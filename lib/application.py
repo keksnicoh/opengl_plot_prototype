@@ -2,7 +2,7 @@
 @author Nicolas 'keksnicoh' Heimann <nicolas.heimann@gmail.com>
 """
 from controller import Controller
-
+from camera import Camera2d
 from OpenGL.GL import *
 from glfw import *
 from termcolor import colored
@@ -17,13 +17,31 @@ class GlWindow():
         self.title = title 
         self.x = 0
         self.y = 0
-        self.controller = Controller()
+        camera = Camera2d((width, height))
+        self.controller = Controller(camera)
         self._glfw_window = None
         self._main_window = None
         self._glfw_initialized = False
         self._active = True
+
+    def set_controller(self, controller):
+        """
+        sets a controller. if controller has no camera
+        this method will configure the camera of the last 
+        controller
+        """
+        # inizialize camera if not camera is configured yet
+        if controller.camera is None:
+            controller.camera = self.controller.camera
+            controller.camera.on_change_matrix.append(controller.camera_updated)
+
+        # link on_post_cycle with swapping glfw
+        controller.on_post_render.append(self.swap)
+        self.controller = controller
+
     def on_init(self):
         self.controller.on_init()
+
     def set_main_window(self, window):
         self._main_window = window
 
@@ -38,9 +56,13 @@ class GlWindow():
         glfwSetMouseButtonCallback(self._glfw_window, self.mouse_callback)
         glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
         self._glfw_initialized = True
+
     def resize_callback(self, win, width, height):
-        self.controller.cycle()
+        self.controller.camera.set_screensize((width, height))
+    
+    def swap(self):
         glfwSwapBuffers(self._glfw_window)
+
     def set_position(self, x, y):
         glfwSetWindowPos(self._glfw_window, int(x), int(y))
         self.x = x
@@ -50,7 +72,6 @@ class GlWindow():
         glfwMakeContextCurrent(self._glfw_window)
         glfwPollEvents()
         self.controller.cycle()
-        glfwSwapBuffers(self._glfw_window)
 
     def destroy(self):
         self.controller.on_destroy()

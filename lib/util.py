@@ -17,7 +17,10 @@ from OpenGL.GL import (glCompileShader, glShaderSource, glCreateProgram,
 from ctypes import c_ubyte
 from OpenGL.GL import *
 import numpy
-
+class Event(list):
+    def __call__(self, *args, **kwargs):
+        for l in self:
+            l(*args, **kwargs)
 def gl_id(obj):
     if hasattr(obj, 'gl_id'): return obj.gl_id()
     return obj

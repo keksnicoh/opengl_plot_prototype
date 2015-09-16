@@ -17,6 +17,15 @@ from OpenGL.GL import (glCompileShader, glShaderSource, glCreateProgram,
 from ctypes import c_ubyte
 from OpenGL.GL import *
 import numpy
+from functools import partial
+class CommandQueue(list):
+    def __call__(self):
+        for c in self: c[0](*c[1], **c[2])
+        del self[:]
+    def queue(self, command):
+        return partial(self.push, command)
+    def push(self, command, *args, **kwargs):
+        self.append((command, args, kwargs))
 class Event(list):
     def __call__(self, *args, **kwargs):
         for l in self:

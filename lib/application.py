@@ -1,92 +1,13 @@
 """
 @author Nicolas 'keksnicoh' Heimann <nicolas.heimann@gmail.com>
 """
-from controller import Controller
-from camera import Camera2d
+from .controller import Controller
+from .util import CommandQueue
+from .camera import Camera2d
+
 from OpenGL.GL import *
 from glfw import *
 from termcolor import colored
-
-class GlWindow():
-    """
-    glfw window wrapper
-    """
-    def __init__(self, width, height, title='no title'):
-        self.width = width
-        self.height = height
-        self.title = title 
-        self.x = 0
-        self.y = 0
-        camera = Camera2d((width, height))
-        self.controller = Controller(camera)
-        self._glfw_window = None
-        self._main_window = None
-        self._glfw_initialized = False
-        self._active = True
-
-    def set_controller(self, controller):
-        """
-        sets a controller. if controller has no camera
-        this method will configure the camera of the last 
-        controller
-        """
-        # inizialize camera if not camera is configured yet
-        if controller.camera is None:
-            controller.camera = self.controller.camera
-            controller.camera.on_change_matrix.append(controller.camera_updated)
-
-        # link on_post_cycle with swapping glfw
-        controller.on_post_render.append(self.swap)
-        self.controller = controller
-
-    def on_init(self):
-        self.controller.on_init()
-
-    def set_main_window(self, window):
-        self._main_window = window
-
-    def init_glfw(self):
-        GlApplication._dbg('initialize glfw window', '...')
-        self._glfw_window = glfwCreateWindow(self.width, self.height, self.title)
-        if not self._glfw_window:
-            raise RuntimeError('glfw.CreateWindow() error')
-
-        glfwMakeContextCurrent(self._glfw_window)
-        glfwSetScrollCallback(self._glfw_window, self.scroll_callback)
-        glfwSetMouseButtonCallback(self._glfw_window, self.mouse_callback)
-        glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
-        self._glfw_initialized = True
-
-    def resize_callback(self, win, width, height):
-        self.controller.camera.set_screensize((width, height))
-    
-    def swap(self):
-        glfwSwapBuffers(self._glfw_window)
-
-    def set_position(self, x, y):
-        glfwSetWindowPos(self._glfw_window, int(x), int(y))
-        self.x = x
-        self.y = y
-
-    def cycle(self):
-        glfwMakeContextCurrent(self._glfw_window)
-        glfwPollEvents()
-        self.controller.cycle()
-
-    def destroy(self):
-        self.controller.on_destroy()
-        glfwDestroyWindow(self._glfw_window)
-
-    def active(self):
-        return self._active and not glfwWindowShouldClose(self._glfw_window)
-
-    def scroll_callback(self, win, bla, scrolled):
-        print('scrolled', win, bla, scrolled)
-    def mouse_callback(self, win, button, action, mod):
-        print('mouse', win, button, action, mod)
-    def onKeyboard(self, win, key, scancode, action, mods):
-        print('keyboard', win, key, scancode, action, mods)
-
 
 class GlApplication():
     """
@@ -104,8 +25,9 @@ class GlApplication():
         self.initGlCoreProfile()
 
     def initGlCoreProfile(self):
-        """setup opengl 4.1"""
-        # all profiles since 3.2 are compatible
+        """
+        setup opengl 4.1
+        """
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -115,16 +37,12 @@ class GlApplication():
         """
         runs the application 
         """
-
         # initialize windows
         pos_x = 50
         pos_y = 150
-        main_window = None
         for window in self.windows:
-            window.set_main_window(main_window)
+            GlApplication._dbg('initialize glfw window', '...')
             window.init_glfw()
-            if main_window is None:
-                main_window = window
             window.set_position(pos_x, pos_y)
             pos_x += window.width + 10
 
@@ -136,18 +54,22 @@ class GlApplication():
         GlApplication._dbg("application is ready to use.", 'OK')
         
         for window in self.windows:
-            window.on_init()
+            window.make_context()
+            window.init()
 
         # main cycle
         while self.active():
+            glfwPollEvents()
             for window in self.windows:
+                window.make_context()
                 if window.active():
+                    window.event_queue()
                     window.cycle()
                 else:
                     GlApplication._dbg('close window', '...')
                     window.destroy()
                     self.windows.remove(window)
-                    GlApplication._dbg('window close', 'OK')
+                    GlApplication._dbg('window closed', 'OK')
 
         self.terminate()
 
@@ -158,6 +80,8 @@ class GlApplication():
 
     def active(self):
         if self.exit:
+            return False
+        if not len(self.windows):
             return False
         if not self.windows[0].active():
             return False 
@@ -172,8 +96,107 @@ class GlApplication():
     @classmethod
     def _dbg(cls, text, state=None):
         if state is not None:
-            if state == 'OK': state = colored(state, 'green')
+            if state == 'OK':   state = colored(state, 'green')
             if state == 'FAIL': state = colored(state, 'red')
-            if state == '...': state = colored(state, 'yellow')
+            if state == '...':  state = colored(state, 'yellow')
+
             text = '[{}] {}'.format(state, text)
         print(text)
+
+class GlWindow():
+    """
+    glfw window wrapper. 
+
+    a window must have a controller, all events will be redirected
+    into the given controller. a GlWindow does not render something,
+    it is the adapter between a Controller and Glfw. 
+    """
+    def __init__(self, width, height, title='no title'):
+        """
+        basic state initialization.
+        """
+        self.width = width
+        self.height = height
+        self.title = title 
+        self.x = 0
+        self.y = 0
+
+        self.controller = Controller(Camera2d((width, height)))
+        self.event_queue = CommandQueue()
+
+        self._glfw_window = None
+        self._glfw_initialized = False
+        self._active = True
+        
+    def init_glfw(self):
+        """
+        glfw initialization.
+        """
+        self._glfw_window = glfwCreateWindow(self.width, self.height, self.title)
+        if not self._glfw_window:
+            raise RuntimeError('glfw.CreateWindow() error')
+        self._glfw_initialized = True
+
+    def init(self):
+        """
+        initializes controller and events 
+        """
+        self.controller.on_init()
+        glfwMakeContextCurrent(self._glfw_window)
+        glfwSetScrollCallback(self._glfw_window, self.event_queue.queue(self.scroll_callback))
+        glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
+        glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
+
+    def set_controller(self, controller):
+        """
+        sets a controller. if controller has no camera
+        this method will configure the camera of the last 
+        controller
+        """
+        # inizialize camera if not camera is configured yet
+        if controller.camera is None:
+            controller.camera = self.controller.camera
+            controller.camera.on_change_matrix.append(controller.camera_updated)
+
+        # link on_post_cycle with swapping glfw
+        controller.on_post_render.append(self.swap)
+        #controller.on_pre_render.append(self.make_context)
+        self.controller = controller
+
+
+    def resize_callback(self, win, width, height):
+        self.event_queue.queue(self.resize_callback)
+        self.make_context()
+        self.controller.camera.set_screensize((width, height))
+    
+    def swap(self):
+        glfwSwapBuffers(self._glfw_window)
+
+    def set_position(self, x, y):
+        glfwSetWindowPos(self._glfw_window, int(x), int(y))
+        self.x = x
+        self.y = y
+
+    def make_context(self):
+        glfwMakeContextCurrent(self._glfw_window)
+        
+    def cycle(self):
+        self.controller.cycle()
+
+    def destroy(self):
+        self.controller.on_destroy()
+        glfwDestroyWindow(self._glfw_window)
+
+    def active(self):
+        return self._active and not glfwWindowShouldClose(self._glfw_window)
+
+    def scroll_callback(self, win, bla, scrolled):
+        print('scrolled', win, bla, scrolled)
+
+    def mouse_callback(self, win, button, action, mod):
+        print('mouse', win, button, action, mod)
+
+    def onKeyboard(self, win, key, scancode, action, mods):
+        print('keyboard', win, key, scancode, action, mods)
+
+

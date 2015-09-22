@@ -1,0 +1,1396 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"get",
+				"get_schema"
+			],
+			[
+				"ge",
+				"get_schema	function"
+			],
+			[
+				"ren",
+				"renteneintritt"
+			],
+			[
+				"set",
+				"set_neo_components_for_employer"
+			],
+			[
+				"def",
+				"default_data	instance"
+			],
+			[
+				"employ",
+				"employer_id"
+			],
+			[
+				"ne",
+				"neo_schema	statement"
+			],
+			[
+				"crea",
+				"create_first_second_parameters	function"
+			],
+			[
+				"with",
+				"with_neo	statement"
+			],
+			[
+				"post_ga",
+				"post_insert_gap	function"
+			],
+			[
+				"res",
+				"result_no_opt	statement"
+			],
+			[
+				"cal",
+				"calculate	function"
+			],
+			[
+				"er",
+				"eraAnpassungsbetrag"
+			],
+			[
+				"apply",
+				"apply_metatags	False"
+			],
+			[
+				"XML_",
+				"XML_INDENTION_TEST_DATA	statement"
+			],
+			[
+				"para",
+				"parameters"
+			],
+			[
+				"post_get",
+				"post_get_employee	function"
+			],
+			[
+				"UR",
+				"URL_CALCULATION_RESULT	statement"
+			],
+			[
+				"re",
+				"response"
+			],
+			[
+				"UL",
+				"URL_CALCULATION_RESULT	statement"
+			],
+			[
+				"post",
+				"post_insert_result	function"
+			],
+			[
+				"URL_CA",
+				"URL_CALCULATION_SERVICE	statement"
+			],
+			[
+				"get_",
+				"get_fix_calculation	function"
+			],
+			[
+				"post_",
+				"post_save_calculation_vorhernachher	function"
+			],
+			[
+				"neo",
+				"neo_components"
+			],
+			[
+				"opt",
+				"optlib_neo	module"
+			],
+			[
+				"calc",
+				"calculator	statement"
+			],
+			[
+				"St",
+				"SteuerrechnerParameter	class"
+			],
+			[
+				"ks",
+				"kstsatz"
+			],
+			[
+				"resul",
+				"Result	class"
+			],
+			[
+				"nett",
+				"netto_auszahlung"
+			],
+			[
+				"xml_",
+				"xml_stripped_soap	statement"
+			],
+			[
+				"me",
+				"apply_metatags	False"
+			],
+			[
+				"appl",
+				"apply_metatags	param"
+			],
+			[
+				"base",
+				"base_calculation_json	param"
+			],
+			[
+				"bas",
+				"baseCalculation"
+			],
+			[
+				"dic",
+				"dict_keys_compare	function"
+			],
+			[
+				"va",
+				"values"
+			],
+			[
+				"_JSON",
+				"_JSON_ZULAGEN_TO_X	statement"
+			],
+			[
+				"GKV",
+				"GKV_PFLICH"
+			],
+			[
+				"GKF",
+				"GKV_PFLICH"
+			],
+			[
+				"str",
+				"strtobool	function"
+			],
+			[
+				"Runt",
+				"RuntimeError	class"
+			],
+			[
+				"valid",
+				"valid_values	statement"
+			],
+			[
+				"calcu",
+				"calculation_id"
+			],
+			[
+				"TAG",
+				"TAG_BASE_CALCULATION	statement"
+			],
+			[
+				"parse",
+				"parse_base_calculation"
+			],
+			[
+				"x_",
+				"x_child	forstmt"
+			],
+			[
+				"cacl",
+				"calculation_id	statement"
+			],
+			[
+				"ba",
+				"baseCalculation"
+			],
+			[
+				"snap",
+				"snapshot_id"
+			],
+			[
+				"RES_",
+				"RES_NEO_GAP	statement"
+			],
+			[
+				"RES_NE",
+				"RES_NEO	statement"
+			],
+			[
+				"render",
+				"render_ns2	function"
+			],
+			[
+				"RES_NEO",
+				"RES_NO_NEO	statement"
+			],
+			[
+				"_tunnel",
+				"_tunnel_forward_str	function"
+			],
+			[
+				"_tunn",
+				"_tunnel_config	statement"
+			],
+			[
+				"TUNN",
+				"TUNNEL_DEFAULT_CONFIG	statement"
+			],
+			[
+				"fow",
+				"forward_port"
+			],
+			[
+				"forwa",
+				"forward_addr"
+			],
+			[
+				"ena",
+				"enable_tunnel	param"
+			],
+			[
+				"TUNNE",
+				"TUNNEL_IDENTIFIER	statement"
+			],
+			[
+				"TUN",
+				"TUNNEL_IDENTIFIER	statement"
+			],
+			[
+				"ST",
+				"STDOUT	statement"
+			],
+			[
+				"TUNNEL",
+				"TUNNEL_IDENTIFIER"
+			],
+			[
+				"comm",
+				"communicate"
+			],
+			[
+				"std",
+				"stdout	statement"
+			],
+			[
+				"TUNE",
+				"TUNNEL_SSH_KEY	statement"
+			],
+			[
+				"LYP",
+				"LYAPUNOV_ANALYTISCH"
+			],
+			[
+				"lya",
+				"lyapunov2"
+			],
+			[
+				"LYA",
+				"LYAPUNOV_NORMIERT	statement"
+			],
+			[
+				"LYAPUNOV_",
+				"LYAPUNOV_ANALYTISCH	statement"
+			],
+			[
+				"iter",
+				"intervals	statement"
+			],
+			[
+				"_init",
+				"_init_inner_matrix	function"
+			],
+			[
+				"_re",
+				"_real_projection_matrix	function"
+			],
+			[
+				"inter",
+				"interval	forstmt"
+			],
+			[
+				"in",
+				"infimum	statement"
+			],
+			[
+				"inte",
+				"interval	forstmt"
+			],
+			[
+				"int",
+				"interval	forstmt"
+			],
+			[
+				"log",
+				"log_arg"
+			],
+			[
+				"Runtime",
+				"RuntimeWarning	class"
+			],
+			[
+				"_gl_la",
+				"_gl_label_font_y	statement"
+			],
+			[
+				"calcul",
+				"calculata_domain	function"
+			],
+			[
+				"_cal",
+				"_calc_infos	function"
+			],
+			[
+				"also",
+				"alos_auszahlungstage"
+			],
+			[
+				"p",
+				"print"
+			],
+			[
+				"conp",
+				"components	statement"
+			],
+			[
+				"sv_",
+				"sv_brutto_opt"
+			],
+			[
+				"rv",
+				"rv_brutto"
+			],
+			[
+				"rv_b",
+				"rv_befreit"
+			],
+			[
+				"kt",
+				"ktg_betriag"
+			],
+			[
+				"sv",
+				"sv_parameters	statement"
+			],
+			[
+				"rb",
+				"rv_brutto"
+			],
+			[
+				"lueck",
+				"luecke_calculator"
+			],
+			[
+				"C",
+				"Currency"
+			],
+			[
+				"GK",
+				"GKV_PFLICH	statement"
+			],
+			[
+				"bru",
+				"brutto_grundlage	statement"
+			],
+			[
+				"br",
+				"brutto_grundlage	statement"
+			],
+			[
+				"alos_",
+				"alos_ausgleich"
+			],
+			[
+				"op",
+				"opt_calculator"
+			],
+			[
+				"resu",
+				"results	statement"
+			],
+			[
+				"cl",
+				"calculate_alos	function"
+			],
+			[
+				"renten",
+				"rentenfaktor"
+			],
+			[
+				"LEI",
+				"LEISTUNGSSATZ_KIND	statement"
+			],
+			[
+				"LEIS",
+				"LEISTUNGSSATZ_KEIN_KIND	statement"
+			],
+			[
+				"be",
+				"bemessung_vorher_entgelt"
+			],
+			[
+				"ja",
+				"jahre_gesamt	statement"
+			],
+			[
+				"jahr",
+				"jahresverbleib	statement"
+			],
+			[
+				"jah",
+				"jahresverbleib	statement"
+			],
+			[
+				"Scal",
+				"ScalarMixin	class"
+			],
+			[
+				"krank",
+				"vorher_getKrankengeldMonatlich"
+			],
+			[
+				"ent",
+				"entgeltverzicht"
+			],
+			[
+				"A",
+				"AGAN	class"
+			],
+			[
+				"pr",
+				"praemie_privat"
+			],
+			[
+				"rv_",
+				"rv_befreit"
+			],
+			[
+				"netto",
+				"netto_calculator"
+			],
+			[
+				"pap",
+				"pap_calculator"
+			],
+			[
+				"luecke",
+				"luecke_result"
+			],
+			[
+				"CU",
+				"CURRENCIES"
+			],
+			[
+				"Curr",
+				"Currency"
+			],
+			[
+				"asse",
+				"assert_valid_container_related"
+			],
+			[
+				"asser",
+				"assert_valid_related"
+			],
+			[
+				"Dumm",
+				"DummyConfig"
+			],
+			[
+				"imp",
+				"import_class"
+			],
+			[
+				"boun",
+				"boundary_error"
+			],
+			[
+				"scala",
+				"scalar_type"
+			],
+			[
+				"vali",
+				"validate"
+			],
+			[
+				"ca",
+				"calculator_parameters"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "demos/geometry_line.py",
+			"settings":
+			{
+				"buffer_size": 5580,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "demos/geometry_line_details.py",
+			"settings":
+			{
+				"buffer_size": 5274,
+				"line_ending": "Unix",
+				"name": "geometey_line_details.py"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 354.0,
+		"last_filter": "pa inst",
+		"selected_items":
+		[
+			[
+				"pa inst",
+				"Package Control: Install Package"
+			],
+			[
+				"pa ins ",
+				"Package Control: Install Package"
+			],
+			[
+				"pa ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pac ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pa int",
+				"Package Control: Install Package"
+			],
+			[
+				"pacl ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pa in ",
+				"Package Control: Install Package"
+			],
+			[
+				"pa in s",
+				"Package Control: Install Package"
+			],
+			[
+				"pack ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pack in",
+				"Package Control: Install Package"
+			],
+			[
+				"pack remo ve ",
+				"Package Control: Remove Package"
+			],
+			[
+				"pack",
+				"Package Control: Add Repository"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"Install package",
+				"Package Control: Install Package"
+			],
+			[
+				"Instal",
+				"Package Control: Install Package"
+			],
+			[
+				"package control: inst",
+				"Package Control: Install Package"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"gitp ush ",
+				"Git: Push"
+			],
+			[
+				"git commt cur",
+				"Git: Quick Commit Current File"
+			],
+			[
+				"git commit cur",
+				"Git: Quick Commit Current File"
+			],
+			[
+				"git pull",
+				"Git: Pull"
+			],
+			[
+				"git push ",
+				"Git: Push"
+			],
+			[
+				"",
+				"About"
+			],
+			[
+				"git comm",
+				"Git: Commit"
+			],
+			[
+				"git statu",
+				"Git: Status"
+			],
+			[
+				"git push",
+				"Git: Push"
+			],
+			[
+				"git com",
+				"Git: Commit"
+			],
+			[
+				"git status",
+				"Git: Status"
+			],
+			[
+				"git p",
+				"Git: Pull"
+			],
+			[
+				"git commit",
+				"Git: Commit"
+			],
+			[
+				"git stat",
+				"Git: Status"
+			],
+			[
+				"git pus",
+				"Git: Push"
+			],
+			[
+				"git psuh",
+				"Git: Push Current Branch"
+			],
+			[
+				"gitp ul",
+				"Git: Pull"
+			],
+			[
+				"git pl",
+				"Git: Pull"
+			],
+			[
+				"git sttu",
+				"Git: Status"
+			],
+			[
+				"git pul",
+				"Git: Pull"
+			],
+			[
+				"gitp ush",
+				"Git: Push"
+			],
+			[
+				"git pull ",
+				"Git: Pull"
+			],
+			[
+				"sublimeGit:A",
+				"SublimeGit: Add License"
+			],
+			[
+				"gitpl",
+				"Git: Pull"
+			],
+			[
+				"git checkout",
+				"Git: Checkout"
+			],
+			[
+				"gitpull",
+				"Git: Pull"
+			]
+		],
+		"width": 575.0
+	},
+	"console":
+	{
+		"height": 139.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'eb2297e1a458f27d836c04bb0cbaf282' + 'd0e7a3098092775ccb37ca9d6b2e4b7d'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/Users/keksnicoh/py/plt",
+		"/Users/keksnicoh/py/plt/demos"
+	],
+	"file_history":
+	[
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/config.yml",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/type.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/data/collections.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/insurance_data.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/test/namespaces/test_neo_admin.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/data/container.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/optlib_neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/etc/docker.stage.nginx",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/test/__init__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/test/namespaces/__init__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/basecalculation.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/client.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/service.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/pap/service.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/application/vre.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/mindestlohn.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/gap.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/parameters.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/calcresult.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/util.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/application/test.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/calcgap.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/employee.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/test/calculator/test_luecke.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/luecke.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/pap.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/tax.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/data/value.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/helper.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/calcsavings.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/payload_renderer.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/made-admin/app/views/capabilities.html",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/config.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/test/calculator/test_sv.py",
+		"/Users/keksnicoh/Library/Application Support/Sublime Text 3/Packages/User/Preferences.sublime-settings",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/derp",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/util.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/test/test_helper.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test/converter/test_basecalculation.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test/converter/test_neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test/test_util.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/optimization.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_service.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_calculators.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_api.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_util.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/sv.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/etc/made.stage/peers/vbm/api.yml",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/brutto.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/netto.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/calcresult.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/application/__init__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/application/test.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/steuerrechner.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/compiler.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/save_calculation_payload.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test_client.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/vre.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/__init__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/.ssh/rrepnak.pub",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/ssh_tunnel_config",
+		"/Users/keksnicoh/slice-dice/valuenet.life/.gitignore",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/.ssh/id_rsa.pub",
+		"/Users/keksnicoh/slice-dice/valuenet.life/docker-compose.yml",
+		"/Users/keksnicoh/slice-dice/valuenet.life/docker-compose.stage.yml",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/__main__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter2/neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api_old/client.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api_old/converter.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/optimization.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/optlib_neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/pap.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/sv.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/data/container.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/test/test_schema.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/test/calculator/test_luecke.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/vbm/employee.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/lib.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/testme.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/test/test_schema.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/lib.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/parameters.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/steuerrechner.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/testme.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/luecke.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner_old/calculator/netto.py",
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/vbm/service.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/lyapunov-definition-rx.py",
+		"/Users/keksnicoh/unih/SS1516/py/plotting/plot2d.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/feigenbaum.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/duffing/poincare.py",
+		"/Users/keksnicoh/unih/SS1516/py/plot/lyapunov.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/duffing/inititial_config.py",
+		"/Users/keksnicoh/unih/SS1516/py/plot/duffing2d.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/logistisch-no-opt-behavior.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/birukation-logistisch-no-opt.py",
+		"/Users/keksnicoh/unih/SS1516/py/plotting/domain.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/birukation-logistisch-opt.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/intermittenz.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/logistisch-opt-behavior.py",
+		"/Users/keksnicoh/unih/SS1516/py/plotting/app.py",
+		"/Users/keksnicoh/unih/SS1516/py/plotting/widget.py",
+		"/Users/keksnicoh/unih/SS1516/py/prak/__init__.py",
+		"/Users/keksnicoh/unih/SS1516/py/plotting/plot2d/field.vert.glsl",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/type.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/api/__init__.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/optlib_neo.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/optimization.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/test/test_data_config.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/parameters.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/helper.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/lib.py",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/utils/Basics.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/pap/Nettorechner.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/utils/Utilities.java",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/data/container.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/insurance_data.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/config.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/sv.py",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/config.yml",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/LueckenBerechnung.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/NettoZielAusgleichBerechnung.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/Entgeltberechnung.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/Berechnungen.java",
+		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/BausteinBerechnungen.java",
+		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/data/collections.py"
+	],
+	"find":
+	{
+		"height": 27.0
+	},
+	"find_in_files":
+	{
+		"height": 158.0,
+		"where_history":
+		[
+			"",
+			"from services.vbm.",
+			"",
+			"Collins\\Bundle\\Module\\Command",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"window1",
+			"sv",
+			"EnumValue",
+			"create_compare_url",
+			"abbrechnungstabelle",
+			"bundesland",
+			"calculate_compare",
+			"IntEnum",
+			" \n",
+			"components",
+			"calculate",
+			"parameter object ",
+			"_min_value",
+			"_type",
+			"            \"type\": \"object\",\n            \"properties\": {\n                \"enabled\": {\n                    \"type\": \"boolean\"\n                },\n                \"pst_agan\": {\n                    \"enum\": [\"AG\", \"AN\"]\n                },\n            }",
+			"parameters_data",
+			"True",
+			"\"type\": \"object\",",
+			"            \"enabled\": {\n                \"type\": \"boolean\"\n            },\n            \"pst_agan\": {\n                \"enum\": [\"AG\", \"AN\"]\n            },\n            \"required\": [\"pst_agan\"]",
+			"{\n            \"enabled\": {\n                \"type\": \"boolean\"\n            }\n        }",
+			"\"enum\": [\"AG\", \"AN\"]",
+			"\"id\":",
+			"        \"",
+			"            \"",
+			"        \"",
+			"[0, 1]",
+			"bool",
+			"pst_agan",
+			"},\n        },",
+			"            pst_agan: {\n                \"enum\": [0, 1]\n            }",
+			"_pst_satz",
+			"with_neo",
+			"without_neo",
+			"second",
+			"first",
+			"irst",
+			"['brutto_gesamt']",
+			"self.metadata, ",
+			"os",
+			"re",
+			"subprocess",
+			"time",
+			"etree",
+			"logging",
+			"_tunnel_active",
+			"_tunnel_config",
+			"TUNNEL_DEFAULT_CONFIG",
+			"_debug",
+			"_extract_return_text_from_response",
+			" _INFO(",
+			", cent_to_euro)",
+			"result_opt",
+			"result_no_opt",
+			"tax_result_no_opt",
+			"tax_result_opt",
+			"result_gap",
+			")))",
+			"luecke_result.get",
+			"luecke_result.get('calculation_information')",
+			"/>",
+			"]))",
+			"+\"\"\"",
+			"<OK/>",
+			"cent_to_euro(",
+			"tax_parameters_opt",
+			"tax_parameters_copy",
+			"tax_parameters_gap_copy",
+			"dumped_result_opt",
+			"gap.parameters",
+			"alv_ktg_geldwert",
+			"geldwert_vorteil",
+			"geldwert_vorteil_dienstwagen",
+			"pst_an",
+			"ins_p40b",
+			"entgelt_bausteine",
+			"entgeldverzicht",
+			"endgeldverzicht_additional",
+			"entgeltverzicht",
+			"entgeltverzichtzusaetzlich",
+			"first['metadata']",
+			"regelarbeitszeit",
+			"mindestlohn",
+			"info",
+			"id",
+			"advisor_id",
+			"employee_id",
+			"renteneintritt",
+			"behandlung_alvktg",
+			"create_neo_component",
+			".2",
+			"_calc_infos",
+			"sv_rente",
+			"create_document_from_dict_simple",
+			"fix_id",
+			"post_insert_result",
+			"get_latest_fix_calculation",
+			"entgeltverzicht",
+			"entgelt_bausteine",
+			"Currency(.0, Currency.CURRENCIES.EUR_CENT)",
+			"copy",
+			"optimization_calculate",
+			"calculate",
+			"optimization_calculate",
+			"TaxResult",
+			"URL_PDF_DOCUMENT",
+			"report_id",
+			", cent_to_euro",
+			")/100)",
+			"'))",
+			"+\"\"\"</",
+			"\"\"\"+str(result.get('",
+			"xml_escape",
+			"OrderedDict",
+			"_assert_mapping",
+			"post_insert_result",
+			"  =",
+			"_JSON_NEO_TO_X",
+			"_OP_NONE",
+			"_OP_LOGIC",
+			"post_insert_result",
+			"get_post_headers(content_type=self.CONTENT_TYPE_XML)",
+			"_x_to_json",
+			"ToJSONResult",
+			"_from_json_recursive",
+			"calculator",
+			"_from_json_recursive",
+			"_opt",
+			"optimization"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"IdenticalTo('services.vbm.",
+			"from services.vbm.",
+			"[1]",
+			"a",
+			"bundle.command.",
+			"bundle.log.",
+			"Collins\\Bundle\\Log",
+			"Collins\\Bundle\\Command\\Command\\Yii",
+			"Collins\\Bundle\\Command",
+			"Collins\\Bundle\\Module\\Command",
+			"ac",
+			"Module\\Ac"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": false,
+		"whole_word": true,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "demos/geometry_line.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5580,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2398,
+								2398
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1486.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "demos/geometry_line_details.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5274,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								628,
+								628
+							]
+						],
+						"settings":
+						{
+							"auto_name": "geometey_line_details.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 34.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 27.0
+	},
+	"input":
+	{
+		"height": 63.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.exec":
+	{
+		"height": 27.0
+	},
+	"output.find_results":
+	{
+		"height": 170.0
+	},
+	"output.git-checkout":
+	{
+		"height": 112.0
+	},
+	"output.git-commit":
+	{
+		"height": 112.0
+	},
+	"output.git-pull":
+	{
+		"height": 216.0
+	},
+	"output.git-push":
+	{
+		"height": 162.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 118.0
+	},
+	"pinned_build_system": "",
+	"project": "plt.sublime-project",
+	"replace":
+	{
+		"height": 50.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"vre",
+				"services/vbm/application/vre.py"
+			],
+			[
+				"optlib",
+				"services/vbm/rechner/calculator/optlib_neo.py"
+			],
+			[
+				"client",
+				"valuenet.vbm/vbm/api/client.py"
+			],
+			[
+				"test_",
+				"valuenet.vbm/vbm/rechner/test/test_schema.py"
+			],
+			[
+				"luecken",
+				"vre-java-src/code/Entgeltoptimierer/src/rechner/logic/LueckenBerechnung.java"
+			],
+			[
+				"basics",
+				"vre-java-src/code/Entgeltoptimierer/src/utils/Basics.java"
+			],
+			[
+				"param",
+				"valuenet.vbm/vbm/rechner/parameters.py"
+			],
+			[
+				"luece",
+				"valuenet.vbm/vbm/rechner/calculator/luecke.py"
+			],
+			[
+				"",
+				"__init__.py"
+			],
+			[
+				"ste",
+				"rechner_future/steuerrechner.py"
+			],
+			[
+				"brut",
+				"rechner_future/calculator/brutto.py"
+			],
+			[
+				"fa",
+				"lib/engine/keyboard/flyaroundHandler.py"
+			],
+			[
+				"timelin",
+				"src/timeline-extensions.js"
+			],
+			[
+				"migsubsi",
+				"migrations/m130621_083047_position_subsize_alter.php"
+			],
+			[
+				"add_more_ro",
+				"migrations/m140227_121658_add_more_roles.php"
+			],
+			[
+				"io",
+				"modules/Command/Helper/IO.php"
+			],
+			[
+				"stotest",
+				"tests/Module/Command/Model/StoryTest.php"
+			],
+			[
+				"debepos",
+				"models/DeliveryBillOrderPosition.php"
+			],
+			[
+				"bidapronrag",
+				"models/business/Tasks/BiDataProviderProductCategorySecondaryAggregationTask.php"
+			],
+			[
+				"provacon",
+				"controllers/ProductVariantController.php"
+			],
+			[
+				"orcont",
+				"controllers/OrderController.php"
+			],
+			[
+				"cdbcommand",
+				"commands/BiDataCommand.php"
+			],
+			[
+				"mautoc",
+				"extensions/Metronic/MAutoCompleteField.php"
+			],
+			[
+				"reconformmo",
+				"modules/Ac/Framework/RequestConfiguration/FormModel.php"
+			],
+			[
+				"supcon",
+				"controllers/SupplierController.php"
+			],
+			[
+				"main.p",
+				"config/main.php"
+			],
+			[
+				"bas",
+				"config/base.php"
+			],
+			[
+				"mana",
+				"modules/Ac/Framework/Manager.php"
+			],
+			[
+				"manager",
+				"modules/Ac/Framework/Manager.php"
+			],
+			[
+				"acl",
+				"config/acl.php"
+			],
+			[
+				"docma",
+				"models/Ac/Framework/Mapper/DocumentMapper.php"
+			],
+			[
+				"pro",
+				"models/Product.php"
+			],
+			[
+				"_orderlist",
+				"views/deliveryBill/_orderList.php"
+			],
+			[
+				"stddocum",
+				"models/Ac/Framework/Mapper/StdDocument.php"
+			],
+			[
+				"managertest",
+				"tests/Model/Ac/Framework/ManagerTest.php"
+			],
+			[
+				"order",
+				"models/Order.php"
+			],
+			[
+				"modemodel",
+				"models/PositionsReportModel.php"
+			],
+			[
+				"debilord",
+				"models/DeliveryBillOrder.php"
+			],
+			[
+				"warcomm",
+				"commands/WarehouseMovementCommand.php"
+			],
+			[
+				"debcon",
+				"controllers/DeliveryBillController.php"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"/Users/keksnicoh/slice-dice/jre-vnrechner/jre.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 243.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

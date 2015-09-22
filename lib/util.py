@@ -1,5 +1,6 @@
 # TODO
 # clean me :)
+# - remove all the deprecated stuff in here
 from OpenGL.GL import (glCompileShader, glShaderSource, glCreateProgram,
     glCreateShader, glAttachShader, glLinkProgram, glGetUniformLocation,
     glGetShaderInfoLog, glGetProgramInfoLog, glGetAttribLocation, glUseProgram,
@@ -14,22 +15,71 @@ from OpenGL.GL import (glCompileShader, glShaderSource, glCreateProgram,
     glCheckFramebufferStatus, GL_FRAMEBUFFER_COMPLETE, glDrawBuffer,
     glBindRenderbuffer, GL_DEPTH_COMPONENT, glUniform4f)
 
-from ctypes import c_ubyte
+
+from functools import partial
 from OpenGL.GL import *
 import numpy
-from functools import partial
+
+signal = lambda ssx, *args, **kwargs: lambda *x, **y: ssx(*args, **kwargs)
+
 class CommandQueue(list):
+    """
+    simple command queue structure.
+    usage:
+
+      q = CommandQueue()
+      q.push(a_command)
+      q.push(a_nother_command)
+      q()
+
+    """
     def __call__(self):
+        """
+        invokes the whole queue
+        """
         for c in self: c[0](*c[1], **c[2])
         del self[:]
+
     def queue(self, command):
+        """
+        returns an callback which will push 
+        the given command with arguments into queue
+        :param command: callback
+        """
         return partial(self.push, command)
+
     def push(self, command, *args, **kwargs):
+        """
+        pushed a command with args into the queue
+        """
         self.append((command, args, kwargs))
+
 class Event(list):
+    """
+    event listener stack
+
+    my_event = Event()
+    my_event.append(blurp)
+    my_event.append(blurp2)
+    my_event('first arg', 'and so on...')
+
+    """
     def __call__(self, *args, **kwargs):
+        """
+        invokes all listeners with given arguments
+        """
         for l in self:
             l(*args, **kwargs)
+
+#
+#
+#
+#      DEPRECATED AREA. REFACTOR ME PLEASE!!!!
+#
+#
+#
+
+
 def gl_id(obj):
     if hasattr(obj, 'gl_id'): return obj.gl_id()
     return obj
@@ -122,80 +172,4 @@ class Buffer():
         if self._is_binded:
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             self._is_binded = False
-class Shader(object):
-    def __init__(self, vertex=None, geometry=None, fragment=None, link=False):
-        self.program_id = glCreateProgram()
-        self._shaders = []
-        if not vertex is None:
-            self.attachShader(GL_VERTEX_SHADER, vertex)
-        if not geometry is None:
-            self.attachShader(GL_GEOMETRY_SHADER, geometry)
-        if not fragment is None:
-            self.attachShader(GL_FRAGMENT_SHADER, fragment)
-        if link: self.linkProgram()
-        self._in_use = 0
-    def attachShader(self,type,source):
-        shader = glCreateShader(type)
-        glShaderSource(shader,source)
-        glCompileShader(shader)
-        shader_log = glGetShaderInfoLog(shader)
-        if shader_log:
-            if type == GL_FRAGMENT_SHADER:
-                str_type = "GL_FRAGMENT_SHADER"
-            elif type == GL_VERTEX_SHADER:
-                str_type = "GL_VERTEX_SHADER"
-            elif type == GL_GEOMETRY_SHADER:
-                str_type = "GL_GEOMETRY_SHADER"
-            else:
-                str_type = "unkown shader type %s" % str(type)
-            raise RuntimeError("%s\n%s" % (str_type, shader_log))
-        glAttachShader(self.program_id, shader)
-        self._shaders.append(shader)
-
-    def uniformLocation(self, name):
-        return glGetUniformLocation(self.program_id, name)
-
-    def attributeLocation(self, name):
-        return glGetAttribLocation(self.program_id, name)
-
-    def uniform(self, name, value):
-        with self:
-            if type(value) == int or type(value) == long:
-                glUniform1i(self.uniformLocation(name), value)
-            elif type(value) == float or type(value) == numpy.float32:
-                glUniform1f(self.uniformLocation(name), value)
-            elif len(value) == 4:
-                value = numpy.array(value, dtype=numpy.float32)
-                glUniform4f(self.uniformLocation(name), *value)
-            elif len(value) == 16:
-                glUniformMatrix4fv(self.uniformLocation(name), 1, GL_FALSE, value)
-            elif len(value) == 9:
-                glUniformMatrix3fv(self.uniformLocation(name), 1, GL_FALSE, value)
-            elif len(value) == 2:
-                value = numpy.array(value, dtype=numpy.float32)
-                glUniform2f(self.uniformLocation(name), *value)
-            else:
-                print(len(value))
-                raise Exception('not implemented')
-    def linkProgram(self):
-        glLinkProgram(self.program_id)
-        program_log = glGetProgramInfoLog(self.program_id)
-        if program_log:
-            raise RuntimeError("shader_program\n%s" % program_log)
-
-        for shader in self._shaders:
-            glDeleteShader(shader)
-        self._shaders = []
-    def useProgram(self):
-        glUseProgram(self.program_id)
-    def unuseProgram(self):
-        glUseProgram(0)
-    def __enter__(self):
-        self.useProgram()
-        self._in_use += 1
-    def __exit__(self, type, value, tb):
-        if self._in_use > 0:
-            self._in_use -= 1
-        if self._in_use == 0:
-            self.unuseProgram()
 

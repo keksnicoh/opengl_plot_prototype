@@ -38,7 +38,7 @@ class Camera2d(Camera):
     
     def set_screensize(self, screensize):
         Camera.set_screensize(self, screensize)
-        self.on_change_matrix()
+        self.on_change_matrix(self)
 
     def _screen_factor(self):
         return (

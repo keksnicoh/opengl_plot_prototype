@@ -156,7 +156,7 @@ while not glfwWindowShouldClose(window1):
 
     # note:
     #
-    # viewport does change after glfwPollEvents.
+    # viewport changes after glfwPollEvents.
     # to restore viewport after framebuffer, persist
     # current viewport
     old_viewport = glGetIntegerv(GL_VIEWPORT)

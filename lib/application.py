@@ -2,7 +2,7 @@
 @author Nicolas 'keksnicoh' Heimann <nicolas.heimann@gmail.com>
 """
 from .controller import Controller
-from .util import CommandQueue
+from .util import CommandQueue, signal
 from .camera import Camera2d
 
 from OpenGL.GL import *
@@ -141,7 +141,7 @@ class GlWindow():
         """
         initializes controller and events 
         """
-        self.controller.on_init()
+        self.controller.init()
         glfwMakeContextCurrent(self._glfw_window)
         glfwSetScrollCallback(self._glfw_window, self.event_queue.queue(self.scroll_callback))
         glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
@@ -156,13 +156,10 @@ class GlWindow():
         # inizialize camera if not camera is configured yet
         if controller.camera is None:
             controller.camera = self.controller.camera
-            controller.camera.on_change_matrix.append(controller.camera_updated)
 
         # link on_post_cycle with swapping glfw
         controller.on_post_render.append(self.swap)
-        #controller.on_pre_render.append(self.make_context)
         self.controller = controller
-
 
     def resize_callback(self, win, width, height):
         self.event_queue.queue(self.resize_callback)

@@ -15,11 +15,13 @@ class Controller():
         self.on_render      = Event()
         self.on_cycle       = Event()
         self.on_destroy     = Event()
-        self.on_init.append(self.init)
         self.on_pre_render.append(self.clear_gl)
-
-    def init(self): pass
-    def camera_updated(self):
+    def get_camera(self):
+        return self.camera
+    def init(self): 
+        self.on_init(self)
+        self.camera.on_change_matrix.append(self.camera_updated)
+    def camera_updated(self, camera):
         self.cycle()
     def clear_gl(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -29,13 +31,14 @@ class Controller():
         self.on_pre_cycle()
         self.on_pre_render()
         self.on_cycle()
-        self.on_render()
+        self.on_render(self)
         self.on_post_render()
         self.on_post_cycle()
         pass
 
 class DebugController(Controller): 
     def init(self):
+        self.on_init(self)
         camera = self.camera
         scaling = camera.scaling
 

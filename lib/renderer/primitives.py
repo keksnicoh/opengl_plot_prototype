@@ -7,11 +7,15 @@ renderers for primitives.
 from lib.renderer.renderer import Renderer 
 from lib.shader import Shader, Program
 from lib.helper import load_lib_file
-from lib import util   
 from OpenGL.GL import * 
 import numpy
 
 class SimplePrimitivesRenderer(Renderer):
+
+    def __init__(self, camera):
+        Renderer.__init__(self, camera)
+        self._initial_vertex_data = None
+
     """
     easy to use primites renderer for simple use cases.
     note that this renderer might not be effective if 
@@ -34,7 +38,14 @@ class SimplePrimitivesRenderer(Renderer):
         """
         sets vertex data 
         """
-        self.vertex_data = vertex_data
+        self._initial_vertex_data = vertex_data
+
+    def buffer_data(self, vertex_data):
+        data = numpy.array(vertex_data, dtype=numpy.float32)
+
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
 
     def init(self, controller):
 
@@ -46,24 +57,22 @@ class SimplePrimitivesRenderer(Renderer):
         program.shaders.append(fragment_shader)
         program.link()
         
-        data = numpy.array(self.vertex_data, dtype=numpy.float32)
-        self.get_camera().on_change_matrix.append(self.update_camera)
         # XXX
         # - replace vao/vbo utils by new library components
-        self.vao = util.VAO()
-        self.vbo = util.VBO(1)
+        self.vao = glGenVertexArrays(1)
+        self.vbo = vbo = glGenBuffers(1)
 
-        #with self.vao:
-        with self.vbo.get(0):
-            glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)
+        if self._initial_vertex_data is not None:
+            self.buffer_data(self._initial_vertex_data)
 
-        with self.vao:
-            with self.vbo.get(0):
-                glVertexAttribPointer(program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
-                glEnableVertexAttribArray(0)
-
+        glBindVertexArray(self.vao)
+        glBindBuffer(GL_ARRAY_BUFFER, self.vbo)
+        glVertexAttribPointer(program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
+        glEnableVertexAttribArray(0)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindVertexArray(0)
         program.use()
-        program.uniform('mat_camera', self.get_camera().get_matrix())
+        program.uniform('mat_camera', self.camera.get_matrix())
         program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
         program.unuse()
 
@@ -71,13 +80,13 @@ class SimplePrimitivesRenderer(Renderer):
 
     def update_camera(self, camera):
         self.program.use()
-        self.program.uniform('mat_camera', self.get_camera().get_matrix())
+        self.program.uniform('mat_camera', self.camera.get_matrix())
         self.program.unuse()
 
     def render(self, controller):
         self.program.use()
-        with self.vao:
-
-            glDrawArrays(self.primitives_type, 0, 4)
+        glBindVertexArray(self.vao)
+        glDrawArrays(self.primitives_type, 0, 4)
+        glBindVertexArray(0)
         self.program.unuse()
 

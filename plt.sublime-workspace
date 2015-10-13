@@ -4,8 +4,60 @@
 		"selected_items":
 		[
 			[
+				"unif",
+				"uniforms	statement"
+			],
+			[
+				"camer",
+				"camera_updated	function"
+			],
+			[
+				"GL_LINE_STR",
+				"GL_LINE_STRIP_ADJACENCY	statement"
+			],
+			[
+				"GL_VERT",
+				"GL_VERTEX_SHADER	statement"
+			],
+			[
 				"get",
-				"get_schema"
+				"get_plotplane_size	function"
+			],
+			[
+				"get_",
+				"get_xaxis_size	function"
+			],
+			[
+				"update",
+				"update_modelview	function"
+			],
+			[
+				"cam",
+				"camera_updated"
+			],
+			[
+				"Cam",
+				"Camera2d	class"
+			],
+			[
+				"r",
+				"rgb_texture_id	statement"
+			],
+			[
+				"rec",
+				"rectangle2	statement"
+			],
+			[
+				"_out",
+				"_outer_viewport	statement"
+			],
+			[
+				"GL_FRAG",
+				"GL_FRAGMENT_SHADER	statement"
+			],
+			[
+				"vert",
+				"vertex_data"
 			],
 			[
 				"ge",
@@ -90,10 +142,6 @@
 			[
 				"URL_CA",
 				"URL_CALCULATION_SERVICE	statement"
-			],
-			[
-				"get_",
-				"get_fix_calculation	function"
 			],
 			[
 				"post_",
@@ -466,54 +514,6 @@
 			[
 				"netto",
 				"netto_calculator"
-			],
-			[
-				"pap",
-				"pap_calculator"
-			],
-			[
-				"luecke",
-				"luecke_result"
-			],
-			[
-				"CU",
-				"CURRENCIES"
-			],
-			[
-				"Curr",
-				"Currency"
-			],
-			[
-				"asse",
-				"assert_valid_container_related"
-			],
-			[
-				"asser",
-				"assert_valid_related"
-			],
-			[
-				"Dumm",
-				"DummyConfig"
-			],
-			[
-				"imp",
-				"import_class"
-			],
-			[
-				"boun",
-				"boundary_error"
-			],
-			[
-				"scala",
-				"scalar_type"
-			],
-			[
-				"vali",
-				"validate"
-			],
-			[
-				"ca",
-				"calculator_parameters"
 			]
 		]
 	},
@@ -528,12 +528,107 @@
 			}
 		},
 		{
-			"file": "demos/geometry_line_details.py",
+			"contents": "#-*- coding: utf-8 -*-\n\"\"\"\nrenderers for primitives.\n\n:author: Nicolas 'keksnicoh' Heimann \n\"\"\"\nfrom lib.renderer import renderer, primitives, window\nfrom lib.shader import Shader, Program\nfrom lib.helper import load_lib_file\nfrom OpenGL.GL import *\nclass Plotter(renderer.Renderer):\n    def __init__(self, camera):\n        renderer.Renderer.__init__(self, camera)\n        self._axis_space = (70, 50)\n        self._plot_plane_min_size = (100, 100)\n        self.graphs = {}\n\n    def init(self, controller):\n        if self._axis_space[0] > 0:\n            self.xaxis_frame = window.Framebuffer(self.camera, self.get_xaxis_size(), clear_color=[1,0,0,1])\n            self.xaxis_frame.init(controller)\n            self.xaxis_frame.modelview.set_position(self._axis_space[1], self.get_plotplane_size()[1])\n            self.xaxis_frame.update_modelview()\n\n        if self._axis_space[1] > 0:\n            self.yaxis_frame = window.Framebuffer(self.camera, self.get_yaxis_size(), clear_color=[1,0,0,1])\n            self.yaxis_frame.init(controller)\n\n        self.plotplane = window.Framebuffer(self.camera, self.get_plotplane_size(), clear_color=[1,1,1,1])\n        self.plotplane.init(controller)\n        self.plotplane.modelview.set_position(self._axis_space[1], 0)\n        self.plotplane.update_modelview()\n\n\n        self.camera.on_change_matrix.append(self.camera_updated)\n\n    def init_graphs(self):\n\n        for graph in self.graphs.values():\n            graph.init(self)\n\n            graph.program.use()\n            graph.program.uniform('mat_camera', self.plotplane.inner_camera.get_matrix())\n            graph.program.unuse()\n\n    def get_plotplane_size(self):\n        return [\n            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]), \n            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0])\n        ]\n\n    def get_xaxis_size(self):\n        return [\n            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]), \n            self._axis_space[0]\n        ]\n\n    def get_yaxis_size(self):\n        return [\n            self._axis_space[1], \n            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0])\n        ]\n\n    def camera_updated(self, camera):\n        if self._axis_space[0] > 0:\n            self.xaxis_frame.screensize = self.get_xaxis_size()\n            self.xaxis_frame.init_capturing()\n            self.xaxis_frame.update_camera(self.camera)\n            self.xaxis_frame.modelview.set_position(self._axis_space[1], self.get_plotplane_size()[1])\n            self.xaxis_frame.update_modelview()\n\n        if self._axis_space[1] > 0:\n            self.yaxis_frame.screensize = self.get_yaxis_size()\n            self.yaxis_frame.init_capturing()\n            self.yaxis_frame.update_modelview()\n            self.yaxis_frame.update_camera(camera)\n\n        self.plotplane.screensize = self.get_plotplane_size()\n        self.plotplane.init_capturing()\n        self.plotplane.update_camera(camera)\n\n        self.plotplane.inner_camera.set_screensize(self.get_plotplane_size())\n        #print(self.plotplane.inner_camera.get_matrix())\n        for graph in self.graphs.values():\n            graph.program.use()\n            graph.program.uniform('mat_camera', self.plotplane.inner_camera.get_matrix())\n            graph.program.unuse()\n            \n    def render(self, controller):\n        if self._axis_space[1] > 0:\n            self.yaxis_frame.use()\n            self.yaxis_frame.unuse()\n            self.yaxis_frame.render(controller)\n\n        if self._axis_space[0] > 0:\n            self.xaxis_frame.use()\n            self.xaxis_frame.unuse()\n            self.xaxis_frame.render(controller)\n\n        self.plotplane.use()\n        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)\n        for id, graph in self.graphs.items():\n            graph.render(self)\n        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);\n\n        self.plotplane.unuse()\n        self.plotplane.render(controller)\n\n\n\n\n\n\n",
+			"file": "lib/renderer/plot2d.py",
+			"file_size": 4001,
+			"file_write_time": 130886854330000000,
 			"settings":
 			{
-				"buffer_size": 5274,
+				"buffer_size": 4014,
 				"line_ending": "Unix",
-				"name": "geometey_line_details.py"
+				"name": "plot2d.py"
+			}
+		},
+		{
+			"file": "lib/helper.py",
+			"settings":
+			{
+				"buffer_size": 316,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/plot/graph.py",
+			"settings":
+			{
+				"buffer_size": 1801,
+				"line_ending": "Unix",
+				"name": "graph.py"
+			}
+		},
+		{
+			"file": "lib/plot/domain.py",
+			"settings":
+			{
+				"buffer_size": 479,
+				"line_ending": "Unix",
+				"name": "domain.py"
+			}
+		},
+		{
+			"file": "lib/glutil.py",
+			"settings":
+			{
+				"buffer_size": 626,
+				"line_ending": "Unix",
+				"name": "glutil.py"
+			}
+		},
+		{
+			"file": "lib/gltype.py",
+			"settings":
+			{
+				"buffer_size": 707,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/examples/plot2d.py",
+			"settings":
+			{
+				"buffer_size": 1602,
+				"line_ending": "Unix",
+				"name": "plot2d.py"
+			}
+		},
+		{
+			"file": "lib/camera.py",
+			"settings":
+			{
+				"buffer_size": 1924,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/renderer/primitives.py",
+			"settings":
+			{
+				"buffer_size": 2875,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/glsl/plot2d/line.vert.glsl",
+			"settings":
+			{
+				"buffer_size": 222,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/glsl/plot2d/line.geom.glsl",
+			"settings":
+			{
+				"buffer_size": 1540,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "lib/glsl/plot2d/line.frag.glsl",
+			"settings":
+			{
+				"buffer_size": 132,
+				"line_ending": "Unix"
 			}
 		}
 	],
@@ -743,10 +838,38 @@
 	"expanded_folders":
 	[
 		"/Users/keksnicoh/py/plt",
-		"/Users/keksnicoh/py/plt/demos"
+		"/Users/keksnicoh/py/plt/demos",
+		"/Users/keksnicoh/py/plt/lib",
+		"/Users/keksnicoh/py/plt/lib/examples",
+		"/Users/keksnicoh/py/plt/lib/glsl",
+		"/Users/keksnicoh/py/plt/lib/glsl/plot2d",
+		"/Users/keksnicoh/py/plt/lib/plot",
+		"/Users/keksnicoh/py/plt/lib/renderer"
 	],
 	"file_history":
 	[
+		"/Users/keksnicoh/py/plt/lib/shader.py",
+		"/Users/keksnicoh/py/plt/lib/plot/__init__.py",
+		"/Users/keksnicoh/py/plt/lib/glsl/plot2d/line.vert.glsl",
+		"/Users/keksnicoh/py/plt/lib/glsl/plot2d/line.geom.glsl",
+		"/Users/keksnicoh/py/plt/lib/glsl/plot2d/line.frag.glsl",
+		"/Users/keksnicoh/py/plt/lib/renderer/window.py",
+		"/Users/keksnicoh/py/plt/lib/glsl/framewindow.frag.glsl",
+		"/Users/keksnicoh/py/plt/lib/glsl/framewindow.vert.glsl",
+		"/Users/keksnicoh/py/plt/lib/controller.py",
+		"/Users/keksnicoh/py/plt/lib/matrix.py",
+		"/Users/keksnicoh/py/plt/lib/camera.py",
+		"/Users/keksnicoh/py/plt/matrix.py",
+		"/Users/keksnicoh/py/plt/lib/examples/framewindow.py",
+		"/Users/keksnicoh/py/plt/lib/renderer/renderer.py",
+		"/Users/keksnicoh/py/plt/lib/util.py",
+		"/Users/keksnicoh/py/plt/lib/renderer/graph.py",
+		"/Users/keksnicoh/py/plt/demos/geometry_line_details.py",
+		"/Users/keksnicoh/py/plt/lib/renderer/primitives.py",
+		"/Users/keksnicoh/py/plt/demos/framebuffer.py",
+		"/Users/keksnicoh/py/plt/lib/examples/primitives.py",
+		"/Users/keksnicoh/py/plt/lib/window.py",
+		"/Users/keksnicoh/py/plt/lib/renderer/untitled",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/config.yml",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/type.py",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/data/collections.py",
@@ -852,33 +975,11 @@
 		"/Users/keksnicoh/unih/SS1516/py/plotting/app.py",
 		"/Users/keksnicoh/unih/SS1516/py/plotting/widget.py",
 		"/Users/keksnicoh/unih/SS1516/py/prak/__init__.py",
-		"/Users/keksnicoh/unih/SS1516/py/plotting/plot2d/field.vert.glsl",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/type.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/api/__init__.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/optlib_neo.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/optimization.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/test/test_data_config.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/parameters.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/helper.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/lib.py",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/utils/Basics.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/pap/Nettorechner.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/utils/Utilities.java",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/data/container.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/insurance_data.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/config.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/calculator/sv.py",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/config.yml",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/LueckenBerechnung.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/NettoZielAusgleichBerechnung.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/Entgeltberechnung.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/Berechnungen.java",
-		"/Users/keksnicoh/slice-dice/vre-java-src/code/Entgeltoptimierer/src/rechner/logic/BausteinBerechnungen.java",
-		"/Users/keksnicoh/slice-dice/valuenet.vbm/vbm/rechner/data/collections.py"
+		"/Users/keksnicoh/unih/SS1516/py/plotting/plot2d/field.vert.glsl"
 	],
 	"find":
 	{
-		"height": 27.0
+		"height": 31.0
 	},
 	"find_in_files":
 	{
@@ -897,6 +998,44 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"mat_camera",
+			"width",
+			"plotplane_frame",
+			"update_modelview",
+			"util",
+			"numpy",
+			"_tmp_plotplane",
+			"_tmp_x_axis",
+			"_tmp_y_axis",
+			"yaxis",
+			"_tmp_x_axis",
+			"_tmp_y_axis",
+			"_tmp_x_axis",
+			"max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0])",
+			"get_camera()",
+			"_camera",
+			"get_camera()",
+			"signal",
+			"gl_id",
+			"numpy",
+			"get_camera()",
+			"_camera",
+			"tex_coord_attr",
+			"vao_frame",
+			"300",
+			"_inner_camera",
+			"buffer_data",
+			"-1",
+			"0.95",
+			"screen_position",
+			"rid",
+			"camera",
+			"self.size",
+			"width",
+			"_tmp_y_axis",
+			"renderer.renderer",
+			"enderer.renderer.",
+			"self._tmp_y_axis",
 			"window1",
 			"sv",
 			"EnumValue",
@@ -986,45 +1125,7 @@
 			"renteneintritt",
 			"behandlung_alvktg",
 			"create_neo_component",
-			".2",
-			"_calc_infos",
-			"sv_rente",
-			"create_document_from_dict_simple",
-			"fix_id",
-			"post_insert_result",
-			"get_latest_fix_calculation",
-			"entgeltverzicht",
-			"entgelt_bausteine",
-			"Currency(.0, Currency.CURRENCIES.EUR_CENT)",
-			"copy",
-			"optimization_calculate",
-			"calculate",
-			"optimization_calculate",
-			"TaxResult",
-			"URL_PDF_DOCUMENT",
-			"report_id",
-			", cent_to_euro",
-			")/100)",
-			"'))",
-			"+\"\"\"</",
-			"\"\"\"+str(result.get('",
-			"xml_escape",
-			"OrderedDict",
-			"_assert_mapping",
-			"post_insert_result",
-			"  =",
-			"_JSON_NEO_TO_X",
-			"_OP_NONE",
-			"_OP_LOGIC",
-			"post_insert_result",
-			"get_post_headers(content_type=self.CONTENT_TYPE_XML)",
-			"_x_to_json",
-			"ToJSONResult",
-			"_from_json_recursive",
-			"calculator",
-			"_from_json_recursive",
-			"_opt",
-			"optimization"
+			".2"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1054,7 +1155,7 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 2,
 			"sheets":
 			[
 				{
@@ -1070,8 +1171,8 @@
 						"selection":
 						[
 							[
-								2398,
-								2398
+								4146,
+								4146
 							]
 						],
 						"settings":
@@ -1083,41 +1184,397 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1486.0,
+						"translation.y": 3003.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 6,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "demos/geometry_line_details.py",
+					"file": "lib/renderer/plot2d.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 5274,
+						"buffer_size": 4014,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								628,
-								628
+								26,
+								26
 							]
 						],
 						"settings":
 						{
-							"auto_name": "geometey_line_details.py",
+							"auto_name": "plot2d.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 17.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "lib/helper.py",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 316,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								316,
+								161
+							]
+						],
+						"settings":
+						{
 							"glslvalidator_configured": true,
 							"glslvalidator_enabled": 1,
 							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
 						},
 						"translation.x": 0.0,
-						"translation.y": 34.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 1,
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "lib/plot/graph.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1801,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1752,
+								1769
+							]
+						],
+						"settings":
+						{
+							"auto_name": "graph.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 11,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "lib/plot/domain.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 479,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								268,
+								268
+							]
+						],
+						"settings":
+						{
+							"auto_name": "domain.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "lib/glutil.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 626,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								48,
+								48
+							]
+						],
+						"settings":
+						{
+							"auto_name": "glutil.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 9,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "lib/gltype.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 707,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								120,
+								120
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 10,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 4,
+			"sheets":
+			[
+				{
+					"buffer": 7,
+					"file": "lib/examples/plot2d.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1602,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								513,
+								513
+							]
+						],
+						"settings":
+						{
+							"auto_name": "plot2d.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "lib/camera.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1924,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1198,
+								1198
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 9,
+					"file": "lib/renderer/primitives.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2875,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								853,
+								853
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 691.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 10,
+					"file": "lib/glsl/plot2d/line.vert.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 222,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13,
+								38
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 11,
+					"file": "lib/glsl/plot2d/line.geom.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1540,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								967,
+								967
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 12,
+					"file": "lib/glsl/plot2d/line.frag.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 132,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								100,
+								100
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 12,
 					"type": "text"
 				}
 			]
@@ -1125,7 +1582,7 @@
 	],
 	"incremental_find":
 	{
-		"height": 27.0
+		"height": 31.0
 	},
 	"input":
 	{
@@ -1140,11 +1597,18 @@
 				0,
 				1,
 				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
 			]
 		],
 		"cols":
 		[
 			0.0,
+			0.57693137678,
 			1.0
 		],
 		"rows":
@@ -1186,7 +1650,7 @@
 	"project": "plt.sublime-project",
 	"replace":
 	{
-		"height": 50.0
+		"height": 58.0
 	},
 	"save_all_on_build": true,
 	"select_file":

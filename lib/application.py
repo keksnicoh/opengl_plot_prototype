@@ -8,7 +8,8 @@ from .camera import Camera2d
 from OpenGL.GL import *
 from glfw import *
 from termcolor import colored
-
+import logging 
+import sys
 class GlApplication():
     """
     initializes opengl & glfw. handles glfw windows
@@ -24,6 +25,14 @@ class GlApplication():
         GlApplication._dbg("load {}".format(colored('OPENGL_CORE_PROFILE 4.10', 'red')), '...')
         self.initGlCoreProfile()
 
+        root = logging.getLogger()
+        root.setLevel(logging.DEBUG)
+        ch = logging.StreamHandler(sys.stdout)
+        ch.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(levelname)s - %(message)s')
+        ch.setFormatter(formatter)
+        root.addHandler(ch)
+        
     def initGlCoreProfile(self):
         """
         setup opengl 4.1
@@ -38,6 +47,7 @@ class GlApplication():
         runs the application 
         """
         # initialize windows
+
         pos_x = 50
         pos_y = 150
         for window in self.windows:

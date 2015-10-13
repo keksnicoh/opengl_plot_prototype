@@ -19,11 +19,12 @@ given shaders.
 :author: Nicolas 'keksnicoh' Heimann 
 """
 from lib.errors import GlError
+from lib.gltype import *
 
 import re
 from OpenGL.GL import * 
 
-class Error(GlError): 
+class ShaderError(GlError): 
     """
     error indicates problems with shaders and programs
     """
@@ -33,12 +34,17 @@ class Shader():
     """
     shader representation
     """
-    def __init__(self, type, source):
+    def __init__(self, type, source, substitutions={}):
         """
         initializes shader by given source.
         matches all attributes and uniforms 
         by using regex
         """
+        self.substitutions = {
+            'VERSION': 410
+        }
+        self.substitutions.update(substitutions)
+
         self.source = source
         self.type = type
         self.gl_id = None
@@ -61,18 +67,23 @@ class Shader():
         """
         compiles shader an returns gl id
         """
-        self.gl_id = glCreateShader(self.type)
-        if self.gl_id < 1:
-            self.gl_id = None
-            raise Error('glCreateShader returns an invalid id.')
+        if self.gl_id is None:
+            self.gl_id = glCreateShader(self.type)
+            if self.gl_id < 1:
+                self.gl_id = None
+                raise ShaderError('glCreateShader returns an invalid id.')
 
-        glShaderSource(self.gl_id, self.source)
-        glCompileShader(self.gl_id)
+            source = self.source
+            for name, code in self.substitutions.items():
+                source = source.replace('/*{$%s$}*/'%name, str(code))
 
-        error_log = glGetShaderInfoLog(self.gl_id)
-        if error_log:
-            self.delete()
-            raise Error(error_log)
+            glShaderSource(self.gl_id, source)
+            glCompileShader(self.gl_id)
+
+            error_log = glGetShaderInfoLog(self.gl_id)
+            if error_log:
+                self.delete()
+                raise ShaderError('{}: {}'.format(self.type, error_log))
 
         return self.gl_id
 
@@ -97,7 +108,7 @@ class Program():
         tells opengl state to use this program 
         """
         if Program.__LAST_USE_GL_ID is not None and Program.__LAST_USE_GL_ID != self.gl_id:
-            raise Error('cannot use program {} since program {} is still in use'.format(
+            raise ShaderError('cannot use program {} since program {} is still in use'.format(
                 self.gl_id, Program.__LAST_USE_GL_ID
             ))
 
@@ -110,7 +121,7 @@ class Program():
         tells opengl state to unuse this program
         """
         if self.gl_id != Program.__LAST_USE_GL_ID:
-            raise Error('cannot unuse program since its not used.')
+            raise ShaderError('cannot unuse program since its not used.')
 
         glUseProgram(0)
         Program.__LAST_USE_GL_ID = None
@@ -132,7 +143,7 @@ class Program():
 
         if self.gl_id < 1:
             self.gl_id = None
-            raise Error('glCreateProgram returns an invalid id')
+            raise ShaderError('glCreateProgram returns an invalid id')
 
         for shader in self.shaders:
             shader.compile()
@@ -142,7 +153,7 @@ class Program():
         error_log = glGetProgramInfoLog(self.gl_id)
         if error_log:
             self.delete()
-            raise Error(error_log)
+            raise ShaderError(error_log)
 
         self._configure_attributes()
         self._configure_uniforms()
@@ -151,27 +162,27 @@ class Program():
 
     def uniform(self, name, value):
         if not name in self.uniforms:
-            raise Error('unkown uniform "{}"'.format(name))
+            raise ShaderError('unkown uniform "{}"'.format(name))
 
         type = self.uniforms[name][1]
         location = self.uniforms[name][0]
         
         if type == 'mat4':
-            glUniformMatrix4fv(location, 1, GL_FALSE, value)
+            glUniformMatrix4fv(location, 1, GL_FALSE, mat4(value))
         elif type == 'mat3':
-            glUniformMatrix3fv(location, 1, GL_FALSE, value)
+            glUniformMatrix3fv(location, 1, GL_FALSE, mat3(value))
         elif type == 'mat2':
-            glUniformMatrix2fv(location, 1, GL_FALSE, value)
+            glUniformMatrix2fv(location, 1, GL_FALSE, mat2(value))
         elif type == 'float':
             glUniform1f(location, value)
         elif type == 'int':
             glUniform1f(location, value)
         elif type == 'vec2':
-            glUniform2f(location, value)
+            glUniform2f(location, *value)
         elif type == 'vec3':
-            glUniform2f(location, value)
+            glUniform3f(location, value)
         elif type == 'vec4':
-            glUniform2f(location, value)
+            glUniform4f(location, *value)
         else:
             raise NotImplementedError('oops! type "{}" not implemented by shader library.'.format(type))
 
@@ -200,12 +211,11 @@ class Program():
         for shader in self.shaders:
             for k, u in shader.uniforms.items():
                 # check whether any uniform is defined in 2 shaders with different types.
-                if k in self.uniforms and self.uniforms[k][0] != u[0]:
-                    raise Error('uniform "{name}" appears twice with different types: {t1}, {t2}'.format(
+                if k in self.uniforms and self.uniforms[k][1] != u[0]:
+                    raise ShaderError('uniform "{name}" appears twice with different types: {t1}, {t2}'.format(
                         name=k,
-                        t1=self.uniforms[k][0],
+                        t1=self.uniforms[k][1],
                         t2=u[0]
                     ))
 
                 self.uniforms[k] = (glGetUniformLocation(self.gl_id, k), u[0], u[1])
-

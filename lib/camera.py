@@ -5,7 +5,7 @@ class Camera():
     def __init__(self, initial_screensize, scaling=None):
         self.initial_screensize = initial_screensize
         self.screensize = initial_screensize
-
+        self.position = [0,0,0]
         self.scaling = None
         self.set_scaling(scaling)
         self.on_change_matrix = Event()
@@ -15,6 +15,13 @@ class Camera():
             scaling = (float(self.initial_screensize[1]), float(self.initial_screensize[0]))
 
         self.scaling = scaling
+
+    def set_screensize_unit(self, screensize_unit):
+        self.screensize_unit = screensize_unit
+
+    def set_position(self, x=0, y=0, z=0):
+        self.position = [x,y,z]
+        self.on_change_matrix(self)
 
     def set_screensize(self, screensize):
         self.screensize = screensize
@@ -40,6 +47,7 @@ class Camera2d(Camera):
         Camera.set_screensize(self, screensize)
         self.on_change_matrix(self)
 
+
     def _screen_factor(self):
         return (
             Camera2d.SCALING_GL*float(self.initial_screensize[0])/(self.screensize[0]), 
@@ -52,6 +60,5 @@ class Camera2d(Camera):
             screen_factor[0]/self.scaling[0], 0, 0, 0,
             0, -screen_factor[1]/self.scaling[1], 0, 0,
             0, 0, 1, 0,
-            -1.0, 1.0, 0, 1,
+            -1.0 + self.position[0], 1.0 + self.position[1], self.position[2], 1,
         ])
-class Camera3d(Camera): pass

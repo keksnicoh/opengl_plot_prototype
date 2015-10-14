@@ -17,18 +17,19 @@ class Line2d(Graph):
     """
     line plotter
     """
-    def __init__(self, domain, kernel, color=[0,0,0,1]):
+    def __init__(self, domain, kernel, color=None):
         Graph.__init__(self, domain)
-        self._color = color
+        self.color = color
         self._kernel = kernel
+        self.initialized = False 
 
-    def init(self, renderer):
+    def init(self):
         """
         creates shader and vao 
         """
         program         = Program()
         vertex_shader   = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/line.vert.glsl'), {
-            'KERNEL': self._kernel+';'
+            'KERNEL': self._kernel+';' #user friendly semicolon :)
         })
         geometry_shader = Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/line.geom.glsl'))
         fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/line.frag.glsl'))
@@ -65,17 +66,19 @@ class Line2d(Graph):
         glBindVertexArray(0)
 
         self.program.use()
-        self.program.uniform('color', self._color)
-        self.program.uniform('mat_domain', self.domain.get_transformation_matrix(
-            (1,1),
-            [10,10],
-        ))
+        self.program.uniform('color', self.color or [0,0,0,1])
+        self.program.uniform('mat_domain', numpy.identity(4).flatten())
         self.program.unuse()
 
-    def render(self, renderer):
+        self.initialized = True
+
+    def render(self, plotter):
         """
         renders line plot 
         """
+        if not self.initialized:
+            self.init()
+
         self.program.use()
         glBindVertexArray(self.vao)
         glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, int(self.domain.get_length()/(4.0*self.domain.dimension)))

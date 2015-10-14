@@ -9,6 +9,7 @@ import numpy
 
 signal = lambda ssx, *args, **kwargs: lambda *x, **y: ssx(*args, **kwargs)
 
+
 class CommandQueue(list):
     """
     simple command queue structure.
@@ -57,3 +58,5 @@ class Event(list):
         """
         for l in self:
             l(*args, **kwargs)
+
+            

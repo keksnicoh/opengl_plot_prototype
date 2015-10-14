@@ -16,8 +16,7 @@ out             vec2 coord;
 in              vec4 fragment_color[4];
 
 uniform         mat4 mat_camera;
-uniform         float width = 0.02;
-uniform         vec2 plotplane_screensize;
+uniform         float width = 0.0075;
                 
                 vec2 p[4]; // verticies
                 vec2 t[2]; // tangents between 0-1, 2-3
@@ -43,8 +42,8 @@ void main(void)
     t[1] = normalize(normalize(p[3]-p[2]) + normalize(p[2]-p[1]));
     m[0] = vec2(-t[0].y, t[0].x);
     m[1] = vec2(-t[1].y, t[1].x);
-    l[0] = width/dot(m[0], n(p[0], p[1]));
-    l[1] = width/dot(m[1], n(p[1], p[2]));
+    l[0] = width/(0.0001+dot(m[0], n(p[0], p[1])));
+    l[1] = width/(0.0001+dot(m[1], n(p[1], p[2])));
 
     // emit
     color = fragment_color[0];

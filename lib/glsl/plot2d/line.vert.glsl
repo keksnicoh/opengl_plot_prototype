@@ -27,7 +27,7 @@ uniform     mat3 mat_domain;
 void main() {
     point_color = color;
 
-    transformed_vertex_position = mat_domain * vertex_position;
+    transformed_vertex_position = mat_domain * vec3(vertex_position.xy, 1);
 
     c = c_scale;
     x = transformed_vertex_position.x;

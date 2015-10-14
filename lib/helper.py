@@ -5,6 +5,7 @@ some generic helper functions
 """
 
 import os
+import struct
 BASE = os.path.dirname(os.path.abspath(__file__))
 
 def load_lib_file(relative_path):
@@ -12,3 +13,9 @@ def load_lib_file(relative_path):
         content = content_file.read()
 
     return content
+
+def hex_to_rgb(hexstr):
+    return [float(i)/255 for i in struct.unpack('BBB', hexstr.decode('hex'))]
+
+def hex_to_rgba(hexstr):
+    return [float(i)/255 for i in struct.unpack('BBBB', hexstr.decode('hex'))]

@@ -24,7 +24,7 @@ class GlApplication():
         self.initGlfw()
         GlApplication._dbg("load {}".format(colored('OPENGL_CORE_PROFILE 4.10', 'red')), '...')
         self.initGlCoreProfile()
-
+        self._initialized = False 
         root = logging.getLogger()
         root.setLevel(logging.DEBUG)
         ch = logging.StreamHandler(sys.stdout)
@@ -42,10 +42,7 @@ class GlApplication():
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    def run(self):
-        """
-        runs the application 
-        """
+    def init(self):
         # initialize windows
 
         pos_x = 50
@@ -66,6 +63,15 @@ class GlApplication():
         for window in self.windows:
             window.make_context()
             window.init()
+
+        self._initialized = True
+
+    def run(self):
+        """
+        runs the application 
+        """
+        if not self._initialized:
+            self.init()
 
         # main cycle
         while self.active():

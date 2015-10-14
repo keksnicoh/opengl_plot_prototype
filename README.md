@@ -15,3 +15,8 @@ to document the process this repo provides some plain demo
 codes (demos/) which can be executed by python -m demos.NAME. 
 each demo contains several notes about important things related
 to the implementation.
+
+images
+------
+first plots
+![Periodenverdopplung analytical for f(x) and f^2(x)](/firstplot.png)

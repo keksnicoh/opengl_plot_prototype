@@ -240,10 +240,10 @@ class Plotter(Controller):
             origin      = plot_camera.get_position()
 
             domain_matrix = graph.domain.get_transformation_matrix(
-                axis=(axis[0]*1.05, axis[1]*1.05),
-                origin=(origin[0]+0.025*axis[0],origin[1]+0.025*axis[1]),
-                #axis=(axis[0], axis[1]),
-                #origin=(origin[0],origin[1]),
+                #axis=(axis[0]*1.05, axis[1]*1.05),
+                #origin=(origin[0]+0.025*axis[0],origin[1]+0.025*axis[1]),
+                axis=(axis[0], axis[1]),
+                origin=(origin[0],origin[1]),
             )
 
             graph.program.use()

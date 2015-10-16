@@ -10,6 +10,7 @@ from lib.helper import load_lib_file, hex_to_rgba
 from lib.camera import Camera2d
 from lib.controller import Controller
 from lib.plot import axis 
+from lib.glfw import *
 
 import numpy 
 
@@ -70,6 +71,29 @@ class Plotter(Controller):
         self._render_graphs      = True
         self._graphs_initialized = False
         self._has_rendered       = False
+
+        self.on_keyboard.append(self.keyboard_callback)
+
+    def keyboard_callback(self, active, pressed):
+        update_camera = False
+        if GLFW_KEY_W in active:
+            self._plotframe.inner_camera.move(0, +.1)
+            update_camera = True
+            #self.camera_updated(self._plotframe.inner_camera)
+        if GLFW_KEY_A in active:
+            self._plotframe.inner_camera.move(.1)
+            update_camera = True
+            #self.camera_updated(self._plotframe.inner_camera)
+        if GLFW_KEY_S in active:
+            self._plotframe.inner_camera.move(0, -.1)
+            update_camera = True
+            #self.camera_updated(self._plotframe.inner_camera)
+        if GLFW_KEY_D in active:
+            self._plotframe.inner_camera.move(-.1)
+            update_camera = True
+
+        if update_camera:
+            self.camera_updated(self._plotframe.inner_camera)
 
     def get_plotframe_size(self):
         """
@@ -191,7 +215,8 @@ class Plotter(Controller):
             size[1] += self._axis_translation[0]
             self._xaxis_frame.size   = size
             self._xaxis_frame.update_camera(self.camera)
-            self._xaxis_frame.modelview.set_position(self._axis_space[1]-1, self.get_plotframe_size()[1]-self._axis_translation[0])
+
+            self._xaxis_frame.modelview.set_position(self._axis_space[1]-1, self.get_plotframe_size()[1]-2*self._axis_translation[0])
             self._xaxis_frame.update_modelview()
 
     def _update_yaxis(self):
@@ -201,6 +226,9 @@ class Plotter(Controller):
         if self._axis_space[1] > 0:
             size = self.get_yaxis_size()
             size[0] += self._axis_translation[1]
+            #size[0] += self._plotframe.inner_camera.get_position()[0]
+
+            translation = self._plotframe.inner_camera.get_position()[1]
             self._yaxis_frame.size   = size
             self._yaxis_frame.capture_size = self.get_yaxis_size()
             self._yaxis_frame.update_camera(self.camera)

@@ -76,13 +76,13 @@ class DynamicContinousDomain(Domain):
             return numpy.array([
                 axis[0],        0,              0,
                 0,              0,              0,
-                -origin[0],     0,              1,
+                -2*origin[0],     0,              1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_Y:
             return numpy.array([
-                0,              0,              0,
+                1,              0,              0,
                 0,              axis[1],        0,
-                0,              -origin[1],     1,
+                0,              0.5*axis[1]*origin[1],     1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_XY:
             return numpy.array([
@@ -118,19 +118,20 @@ class RealAxis(DynamicContinousDomain):
 
     for static mode you need to specify the interval explicit.
     """
-    def __init__(self, interval=[0,1], dynamic=True, length=1000):
+    def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
         """
         initializes the RealAxis Domain
         :param interval: the interval where data should spawned on
         :param dynamic: specify whether the interval will be automatically
                   fitted to plotspace. if True the interval
                   should be [0,1]
+        :param axis: specifies the axis to build vertex data (0=X-Axis, 1=Y-Axis)
         :param length: number of points 
         """
         data = numpy.zeros(length*2, dtype=numpy.float32)
         for i in range(0, length):
-            data[2*i] = interval[0]+interval[1]*float(i)/length
-            data[2*i+1] = 0
+            data[2*i+axis]   = interval[0]+interval[1]*float(i)/length
+            data[2*i+axis^1] = 0
 
         vbo = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
@@ -138,5 +139,7 @@ class RealAxis(DynamicContinousDomain):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         domain = Domain(vbo)
 
-        mode = DynamicContinousDomain.MODE_DYNAMIC_X if dynamic else DynamicContinousDomain.MODE_STATIC
+        dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
+        mode = dynamic_matrix() if dynamic else DynamicContinousDomain.MODE_STATIC
         DynamicContinousDomain.__init__(self, vbo, mode=mode)
+

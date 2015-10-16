@@ -140,3 +140,17 @@ class RealAxis(DynamicContinousDomain):
 
         mode = DynamicContinousDomain.MODE_DYNAMIC_X if dynamic else DynamicContinousDomain.MODE_STATIC
         DynamicContinousDomain.__init__(self, vbo, mode=mode)
+
+
+class RealAxisData(DynamicContinousDomain):
+
+    def __init__(self, data, dynamic=True):
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        domain = Domain(vbo)
+
+        mode = DynamicContinousDomain.MODE_DYNAMIC_X if dynamic else DynamicContinousDomain.MODE_STATIC
+        DynamicContinousDomain.__init__(self, vbo, mode=mode)
+

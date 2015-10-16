@@ -143,6 +143,9 @@ class GlWindow():
         self._glfw_window = None
         self._glfw_initialized = False
         self._active = True
+
+        self._keyboard_active = set()
+        self._keyboard_pressed = set()
         
     def init_glfw(self):
         """
@@ -162,6 +165,16 @@ class GlWindow():
         glfwSetScrollCallback(self._glfw_window, self.event_queue.queue(self.scroll_callback))
         glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
         glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
+        glfwSetKeyCallback(self._glfw_window, self.key_callback)
+
+    def key_callback(self, window, keycode, scancode, action, option):
+        if action == GLFW_PRESS:
+            self._keyboard_active.add(keycode)
+            self._keyboard_pressed.add((keycode, option))
+        elif action == GLFW_RELEASE:
+            self._keyboard_active.remove(keycode)
+        elif action == GLFW_REPEAT:
+            self._keyboard_pressed.add((keycode, option))
 
     def set_controller(self, controller):
         """
@@ -194,7 +207,11 @@ class GlWindow():
         glfwMakeContextCurrent(self._glfw_window)
         
     def cycle(self):
-        self.controller.cycle()
+        self.controller.cycle(**{
+            'keyboard_active': self._keyboard_active,
+            'keyboard_pressed': self._keyboard_pressed,
+        })
+        self._keyboard_pressed = set()
 
     def destroy(self):
         self.controller.on_destroy()

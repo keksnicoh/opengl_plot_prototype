@@ -5,7 +5,7 @@ from lib.plot import plotter2d
 import numpy 
 
 def plot2d(f, **kwargs):
-    window = GlWindow(400, 400, '2 cool quads 4 yolo')
+    window = GlWindow(600, 600, '2 cool quads 4 yolo')
     app = GlApplication()
     app.windows.append(window)
     plotter = plotter2d.Plotter(**kwargs)

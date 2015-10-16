@@ -17,6 +17,7 @@ class Controller():
         self.on_post_render = Event()
         self.on_render      = Event()
         self.on_cycle       = Event()
+        self.on_keyboard    = Event()
 
         self.on_pre_render.append(self.clear_gl)
 
@@ -34,8 +35,15 @@ class Controller():
         self.on_cycle()
         self.on_render(self)
 
-    def cycle(self):
+    def cycle(self, 
+        keyboard_active=set(),
+        keyboard_pressed=set()):
+
         self.on_pre_cycle()
+        if len(keyboard_pressed) or len(keyboard_active):
+            self.on_keyboard(keyboard_active, keyboard_pressed)
+
+
         self.on_pre_render()
         self.run()
         self.on_post_render()

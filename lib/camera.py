@@ -31,6 +31,12 @@ class Camera():
     def get_position(self):
         return self.position
 
+    def move(self, x=0, y=0, z=0):
+        self.position[0]+=x
+        self.position[1]+=y
+        self.position[2]+=z
+        self.on_change_matrix(self)
+
     def get_scaling(self):
         return self.scaling
 

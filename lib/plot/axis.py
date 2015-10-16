@@ -33,10 +33,13 @@ class Scale():
         
 
     def init(self):
+
         unit_size = float(self.unit)/self._scale_camera.get_scaling()[self._axis]
         capture_size = [0,0]
         capture_size[self._axis] = int(round(unit_size*float(self._initial_size[self._axis]), 0))
         capture_size[self._axis^1] = self.size[self._axis^1]
+
+        print('INIT', capture_size)
         frame = window.Framebuffer(
             camera=self.camera,
             screensize=self.size,  
@@ -68,22 +71,22 @@ class Scale():
             data[0] = .0001
             data[1] = 0
             data[2] = .0001
-            data[3] = 25
+            data[3] = 11
 
             subunit = float(self.unit)/self.subunits
             for i in range(1, self.subunits):
                 data[4*i+0] = subunit*i
                 data[4*i+1] = 5
                 data[4*i+2] = subunit*i
-                data[4*i+3] = 15    
+                data[4*i+3] = 9    
         else:
-            data[0+0] = 30
+            data[0+0] = 39
             data[1-0] = .999
             data[2+0] = 50
             data[3-0] = .999
             subunit = float(self.unit)/self.subunits
             for i in range(1, self.subunits):
-                data[4*i+0] = 35
+                data[4*i+0] = 41
                 data[4*i+1] = subunit*i
                 data[4*i+2] = 45
                 data[4*i+3] = subunit*i   
@@ -114,20 +117,27 @@ class Scale():
     def update_camera(self, camera):
         self._frame.update_camera(camera)
 
+        position = self._scale_camera.get_position()
         if self._axis == 1:
             camera = self._frame.camera
             size = camera.screensize 
             initial = camera.initial_screensize
             diff = initial[1]-size[1]
-            self._frame.screen_translation = [0,+0.5*diff]
-
+            translation = 0.5*self.size[1]*position[1]
+            self._frame.screen_translation = [0,+0.5*diff+translation]
+        if self._axis == 0:
+            self._frame.screen_translation[0] = -(0.5*self.size[0]*position[0])%self._frame.capture_size[0]
     def update_modelview(self):
         self._frame.modelview = self.modelview
         self._frame.update_modelview()
 
     def render(self):
         if not self._last_size == self.size:
-            self.initialized = False
+            self._frame.screensize = self.size
+            self._frame.init_screen()
+            self._last_size = self.size 
+            print(self.size)
+
         if not self.initialized:
             self.init()
         if not self._frame.has_captured():

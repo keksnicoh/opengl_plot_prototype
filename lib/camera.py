@@ -8,11 +8,13 @@ class Camera():
         self.position = [0,0,0]
         self.scaling = None
         self.on_change_matrix = Event()
-
+        self._zoom = 1
 
         self.set_base_matrix()
         self.set_scaling(scaling)
-        
+    
+    def zoom(self, zoom=1.1):
+        self._zoom *= zoom
 
     def set_scaling(self, scaling):
         if scaling is None:
@@ -23,7 +25,8 @@ class Camera():
 
     def set_screensize_unit(self, screensize_unit):
         self.screensize_unit = screensize_unit
-
+    def get_zoom(self):
+        return self._zoom
     def set_position(self, x=0, y=0, z=0):
         self.position = [x,y,z]
         self.on_change_matrix(self)
@@ -38,7 +41,11 @@ class Camera():
         self.on_change_matrix(self)
 
     def get_scaling(self):
-        return self.scaling
+        return (
+            float(self.scaling[0])/self._zoom,
+            float(self.scaling[1])/self._zoom
+        )
+
 
     def set_base_matrix(self, matrix=None):
         if matrix is None:
@@ -48,8 +55,8 @@ class Camera():
 
     def get_screen_scaling(self):
         return (
-            float(self.scaling[0])/(float(self.initial_screensize[0])/(self.screensize[0])),
-            float(self.scaling[1])/(float(self.initial_screensize[1])/(self.screensize[1]))
+            float(self.scaling[0])/(float(self.initial_screensize[0])/(self.screensize[0]))/self._zoom,
+            float(self.scaling[1])/(float(self.initial_screensize[1])/(self.screensize[1]))/self._zoom,
         )
 
 
@@ -82,9 +89,10 @@ class Camera2d(Camera):
 
     def get_matrix(self):
         screen_factor = self._screen_factor()
+        scaling = self.get_scaling()
         return numpy.dot(numpy.array([
-            screen_factor[0]/self.scaling[0], 0, 0, 0,
-            0, -screen_factor[1]/self.scaling[1], 0, 0,
+            screen_factor[0]/scaling[0], 0, 0, 0,
+            0, -screen_factor[1]/scaling[1], 0, 0,
             0, 0, 1, 0,
             -1.0 + self.position[0], 1.0 + self.position[1], self.position[2], 1,
         ]).reshape(4,4), self._base_matrix.reshape(4,4)).flatten()

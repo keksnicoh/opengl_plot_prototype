@@ -40,12 +40,15 @@ DEFAULT_COLORS = {
 }
 
 class Plotter(Controller):
+    KEY_TRANSLATION_SPEED = 0.1
+    KEY_ZOOM_SPEED = 0.02
+
     def __init__(self, 
         camera=None, 
         axis=[1,1], 
         origin=[0,-1],
         axis_units=[1,1],
-        axis_subunits=[10,10],
+        axis_subunits=[9,9],
         color_scheme=DEFAULT_COLORS
     ):
         Controller.__init__(self, camera)
@@ -77,21 +80,26 @@ class Plotter(Controller):
     def keyboard_callback(self, active, pressed):
         update_camera = False
         if GLFW_KEY_W in active:
-            self._plotframe.inner_camera.move(0, +.1)
+            self._plotframe.inner_camera.move(0, +self.KEY_TRANSLATION_SPEED)
             update_camera = True
             #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_A in active:
-            self._plotframe.inner_camera.move(.1)
+            self._plotframe.inner_camera.move(self.KEY_TRANSLATION_SPEED)
             update_camera = True
             #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_S in active:
-            self._plotframe.inner_camera.move(0, -.1)
+            self._plotframe.inner_camera.move(0, -self.KEY_TRANSLATION_SPEED)
             update_camera = True
             #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_D in active:
-            self._plotframe.inner_camera.move(-.1)
+            self._plotframe.inner_camera.move(-self.KEY_TRANSLATION_SPEED)
             update_camera = True
-
+        if GLFW_KEY_SPACE in active:
+            zoom = 1+(-1 if GLFW_KEY_LEFT_SHIFT in active else 1)*self.KEY_ZOOM_SPEED
+            translation = self._plotframe.inner_camera.get_position()
+            self._plotframe.inner_camera.zoom(zoom)
+            self._plotframe.inner_camera.move((zoom-1)*translation[0])
+            update_camera = True
         if update_camera:
             self.camera_updated(self._plotframe.inner_camera)
 
@@ -100,8 +108,8 @@ class Plotter(Controller):
         returns the absolute size of the plotframe
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]), 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0])
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-2*self._axis_space[1]), 
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-2*self._axis_space[0])
         ]
 
     def get_xaxis_size(self):
@@ -109,7 +117,7 @@ class Plotter(Controller):
         returns the absolute size of x axis
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]), 
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-2*self._axis_space[1]), 
             self._axis_space[0]
         ]
 
@@ -119,7 +127,7 @@ class Plotter(Controller):
         """
         return [
             self._axis_space[1], 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0])
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-2*self._axis_space[0]) 
         ]
 
     def init(self):
@@ -138,7 +146,7 @@ class Plotter(Controller):
         )
 
         plotframe.init()
-        plotframe.modelview.set_position(self._axis_space[1], 0)
+        plotframe.modelview.set_position(self._axis_space[1], self._axis_space[1])
         plotframe.update_modelview()
 
         # setup plotplane camera
@@ -212,11 +220,11 @@ class Plotter(Controller):
         """
         if self._axis_space[0] > 0:
             size = self.get_xaxis_size()
-            size[1] += self._axis_translation[0]
+            #size[1] += self._axis_translation[0]
             self._xaxis_frame.size   = size
             self._xaxis_frame.update_camera(self.camera)
 
-            self._xaxis_frame.modelview.set_position(self._axis_space[1]-1, self.get_plotframe_size()[1]-2*self._axis_translation[0])
+            self._xaxis_frame.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[0])
             self._xaxis_frame.update_modelview()
 
     def _update_yaxis(self):
@@ -225,16 +233,16 @@ class Plotter(Controller):
         """
         if self._axis_space[1] > 0:
             size = self.get_yaxis_size()
-            size[0] += self._axis_translation[1]
+            #size[0] += self._axis_translation[1]
             #size[0] += self._plotframe.inner_camera.get_position()[0]
 
             translation = self._plotframe.inner_camera.get_position()[1]
             self._yaxis_frame.size   = size
             self._yaxis_frame.capture_size = self.get_yaxis_size()
-            self._yaxis_frame.update_camera(self.camera)
-            self._yaxis_frame.modelview.set_position(self._axis_translation[1],1)
+            
+            self._yaxis_frame.modelview.set_position(self._axis_translation[1],self._axis_space[0])
             self._yaxis_frame.update_modelview()       
-
+            self._yaxis_frame.update_camera(self.camera)
     def _update_plotframe_camera(self):
         """
         updates plotframe camera
@@ -243,7 +251,7 @@ class Plotter(Controller):
         self._plotframe.capture_size = self.get_plotframe_size()
         self._plotframe.update_camera(self.camera)
         self._plotframe.inner_camera.set_screensize(self.get_plotframe_size())
-
+      
     def camera_updated(self, camera):
         """
         updates cameras and modelview of axis and plotplane
@@ -277,6 +285,7 @@ class Plotter(Controller):
             graph.program.use()
             graph.program.uniform('mat_camera', plot_camera.get_matrix())
             graph.program.uniform('mat_domain', domain_matrix)
+            graph.program.uniform('zoom', plot_camera.get_zoom())
             graph.program.unuse() 
 
     def run(self):
@@ -338,7 +347,7 @@ DEBUG_COLORS = {
 
 DARK_COLORS = {
     'bgcolor'              : '000000ff',
-    'plotplane-bgcolor'    : '020609ff',
+    'plotplane-bgcolor'    : '02050eff',
     'plotplane-bordercolor': 'FF9900ff',
     'xaxis-bgcolor'        : '020609ff',
     'yaxis-bgcolor'        : '020609ff',
@@ -349,9 +358,9 @@ DARK_COLORS = {
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : '000000ff',
     'graph-colors': [
-        'FF0066ff',
-        '007A00ff',
-        '33CCFFff',
+        'FF000099',
+        '00ff0099',
+        '0000ff99',
     ]
 }
 

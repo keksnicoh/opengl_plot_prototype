@@ -75,11 +75,11 @@ class DynamicContinousDomain(Domain):
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_X:
             return numpy.array([
                 axis[0],        0,              0,
-                0,              0,              0,
-                -2*origin[0],     0,              1,
+                0,              1,              0,
+                -0.5*axis[0]*origin[0],     0,              1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_Y:
-            return numpy.array([
+           return numpy.array([
                 1,              0,              0,
                 0,              axis[1],        0,
                 0,              0.5*axis[1]*origin[1],     1,
@@ -88,7 +88,7 @@ class DynamicContinousDomain(Domain):
             return numpy.array([
                 axis[0],        0,              0,
                 0,              axis[1],        0,
-                -origin[0],     -origin[1],     1,
+                -0.5*axis[0]*origin[0],     -0.5*axis[1]*origin[1],     1,
             ], dtype=numpy.float32)
         else:
             raise ValueError('mode must be either {}'.format(' or '.join([
@@ -142,4 +142,8 @@ class RealAxis(DynamicContinousDomain):
         dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
         mode = dynamic_matrix() if dynamic else DynamicContinousDomain.MODE_STATIC
         DynamicContinousDomain.__init__(self, vbo, mode=mode)
+
+class Interval(RealAxis):
+    def __init__(self, interval=[0,1]):
+        RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
 

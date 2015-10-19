@@ -13,3 +13,28 @@ def plot2d(f, **kwargs):
     app.init()
     f(plotter)
     app.run()
+
+
+def plot2dMulti(fs, **kwargs):
+
+    windows = []
+    for x in xrange(len(fs)):
+        windows.append(GlWindow(600, 600, 'Number %d' % x))
+
+    app = GlApplication()
+
+    plotters = []
+    for window in windows:
+        app.windows.append(window)
+        plotter = plotter2d.Plotter(**kwargs)
+        plotters.append(plotter)
+        window.set_controller(plotter)
+
+    app.init()
+
+    for x in xrange(len(fs)):
+        f = fs[x]
+        plotter = plotters[x]
+        f(plotter)
+
+    app.run()

@@ -10,7 +10,12 @@ from glfw import *
 from termcolor import colored
 import logging 
 import sys
+
 class GlApplication():
+
+    WINDOW_CURRENT = None
+    DEBUG = False 
+    
     """
     initializes opengl & glfw. handles glfw windows
     and route events to windows
@@ -59,7 +64,6 @@ class GlApplication():
         GlApplication._dbg('  + Renderer           {}'.format(colored(glGetString(GL_RENDERER), 'cyan')))
         GlApplication._dbg('  + GLFW3              {}'.format(colored(glfwGetVersion(), 'cyan')))
         GlApplication._dbg("application is ready to use.", 'OK')
-        
         for window in self.windows:
             window.make_context()
             window.init()
@@ -155,17 +159,21 @@ class GlWindow():
         if not self._glfw_window:
             raise RuntimeError('glfw.CreateWindow() error')
         self._glfw_initialized = True
-
+        self.glspecs = {
+            'max_texture_size': glGetIntegerv( GL_MAX_TEXTURE_SIZE)
+        }
     def init(self):
         """
         initializes controller and events 
         """
         self.controller.init()
-        glfwMakeContextCurrent(self._glfw_window)
+        self.make_context()
         glfwSetScrollCallback(self._glfw_window, self.event_queue.queue(self.scroll_callback))
         glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
         glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
         glfwSetKeyCallback(self._glfw_window, self.key_callback)
+
+
 
     def key_callback(self, window, keycode, scancode, action, option):
         if action == GLFW_PRESS:
@@ -205,6 +213,7 @@ class GlWindow():
 
     def make_context(self):
         glfwMakeContextCurrent(self._glfw_window)
+        GlApplication.WINDOW_CURRENT = self
         
     def cycle(self):
         self.controller.cycle(**{

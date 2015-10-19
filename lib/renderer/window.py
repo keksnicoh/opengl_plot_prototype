@@ -9,7 +9,9 @@ from lib.camera import Camera2d
 from lib import matrix
 from lib import glutil
 from lib.helper import load_lib_file
-
+from lib.application import GlApplication
+from lib.errors import GlError
+from lib.matrix import ModelView
 from OpenGL.GL import * 
 import numpy
 import logging
@@ -27,6 +29,7 @@ class Framebuffer(renderer.Renderer):
         capture_size=None, 
         screen_mode=SCREEN_MODE_STRECH,
         inner_camera=None, 
+        modelview=None,
         clear_color=[0,0,0,1],
         border=None):
         """
@@ -46,6 +49,7 @@ class Framebuffer(renderer.Renderer):
         self.program            = None
         self.screen_translation = [0,0]
         self.border             = border
+        self.modelview          = modelview or ModelView()
 
         self._rgb_texture_id          = None 
         self._framebuffer_id          = None 
@@ -57,6 +61,7 @@ class Framebuffer(renderer.Renderer):
         self._texture_matrix_changed  = True
         self._has_captured            = False
         self._last_screen_translation = None
+        self.__max_texture_size = glGetIntegerv( GL_MAX_TEXTURE_SIZE)
 
     def init(self):
         """
@@ -74,7 +79,6 @@ class Framebuffer(renderer.Renderer):
         self.init_screen()
 
         self.update_camera(self.camera)
-        self.modelview = matrix.ModelView()
         self.update_modelview()
 
     def init_screen(self):
@@ -127,6 +131,12 @@ class Framebuffer(renderer.Renderer):
         """
         initialized framebuffer & texture
         """
+        if GlApplication.WINDOW_CURRENT.glspecs['max_texture_size']**2 > self.capture_size[0]*self.capture_size[1]:
+            raise GlError('capture {} size exceeds max_texutre_size {}'.format(
+                GlApplication.WINDOW_CURRENT.glspecs['max_texture_size'],
+                self.capture_size
+            ))
+
         self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=[
             # those filters enable translation on 
             # texture without anyoing blur effects.
@@ -178,6 +188,8 @@ class Framebuffer(renderer.Renderer):
         self.program.use()
         self.program.uniform('mat_modelview', self.modelview)
         self.program.unuse()
+        if self.border is not None:
+            self.border.set_matricies(self.camera.get_matrix(), self.modelview)
 
     def update_camera(self, camera):
         """
@@ -186,6 +198,8 @@ class Framebuffer(renderer.Renderer):
         self.program.use()
         self.program.uniform('mat_camera', self.get_camera().get_matrix())
         self.program.unuse()
+        if self.border is not None:
+            self.border.set_matricies(self.camera.get_matrix(), self.modelview)
 
     def screen_has_changed(self):
         """
@@ -279,10 +293,15 @@ class PixelBorder():
         vertex_position = numpy.array([
             0,            screensize[1], 
             0,            0, 
+
+            0,            0, 
             screensize[0], 0, 
+
             screensize[0], 0, 
-            screensize[0], screensize[1],
-            0,            screensize[1], 
+            screensize[0], screensize[1], 
+
+            screensize[0], screensize[1], 
+            0, screensize[1],
         ], dtype=numpy.float32)
 
         self._vao = glGenVertexArrays(1)

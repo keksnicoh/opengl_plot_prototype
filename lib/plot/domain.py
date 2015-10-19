@@ -7,7 +7,6 @@ API methods:
  - get_length() should return number of points to plot
  - get_transformation_matrix() should return a matrix to transform
       domain data within the vertex shaders
-
 :author: Nicolas 'keksnicoh' Heimann 
 """
 from OpenGL.GL import *
@@ -33,7 +32,6 @@ class DynamicContinousDomain(Domain):
     """
     domain for continuous data sets. 
     this domain provides several transformation modes MODE_*. 
-
     MODE_STATIC:
       the domain is static and wont be fitted to plot plane 
     MODE_DYNAMIC_X:
@@ -45,7 +43,6 @@ class DynamicContinousDomain(Domain):
       see: MODE_DYNAMIC_X
     MODE_DYNAMIC_XY:
       both MODE_DYNAMIC_X and MODE_DYNAMIC_Y are active. 
-
     """
     MODE_STATIC     = 1
     MODE_DYNAMIC_X  = 2
@@ -75,11 +72,11 @@ class DynamicContinousDomain(Domain):
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_X:
             return numpy.array([
                 axis[0],        0,              0,
-                0,              0,              0,
-                -2*origin[0],     0,              1,
+                0,              1,              0,
+                -0.5*axis[0]*origin[0],     0,              1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_Y:
-            return numpy.array([
+           return numpy.array([
                 1,              0,              0,
                 0,              axis[1],        0,
                 0,              0.5*axis[1]*origin[1],     1,
@@ -88,7 +85,7 @@ class DynamicContinousDomain(Domain):
             return numpy.array([
                 axis[0],        0,              0,
                 0,              axis[1],        0,
-                -origin[0],     -origin[1],     1,
+                -0.5*axis[0]*origin[0],     -0.5*axis[1]*origin[1],     1,
             ], dtype=numpy.float32)
         else:
             raise ValueError('mode must be either {}'.format(' or '.join([
@@ -101,21 +98,17 @@ class DynamicContinousDomain(Domain):
 class RealAxis(DynamicContinousDomain):
     """
     real axis domain.
-
     usage:
       1) plot sin(x) for whole x axis
       domain = RealAxis()
       graph = Line2d(domain, "y=sin(x)")
-
       2) plot sin(x) for a fixed interval.
       domain = RealAxis([0,2], dynamic=False)
       graph = Line2d(domain, "y=sin(x)")
-
     if dynamic=True then this method will transform
     its data to the shown plot plane, the boundaries does
     not matter at all. this is why in dynamic mode an interval
     [0,1] is chosen.
-
     for static mode you need to specify the interval explicit.
     """
     def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
@@ -128,6 +121,31 @@ class RealAxis(DynamicContinousDomain):
         :param axis: specifies the axis to build vertex data (0=X-Axis, 1=Y-Axis)
         :param length: number of points 
         """
+        data = numpy.zeros(length*2, dtype=numpy.float32)
+        for i in range(0, length):
+            data[2*i+axis]   = interval[0]+interval[1]*float(i)/length
+            data[2*i+axis^1] = 0
+
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        domain = Domain(vbo)
+
+        dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
+        mode = dynamic_matrix() if dynamic else DynamicContinousDomain.MODE_STATIC
+        DynamicContinousDomain.__init__(self, vbo, mode=mode)
+
+class Interval(RealAxis):
+    def __init__(self, interval=[0,1]):
+        RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
+
+
+
+class RealAxisDual(DynamicContinousDomain):
+    def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
+
+        
         self._interval = interval
         self._dynamic = dynamic
         self._axis = axis 
@@ -135,14 +153,9 @@ class RealAxis(DynamicContinousDomain):
         self._vbo_id = None
         self.dimension = 2
 
+
         dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if self._axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
         self.mode = dynamic_matrix() if self._dynamic else DynamicContinousDomain.MODE_STATIC
-
-    def get_vbo(self):
-        if self._vbo_id is None:
-            self._init_vbo()
-
-        return Domain.get_vbo(self)
 
     def _init_vbo(self):
         data = numpy.zeros(self._length*2, dtype=numpy.float32)
@@ -157,3 +170,19 @@ class RealAxis(DynamicContinousDomain):
         domain = Domain(vbo)
 
         self._vbo_id = vbo
+
+    def get_vbo(self):
+        if self._vbo_id is None:
+            self._init_vbo()
+
+        return Domain.get_vbo(self)
+
+
+
+
+
+
+
+
+
+

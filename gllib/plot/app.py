@@ -1,6 +1,6 @@
-from lib.application import GlApplication, GlWindow
-from lib.controller import Controller
-from lib.plot import plotter2d
+from gllib.application import GlApplication, GlWindow
+from gllib.controller import Controller
+from gllib.plot import plotter2d
 
 import numpy 
 

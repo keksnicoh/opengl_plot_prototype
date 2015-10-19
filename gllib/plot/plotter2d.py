@@ -45,8 +45,8 @@ class Plotter(Controller):
 
     def __init__(self, 
         camera=None, 
-        axis=[1,1], 
-        origin=[0,-1],
+        axis=[2,2], 
+        origin=[1,-1],
         axis_units=[1,1],
         axis_subunits=[9,9],
         color_scheme=DEFAULT_COLORS

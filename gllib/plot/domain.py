@@ -21,7 +21,7 @@ class Domain():
     def get_vbo(self):
         return self._vbo_id
     def get_transformation_matrix(self, axis, origin):
-        return numpy.identity(4).flatten()
+        return numpy.identity(3).flatten()
     def get_length(self):
         glBindBuffer(GL_ARRAY_BUFFER, self._vbo_id)
         size = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE)
@@ -85,7 +85,7 @@ class DynamicContinousDomain(Domain):
             return numpy.array([
                 axis[0],        0,              0,
                 0,              axis[1],        0,
-                -0.5*axis[0]*origin[0],     -0.5*axis[1]*origin[1],     1,
+                -0.5*axis[0]*origin[0],  0.5*axis[1]*origin[1],     1,
             ], dtype=numpy.float32)
         else:
             raise ValueError('mode must be either {}'.format(' or '.join([

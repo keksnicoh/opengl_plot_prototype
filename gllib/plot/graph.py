@@ -17,7 +17,7 @@ class Line2d(Graph):
     """
     line plotter
     """
-    def __init__(self, domain, kernel, color=None):
+    def __init__(self, domain, kernel='', color=None):
         Graph.__init__(self, domain)
         self.color = color
         self._kernel = kernel

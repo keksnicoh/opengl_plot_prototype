@@ -5,9 +5,9 @@ with controller and window framework
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from lib.application import GlApplication, GlWindow
-from lib.controller import Controller
-from lib.renderer.primitives import SimplePrimitivesRenderer
+from gllib.application import GlApplication, GlWindow
+from gllib.controller import Controller
+from gllib.renderer.primitives import SimplePrimitivesRenderer
 
 from OpenGL.GL import *
 

@@ -3,15 +3,16 @@
 :author: Nicolas 'keksnicoh' Heimann 
 """
 
-from lib.renderer import renderer
-from lib.shader import Program, Shader 
-from lib.camera import Camera2d
-from lib import matrix
-from lib import glutil
-from lib.helper import load_lib_file
-from lib.application import GlApplication
-from lib.errors import GlError
-from lib.matrix import ModelView
+from gllib.renderer import renderer
+from gllib.shader import Program, Shader 
+from gllib.camera import Camera2d
+from gllib import matrix
+from gllib import glutil
+from gllib.helper import load_lib_file
+from gllib.application import GlApplication
+from gllib.errors import GlError
+from gllib.matrix import ModelView
+from gllib.gltype import *
 from OpenGL.GL import * 
 import numpy
 import logging
@@ -85,7 +86,7 @@ class Framebuffer(renderer.Renderer):
         """
         init vbo and stuff from the screen plane
         """
-        logging.debug('initialite window.Framebuffer screen %s', self)
+        #logging.debug('initialite window.Framebuffer screen %s', self)
 
         vertex_position = numpy.array([
             0,                  self.screensize[1], 
@@ -171,7 +172,7 @@ class Framebuffer(renderer.Renderer):
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._framebuffer_id)
         glClearColor(*self.clear_color)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
-        glViewport(0, 0, *self.capture_size)
+        glViewport(0, 0, *ivec2(self.capture_size))
 
     def unuse(self):
         """

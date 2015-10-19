@@ -18,8 +18,8 @@ given shaders.
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from lib.errors import GlError
-from lib.gltype import *
+from gllib.errors import GlError
+from gllib.gltype import *
 
 import re
 from OpenGL.GL import * 

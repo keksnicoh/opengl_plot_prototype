@@ -1,5 +1,5 @@
-from lib.shader import * 
-from lib.helper import load_lib_file
+from gllib.shader import * 
+from gllib.helper import load_lib_file
 from OpenGL.GL import * 
 
 class Graph():

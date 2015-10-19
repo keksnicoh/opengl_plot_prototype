@@ -4,9 +4,9 @@ renderers for primitives.
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from lib.renderer.renderer import Renderer 
-from lib.shader import Shader, Program
-from lib.helper import load_lib_file
+from gllib.renderer.renderer import Renderer 
+from gllib.shader import Shader, Program
+from gllib.helper import load_lib_file
 from OpenGL.GL import * 
 import numpy
 

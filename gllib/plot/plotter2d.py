@@ -4,13 +4,13 @@ plot2d
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from lib.renderer import renderer, primitives, window
-from lib.shader import Shader, Program
-from lib.helper import load_lib_file, hex_to_rgba
-from lib.camera import Camera2d
-from lib.controller import Controller
-from lib.plot import axis 
-from lib.glfw import *
+from gllib.renderer import renderer, primitives, window
+from gllib.shader import Shader, Program
+from gllib.helper import load_lib_file, hex_to_rgba
+from gllib.camera import Camera2d
+from gllib.controller import Controller
+from gllib.plot import axis 
+from gllib.glfw import *
 
 import numpy 
 
@@ -40,7 +40,7 @@ DEFAULT_COLORS = {
 }
 
 class Plotter(Controller):
-    KEY_TRANSLATION_SPEED = 0.1
+    KEY_TRANSLATION_SPEED = 0.05
     KEY_ZOOM_SPEED = 0.02
 
     def __init__(self, 
@@ -98,7 +98,7 @@ class Plotter(Controller):
             zoom = 1+(-1 if GLFW_KEY_LEFT_SHIFT in active else 1)*self.KEY_ZOOM_SPEED
             translation = self._plotframe.inner_camera.get_position()
             self._plotframe.inner_camera.zoom(zoom)
-            self._plotframe.inner_camera.move((zoom-1)*translation[0])
+            #self._plotframe.inner_camera.move((zoom-1)*translation[0])
             update_camera = True
         if update_camera:
             self.camera_updated(self._plotframe.inner_camera)

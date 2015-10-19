@@ -1,7 +1,7 @@
-from lib.renderer import window
-from lib.matrix import ModelView
-from lib.shader import *
-from lib.helper import load_lib_file
+from gllib.renderer import window
+from gllib.matrix import ModelView
+from gllib.shader import *
+from gllib.helper import load_lib_file
 from OpenGL.GL import * 
 import numpy
 class Scale():
@@ -47,7 +47,6 @@ class Scale():
                 if 2*size*f > density:
                     break
                 f *= 2
-        print(self._axis, f)
         return f
 
     def init(self):
@@ -83,10 +82,9 @@ class Scale():
         # create framebuffer for one scale unit. 
         unit_size    = float(self.unit)/self._scale_camera.get_scaling()[self._axis]
         capture_size = [0,0]
-        capture_size[self._axis]   = unit_size*float(self._initial_size[self._axis])
+        capture_size[self._axis]   = float(unit_size)*float(self._initial_size[self._axis])
         capture_size[self._axis^1] = self.size[self._axis^1]
         capture_size[self._axis]   *= self.unit_density_factor(capture_size[self._axis])
-        capture_size[self._axis]   = int(round(capture_size[self._axis], 0))
 
         frame = window.Framebuffer(
             camera       = self.camera,
@@ -169,15 +167,12 @@ class Scale():
 
 
 
-
-
     def update_camera(self, camera):
         """
         updates the frame and capture camare to
         adjust zooming and translation of the axis units and
         position of the axis
         """
-
         # scale the axis size to window size.
         # no translation is done here. do translation (e.g. bottom fixed)
         # from outside.
@@ -197,6 +192,7 @@ class Scale():
         if self._axis == 0:
             translation = 0.5*self.size[0]*position[0]
             self._frame.screen_translation[0] = -translation%self._frame.capture_size[0]
+
 
     def update_modelview(self):
         """

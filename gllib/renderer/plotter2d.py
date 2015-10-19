@@ -4,11 +4,11 @@ plot2d
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from lib.renderer import renderer, primitives, window
-from lib.shader import Shader, Program
-from lib.helper import load_lib_file
-from lib.camera import Camera2d
-from lib.plot.axis import Scale
+from gllib.renderer import renderer, primitives, window
+from gllib.shader import Shader, Program
+from gllib.helper import load_lib_file
+from gllib.camera import Camera2d
+from gllib.plot.axis import Scale
 import numpy 
 
 from OpenGL.GL import *

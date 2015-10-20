@@ -26,7 +26,7 @@ class Domain():
         glBindBuffer(GL_ARRAY_BUFFER, self._vbo_id)
         size = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
-        return size
+        return float(size)
 
 class DynamicContinousDomain(Domain):
     """
@@ -141,7 +141,14 @@ class Interval(RealAxis):
         RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
 
 
-
+class NumpyDomain(Domain):
+    def __init__(self, data):
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        Domain.__init__(self, vbo)
+         
 class RealAxisDual(DynamicContinousDomain):
     def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
 

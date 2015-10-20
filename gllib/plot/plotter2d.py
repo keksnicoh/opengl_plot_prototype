@@ -30,12 +30,12 @@ DEFAULT_COLORS = {
     'yaxis-fontcolor'      : '000000ff',
     'graph-colors': [
         '000000ff',
-        'ff0000ff',
-        '00ff00ff',
-        '0000ffff',
-        'ffff00ff',
-        'ff00ffff',
-        '00ffffff',
+        'aa0000ff',
+        '00aa00ff',
+        '0000aaff',
+        'aaaa00ff',
+        'aa00aaff',
+        '00aaaaff',
     ]
 }
 
@@ -358,9 +358,11 @@ DARK_COLORS = {
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : '000000ff',
     'graph-colors': [
-        'FF000099',
-        '00ff0099',
-        '0000ff99',
+        'FF0000bb',
+        '00ff00bb',
+        '0000ffbb',
+        'ff00ffbb',
+        '00ffffbb',
     ]
 }
 

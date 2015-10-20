@@ -16,7 +16,7 @@ out             vec2 coord;
 in              vec4 fragment_color[4];
 
 uniform         mat4 mat_camera;
-uniform         float width = 0.009;
+uniform         float width = 0.015;
 uniform         float zoom = 1;                
                 vec2 p[4]; // verticies
                 vec2 t[2]; // tangents between 0-1, 2-3

@@ -14,14 +14,16 @@ class Graph():
         pass
 
 class Line2d(Graph):
+    GEOMETRY_SHADER_WIDTH = 0.002
     """
     line plotter
     """
-    def __init__(self, domain, kernel='', color=None):
+    def __init__(self, domain, kernel='', color=None, width=1):
         Graph.__init__(self, domain)
         self.color = color
         self._kernel = kernel
         self.initialized = False 
+        self._width = width
 
     def init(self):
         """
@@ -68,6 +70,7 @@ class Line2d(Graph):
         self.program.use()
         self.program.uniform('color', self.color or [0,0,0,1])
         self.program.uniform('mat_domain', numpy.identity(4).flatten())
+        self.program.uniform('width', Line2d.GEOMETRY_SHADER_WIDTH*self._width)
         self.program.unuse()
 
         self.initialized = True

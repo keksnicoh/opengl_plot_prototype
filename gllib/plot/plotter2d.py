@@ -8,8 +8,10 @@ from gllib.renderer import renderer, primitives, window
 from gllib.shader import Shader, Program
 from gllib.helper import load_lib_file, hex_to_rgba
 from gllib.camera import Camera2d
+from gllib.application import GlApplication
 from gllib.controller import Controller
 from gllib.plot import axis 
+from gllib.renderer.primitives import SimplePrimitivesRenderer
 from gllib.glfw import *
 
 import numpy 
@@ -49,11 +51,15 @@ class Plotter(Controller):
         origin=[1,-1],
         axis_units=[1,1],
         axis_subunits=[9,9],
-        color_scheme=DEFAULT_COLORS
+        color_scheme=DEFAULT_COLORS,
+        graphs={}
     ):
         Controller.__init__(self, camera)
 
-        self.graphs               = {}
+        if GlApplication.DEBUG:
+            color_scheme = DEBUG_COLORS
+
+        self.graphs               = graphs or {}
         self.plot_camera          = None
         self._axis_translation    = (5, 5)
         self._axis_space          = (50, 50)
@@ -65,10 +71,10 @@ class Plotter(Controller):
 
         self.color_scheme = color_scheme
 
-        self._plotframe   = None
-        self._xaxis_frame = None
-        self._yaxis_frame = None
-        self._debug       = False
+        self._plotframe = None
+        self._xaxis     = None
+        self._yaxis     = None
+        self._debug     = False
 
         # states
         self._render_graphs      = True
@@ -76,21 +82,21 @@ class Plotter(Controller):
         self._has_rendered       = False
 
         self.on_keyboard.append(self.keyboard_callback)
-
+        self.on_pre_render.insert(0, self.pre_render)
+        self.on_cycle.append(self.check_graphs)
+        self.on_post_render.append(self.post_render)
+        self.on_render.append(self.render)
     def keyboard_callback(self, active, pressed):
         update_camera = False
         if GLFW_KEY_W in active:
             self._plotframe.inner_camera.move(0, +self.KEY_TRANSLATION_SPEED)
             update_camera = True
-            #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_A in active:
             self._plotframe.inner_camera.move(self.KEY_TRANSLATION_SPEED)
             update_camera = True
-            #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_S in active:
             self._plotframe.inner_camera.move(0, -self.KEY_TRANSLATION_SPEED)
             update_camera = True
-            #self.camera_updated(self._plotframe.inner_camera)
         if GLFW_KEY_D in active:
             self._plotframe.inner_camera.move(-self.KEY_TRANSLATION_SPEED)
             update_camera = True
@@ -98,7 +104,6 @@ class Plotter(Controller):
             zoom = 1+(-1 if GLFW_KEY_LEFT_SHIFT in active else 1)*self.KEY_ZOOM_SPEED
             translation = self._plotframe.inner_camera.get_position()
             self._plotframe.inner_camera.zoom(zoom)
-            #self._plotframe.inner_camera.move((zoom-1)*translation[0])
             update_camera = True
         if update_camera:
             self.camera_updated(self._plotframe.inner_camera)
@@ -163,7 +168,7 @@ class Plotter(Controller):
 
         # setup axis
         if self._axis_space[0] > 0:
-            self._xaxis_frame = axis.Scale(
+            self._xaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
                 size         = self.get_xaxis_size(),
@@ -174,11 +179,11 @@ class Plotter(Controller):
                 linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
             )
-            self._xaxis_frame.init()
+            self._xaxis.init()
             self._update_xaxis()
 
         if self._axis_space[1] > 0:
-            self._yaxis_frame = axis.Scale(
+            self._yaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
                 size         = self.get_yaxis_size(),
@@ -189,11 +194,12 @@ class Plotter(Controller):
                 linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),
             )
-            self._yaxis_frame.init()
+            self._yaxis.init()
             self._update_yaxis()
 
         # parent controller initialization
         Controller.init(self)
+        self.init_graphs()
 
     def init_graphs(self):
         """
@@ -203,11 +209,13 @@ class Plotter(Controller):
         colors = self.color_scheme['graph-colors']
         colors_length = len(colors)
         graph_color_index = 0
+        initial_scaling = [self._plotframe.inner_camera.get_matrix()[0], self._plotframe.inner_camera.get_matrix()[5]]
         for graph in [g for g in self.graphs.values() if not g.initialized]:
             graph.init()
             if graph.color is None:
                 graph.program.use()
                 graph.program.uniform('color', hex_to_rgba(colors[graph_color_index%colors_length]))
+                graph.program.uniform('initial_scaling', initial_scaling)
                 graph.program.unuse()
                 graph_color_index+=1
 
@@ -219,30 +227,24 @@ class Plotter(Controller):
         updates camera and modelview of the x axis
         """
         if self._axis_space[0] > 0:
-            size = self.get_xaxis_size()
-            #size[1] += self._axis_translation[0]
-            self._xaxis_frame.size   = size
-            self._xaxis_frame.update_camera(self.camera)
+            self._xaxis.size = self.get_xaxis_size()
+            self._xaxis.update_camera(self.camera)
 
-            self._xaxis_frame.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[0])
-            self._xaxis_frame.update_modelview()
+            self._xaxis.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[0])
+            self._xaxis.update_modelview()
 
     def _update_yaxis(self):
         """
         updates camera and modelview of the y axis
         """
         if self._axis_space[1] > 0:
-            size = self.get_yaxis_size()
-            #size[0] += self._axis_translation[1]
-            #size[0] += self._plotframe.inner_camera.get_position()[0]
-
             translation = self._plotframe.inner_camera.get_position()[1]
-            self._yaxis_frame.size   = size
-            self._yaxis_frame.capture_size = self.get_yaxis_size()
+            self._yaxis.size = self.get_yaxis_size()
+            self._yaxis.capture_size = self.get_yaxis_size()
             
-            self._yaxis_frame.modelview.set_position(self._axis_translation[1],self._axis_space[0])
-            self._yaxis_frame.update_modelview()       
-            self._yaxis_frame.update_camera(self.camera)
+            self._yaxis.modelview.set_position(self._axis_translation[1],self._axis_space[0])
+            self._yaxis.update_modelview()       
+            self._yaxis.update_camera(self.camera)
     def _update_plotframe_camera(self):
         """
         updates plotframe camera
@@ -288,13 +290,21 @@ class Plotter(Controller):
             graph.program.uniform('zoom', plot_camera.get_zoom())
             graph.program.unuse() 
 
-    def run(self):
+    # controller action events
 
+    def pre_render(self):
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glClearColor(*hex_to_rgba(self.color_scheme['bgcolor']))
+
+    def post_render(self):
+        self._has_rendered = True
+
+    def check_graphs(self):
         if not self._graphs_initialized:
-            self.init_graphs()
+            self.init_graphs()  
 
-
-        # render axis if neccessary
+    def render(self):
         if self._render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
@@ -312,13 +322,12 @@ class Plotter(Controller):
             self._plotframe.unuse()
             self._render_graphs = False
 
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glClearColor(*hex_to_rgba(self.color_scheme['bgcolor']))
         self._plotframe.render()
-        self._yaxis_frame.render()
-        self._xaxis_frame.render()
-        self._has_rendered = True
+        self._yaxis.render()
+        self._xaxis.render()
+        
+
+        
 
 
 DEBUG_COLORS = {

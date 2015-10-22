@@ -27,12 +27,12 @@ class Framebuffer(renderer.Renderer):
     def __init__(self, 
         camera, 
         screensize, 
-        capture_size=None, 
-        screen_mode=SCREEN_MODE_STRECH,
-        inner_camera=None, 
-        modelview=None,
-        clear_color=[0,0,0,1],
-        border=None):
+        capture_size = None, 
+        screen_mode  = SCREEN_MODE_STRECH,
+        inner_camera = None, 
+        modelview    = None,
+        clear_color  = [0,0,0,1],
+        border       = None):
         """
         initializes attributes
         :param camera: camera instance 
@@ -62,20 +62,32 @@ class Framebuffer(renderer.Renderer):
         self._texture_matrix_changed  = True
         self._has_captured            = False
         self._last_screen_translation = None
-        self.__max_texture_size = glGetIntegerv( GL_MAX_TEXTURE_SIZE)
+        self.__max_texture_size = glGetIntegerv(GL_MAX_TEXTURE_SIZE)
+
+    def __del__(self):
+        """
+        Delete opengl data 
+        """
+        if self._rgb_texture_id is not None:
+            glDeleteTextures([self._rgb_texture_id])
+        if self._framebuffer_id is not None:
+            glDeleteFramebuffers([self._framebuffer_id])
 
     def init(self):
         """
         initializes shader program, framebuffer and plane vao/vbo
         """
-        program = Program()
-        vertex_shader = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/framewindow.vert.glsl'))
-        fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/framewindow.frag.glsl'))
-        program.shaders.append(vertex_shader)
-        program.shaders.append(fragment_shader)
-        program.link()
+        if self.program is None:
+            program         = Program()
+            vertex_shader   = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/framewindow.vert.glsl'))
+            fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/framewindow.frag.glsl'))
 
-        self.program = program
+            program.shaders.append(vertex_shader)
+            program.shaders.append(fragment_shader)
+            program.link()
+
+            self.program = program
+
         self.init_capturing()
         self.init_screen()
 
@@ -106,20 +118,28 @@ class Framebuffer(renderer.Renderer):
             0, 0
         ], dtype=numpy.float32)
 
-        self._vao = glGenVertexArrays(1)
-        vbo_frame = glGenBuffers(2)
-        
+        if self._vao is None:
+            self._vao = glGenVertexArrays(1)
+            self._vbo = glGenBuffers(2)
+            glBindVertexArray(self._vao)
+            glBindBuffer(GL_ARRAY_BUFFER, self._vbo[0])
+            glVertexAttribPointer(self.program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
+            glEnableVertexAttribArray(0)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+            glBindBuffer(GL_ARRAY_BUFFER, self._vbo[1])
+            glVertexAttribPointer(self.program.attributes['text_coord'], 2, GL_FLOAT, GL_FALSE, 0, None)
+            glEnableVertexAttribArray(1)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+            glBindVertexArray(0)
+
         glBindVertexArray(self._vao)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_frame[0])
+        glBindBuffer(GL_ARRAY_BUFFER, self._vbo[0])
         glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(vertex_position), vertex_position, GL_STATIC_DRAW)
-        glVertexAttribPointer(self.program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(0)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_frame[1])
+        glBindBuffer(GL_ARRAY_BUFFER, self._vbo[1])
         glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(tex_position), tex_position, GL_STATIC_DRAW)
-        glVertexAttribPointer(self.program.attributes['text_coord'], 2, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(1)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
@@ -138,14 +158,22 @@ class Framebuffer(renderer.Renderer):
                 self.capture_size
             ))
 
+        # cleanup if there was allready a texture
+        if self._rgb_texture_id is not None:
+            glDeleteTextures([self._rgb_texture_id])
+
         self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=[
             # those filters enable translation on 
             # texture without anyoing blur effects.
             (GL_TEXTURE_MAG_FILTER, GL_NEAREST),
-            (GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            (GL_TEXTURE_MIN_FILTER, GL_NEAREST),
+          #  (GL_TEXTURE_WRAP_S, GL_REPEAT),
+          #  (GL_TEXTURE_WRAP_T, GL_REPEAT),
         ])
 
-        self._framebuffer_id = glGenFramebuffers(1);
+        if self._framebuffer_id is None:
+            self._framebuffer_id = glGenFramebuffers(1);
+
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._framebuffer_id)
         glDrawBuffer(GL_COLOR_ATTACHMENT0)
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, self._rgb_texture_id, 0);
@@ -161,7 +189,7 @@ class Framebuffer(renderer.Renderer):
         keeps old opengl values and restores them 
         after finishing
         """
-        logging.debug('start using window.Framebuffer %s', self)
+        #logging.debug('start using window.Framebuffer %s', self)
   
         if self._last_capture_size != self.capture_size:
             self.init_capturing()
@@ -170,20 +198,28 @@ class Framebuffer(renderer.Renderer):
         self._outer_clear_value = glGetFloatv(GL_COLOR_CLEAR_VALUE)
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._framebuffer_id)
+        GlApplication.GL__ACTIVE_FRAMEBUFFER.append(self._framebuffer_id)
+
         glClearColor(*self.clear_color)
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glViewport(0, 0, *ivec2(self.capture_size))
+
+
 
     def unuse(self):
         """
         disable framebuffer and restore old opengl state
         """
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
+        GlApplication.GL__ACTIVE_FRAMEBUFFER.pop()
+        if len(GlApplication.GL__ACTIVE_FRAMEBUFFER):
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GlApplication.GL__ACTIVE_FRAMEBUFFER[-1])
+
         glClearColor(*self._outer_clear_value)
         glViewport(*self._outer_viewport)
 
         self._has_captured = True
-        logging.debug('stop using window.Framebuffer %s', self)
+        #logging.debug('stop using window.Framebuffer %s', self)
 
     def update_modelview(self):
         self.program.use()
@@ -261,10 +297,25 @@ class Framebuffer(renderer.Renderer):
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture (GL_TEXTURE_2D, self._rgb_texture_id)
-        
         glBindVertexArray(self._vao)
-        glDrawArrays(GL_TRIANGLES, 0, 6)
+        
+        if GlApplication.DEBUG:
+            self.program.uniform('mix_debug', 0.1)
+            self.program.uniform('color_debug', [1,1,0,0.7])
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+            self.program.uniform('mix_debug', 1)
+            self.program.uniform('color_debug', [0,0,1,1])
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            
+            self.program.uniform('mix_debug', 0)
+            self.program.uniform('color_debug', [0,0,0,0])
+        else:
+            glDrawArrays(GL_TRIANGLES, 0, 6)
+
         glBindVertexArray(0)
+ 
         self.program.unuse()
 
         if self.border is not None:

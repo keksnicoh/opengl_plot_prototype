@@ -111,6 +111,7 @@ class RealAxis(DynamicContinousDomain):
     [0,1] is chosen.
     for static mode you need to specify the interval explicit.
     """
+
     def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
         """
         initializes the RealAxis Domain
@@ -121,37 +122,6 @@ class RealAxis(DynamicContinousDomain):
         :param axis: specifies the axis to build vertex data (0=X-Axis, 1=Y-Axis)
         :param length: number of points 
         """
-        data = numpy.zeros(length*2, dtype=numpy.float32)
-        for i in range(0, length):
-            data[2*i+axis]   = interval[0]+interval[1]*float(i)/length
-            data[2*i+axis^1] = 0
-
-        vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        domain = Domain(vbo)
-
-        dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
-        mode = dynamic_matrix() if dynamic else DynamicContinousDomain.MODE_STATIC
-        DynamicContinousDomain.__init__(self, vbo, mode=mode)
-
-class Interval(RealAxis):
-    def __init__(self, interval=[0,1]):
-        RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
-
-
-class NumpyDomain(Domain):
-    def __init__(self, data):
-        vbo = glGenBuffers(1)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        Domain.__init__(self, vbo)
-         
-class RealAxisDual(DynamicContinousDomain):
-    def __init__(self, interval=[0,1], dynamic=True, axis=0, length=1000):
-
         
         self._interval = interval
         self._dynamic = dynamic
@@ -159,7 +129,6 @@ class RealAxisDual(DynamicContinousDomain):
         self._length = length
         self._vbo_id = None
         self.dimension = 2
-
 
         dynamic_matrix = lambda: DynamicContinousDomain.MODE_DYNAMIC_X if self._axis == 0 else DynamicContinousDomain.MODE_DYNAMIC_Y
         self.mode = dynamic_matrix() if self._dynamic else DynamicContinousDomain.MODE_STATIC
@@ -184,9 +153,19 @@ class RealAxisDual(DynamicContinousDomain):
 
         return Domain.get_vbo(self)
 
+class Interval(RealAxis):
+    def __init__(self, interval=[0,1]):
+        RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
 
 
-
+class NumpyDomain(Domain):
+    def __init__(self, data):
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        Domain.__init__(self, vbo)
+         
 
 
 

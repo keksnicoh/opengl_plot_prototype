@@ -19,5 +19,4 @@ def simple_texture(size, format=GL_RGBA, internalFormat=None, parameters=[
         glTexParameterf(GL_TEXTURE_2D, *parameter)
 
     glBindTexture(GL_TEXTURE_2D, 0);
-
     return id

@@ -14,7 +14,14 @@ import sys
 class GlApplication():
 
     WINDOW_CURRENT = None
+
     DEBUG = False 
+    
+    """
+    allows to register a framebuffer on binding. 
+    this enabled to reactivate last active framebuffers.
+    """
+    GL__ACTIVE_FRAMEBUFFER = []
     
     """
     initializes opengl & glfw. handles glfw windows
@@ -172,7 +179,8 @@ class GlWindow():
         glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
         glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
         glfwSetKeyCallback(self._glfw_window, self.key_callback)
-
+        #self.controller.camera.initial_screensize = self.controller.camera.screensize
+        self.controller.camera.screensize = glfwGetWindowSize(self._glfw_window)
 
 
     def key_callback(self, window, keycode, scancode, action, option):

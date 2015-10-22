@@ -31,7 +31,7 @@ class Scale():
         self._axis                = axis
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
-
+        self.vao = None
     def unit_density_factor(self, capture_size):
         density = 100
         size = capture_size
@@ -86,6 +86,7 @@ class Scale():
         capture_size[self._axis^1] = self.size[self._axis^1]
         capture_size[self._axis]   *= self.unit_density_factor(capture_size[self._axis])
 
+        #if self._frame is None:
         frame = window.Framebuffer(
             camera       = self.camera,
             screensize   = self.size,  
@@ -94,26 +95,28 @@ class Scale():
             clear_color  = self.bgcolor,
             modelview    = self.modelview,
         )
-        frame.init()
+        
+        self._frame = frame
 
+        self._frame.init()
         # create a special scaling. 
         # in self._axis direction the scaling should be like unit scaling,
         # on the perpendicular axis the scaling should be like the scaling 
         # from frame space. 
         scaling               = [0,0]
         scaling[self._axis]   = self.unit
-        scaling[self._axis^1] = frame.inner_camera.get_scaling()[self._axis^1]
+        scaling[self._axis^1] = self._frame.inner_camera.get_scaling()[self._axis^1]
 
-        frame.inner_camera.set_scaling(scaling)
-        self._frame = frame
-
+        self._frame.inner_camera.set_scaling(scaling)
+        
         # update shader
         self.axis_program.use()
         self.axis_program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
         self.axis_program.unuse()
 
-        # create vbo
-        self._init_capturing_vbo()
+        # create vao
+        if self.vao is None:
+            self._init_capturing_vbo()
 
         # set init state
         self._last_size = self.size[:]

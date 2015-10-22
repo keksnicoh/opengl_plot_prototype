@@ -58,7 +58,11 @@ class Camera():
             float(self.scaling[0])/(float(self.initial_screensize[0])/(self.screensize[0]))/self._zoom,
             float(self.scaling[1])/(float(self.initial_screensize[1])/(self.screensize[1]))/self._zoom,
         )
-
+    def get_screen_factor(self):
+        return (
+            float(self.screensize[0])/(self.initial_screensize[0]), 
+            float(self.screensize[1])/(self.initial_screensize[1])
+        )
 
     def set_screensize(self, screensize):
         self.screensize = screensize

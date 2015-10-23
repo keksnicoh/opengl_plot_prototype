@@ -199,7 +199,6 @@ class Plotter(Controller):
 
         # parent controller initialization
         Controller.init(self)
-        self.init_graphs()
 
     def init_graphs(self):
         """
@@ -245,6 +244,7 @@ class Plotter(Controller):
             self._yaxis.modelview.set_position(self._axis_translation[1],self._axis_space[0])
             self._yaxis.update_modelview()       
             self._yaxis.update_camera(self.camera)
+
     def _update_plotframe_camera(self):
         """
         updates plotframe camera
@@ -305,6 +305,7 @@ class Plotter(Controller):
             self.init_graphs()  
 
     def render(self):
+
         if self._render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()

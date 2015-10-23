@@ -46,10 +46,10 @@ void main(void)
     l[0] = width/(0.0001+dot(m[0], n(p[0], p[1])))/zoom;
     l[1] = width/(0.0001+dot(m[1], n(p[1], p[2])))/zoom;
 
-    m[0].x /= initial_scaling.x;
-    m[0].y /= initial_scaling.y;
-    m[1].x /= initial_scaling.x;
-    m[1].y /= initial_scaling.y;
+    m[0].x /= initial_scaling.x/2;
+    m[0].y /= initial_scaling.y/2;
+    m[1].x /= initial_scaling.x/2;
+    m[1].y /= initial_scaling.y/2;
 
     // emit
     color = fragment_color[0];

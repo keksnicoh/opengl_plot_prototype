@@ -183,6 +183,8 @@ class Program():
             glUniform3f(location, value)
         elif type == 'vec4':
             glUniform4f(location, *value)
+        elif type == 'sampler2D':
+            glUniform1i(location, value)
         else:
             raise NotImplementedError('oops! type "{}" not implemented by shader library.'.format(type))
 

@@ -12,8 +12,7 @@ from gllib.matrix import ModelView
 from OpenGL.GL import *
 from PIL import ImageFont
 import numpy, os, uuid
-FONT_RESOURCES_DIR = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts'
-
+DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/arial.ttf'
 
 class Text(object):
     RIGHT = "right"
@@ -194,13 +193,16 @@ class Text(object):
         return self._texture_cache[char]
 
 class Layout():
-    def __init__(self):
+    def __init__(self, font_path=DEFAULT_FONT, font_size=12):
         self._position = [0,0,0]
+        self._rotation = 0
         self._texts = []
-
+        self._font_path = font_path
+        self._font_size = font_size
         self.has_changed = True
 
-    def set_rotation(self, bla): pass
+    def set_rotation(self, deg):
+        self._rotation = deg
     def set_position(self, *position):
         self._position = position
     def get_render_protocol(self):
@@ -213,25 +215,27 @@ class Layout():
     def _create_text(self, text, **kwargs):
         if not isinstance(text, Text):
             if not 'font' in kwargs:
-                kwargs['font'] = ImageFont.truetype (FONT_RESOURCES_DIR+"/arial.ttf", 30)
+                kwargs['font'] = ImageFont.truetype(self._font_path, self._font_size)
             return Text(text, **kwargs)
         return text
 
 class AbsoluteLayout(Layout):
 
-    def add_text(self, text, x, y, **kwargs):
+    def add_text(self, text, x, y, rotate=0, **kwargs):
         text = self._create_text(text, **kwargs)
-        self._texts.append((text, x, y))
+        self._texts.append((text, x, y, rotate))
         self.has_changed = True
 
         return text
 
     def get_render_protocol(self):
         protocol = []
-        for i, (text, x, y) in enumerate(self._texts):
+        for i, (text, x, y, rotate) in enumerate(self._texts):
             modelview = ModelView()
             modelview.set_position(*self._position)
+            modelview.set_rotation(self._rotation)
             modelview.translate(x, y)
+            modelview.rotate(rotate)
             protocol.append((text, modelview))
         return protocol
 
@@ -245,9 +249,8 @@ class FloatingLayout(Layout):
 class FontRenderer(renderer.Renderer):
     NEWLINE = '\n'
     SCALING = 1.0
-    def __init__(self, camera, font, modelview=None):
+    def __init__(self, camera, modelview=None):
         self.camera = camera
-        self.font = font
         self.color = [0.0, 0.0, 0.0, 1.0]
         self.program = None
         self.length = None

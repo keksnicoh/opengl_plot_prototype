@@ -364,10 +364,10 @@ DARK_COLORS = {
     'yaxis-bgcolor'        : '020609ff',
     'xaxis-linecolor'      : '99D699ff',
     'xaxis-bgcolor'        : '00333300',
-    'xaxis-fontcolor'      : '000000ff',
+    'xaxis-fontcolor'      : 'ffffffff',
     'yaxis-linecolor'      : '99D699ff',
     'yaxis-bgcolor'        : '00333300',
-    'yaxis-fontcolor'      : '000000ff',
+    'yaxis-fontcolor'      : 'ffffffff',
     'graph-colors': [
         'FF0000bb',
         '00ff00bb',

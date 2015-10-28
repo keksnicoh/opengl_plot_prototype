@@ -35,7 +35,8 @@ class Scale():
         self._frame               = None
         self._axis                = axis
         self._translation = 0
-        self._font_size = 18
+        self._font_size = 12
+        self._unit_f = 1
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
         self.vao = None
@@ -61,9 +62,9 @@ class Scale():
         initialize the whole object
         """
         self._font_renderer = FontRenderer(self.camera)
-        self._font_renderer.layouts['axis'] = AbsoluteLayout(resource_path("fonts/arial.ttf"), self._font_size)
+        self._font_renderer.layouts['axis'] = AbsoluteLayout(resource_path("fonts/arialbd.ttf"), self._font_size)
         self._font_renderer.init()
-        self._font_renderer.set_color([1,1,1,1])
+        self._font_renderer.set_color(self.fontcolor)
 
         self.init_shader()
         self.init_capturing()
@@ -97,6 +98,7 @@ class Scale():
         capture_size = [0,0]
         capture_size[self._axis]   = float(unit_size)*float(self._initial_size[self._axis])
         capture_size[self._axis^1] = self.size[self._axis^1]
+        self._unit_f = self.unit_density_factor(capture_size[self._axis])
         capture_size[self._axis]   *= self.unit_density_factor(capture_size[self._axis])
 
         #if self._frame is None:
@@ -188,7 +190,7 @@ class Scale():
         translation      = self._frame.screen_translation[self._axis]
         size             = self._last_size[self._axis] + translation
         self._unit_count = int(numpy.floor(size/capture_size))
-        
+
         axis_flayout = self._font_renderer.layouts['axis']
         axis_flayout.clear_texts()
         axis_flayout.set_position(*self._frame.modelview.position)
@@ -196,12 +198,12 @@ class Scale():
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):
-                axis_flayout.add_text(str(i-start_unit), position[0]-20, position[1])
+                axis_flayout.add_text(str(self._unit_f*(i-start_unit)), position[0]-10, position[1])
                 position[self._axis] += capture_size
         else:
             position = [0,size-capture_size]
             for i in range(0, self._unit_count):
-                axis_flayout.add_text(str(start_unit+i+1), position[0], position[1]-float(self._font_size)/2)
+                axis_flayout.add_text(str(self._unit_f*(start_unit+i+1)), position[0], position[1]-float(self._font_size)/2)
                 position[self._axis] -= capture_size
 
 

@@ -18,13 +18,13 @@ class Line2d(Graph):
     """
     line plotter
     """
-    def __init__(self, domain, kernel='', color=None, width=1):
+    def __init__(self, domain, kernel='', color=None, width=1, shift=(0.0,0.0)):
         Graph.__init__(self, domain)
         self.color = color
         self._kernel = kernel
         self.initialized = False 
         self._width = width
-
+        self.shift = shift
     def init(self):
         """
         creates shader and vao 
@@ -83,7 +83,12 @@ class Line2d(Graph):
             self.init()
 
         self.program.use()
+        self.program.uniform('shift', self.shift)
         glBindVertexArray(self.vao)
-        glDrawArrays(GL_LINE_STRIP_ADJACENCY, 0, int(self.domain.get_length()/(4.0*self.domain.dimension)))
+        glDrawArrays(
+            GL_LINE_STRIP_ADJACENCY, 
+            int(self.domain.get_offset()/(4.0*self.domain.dimension)), 
+            int(self.domain.get_length()/(4.0*self.domain.dimension))
+        )
         glBindVertexArray(0)
         self.program.unuse()

@@ -14,6 +14,7 @@ uniform     vec4 color;
 uniform     float c_scale = 1;
 uniform     float time;
 uniform     mat3 mat_domain;
+uniform     vec2 shift;
 
             vec4 point_color;
             float x;
@@ -21,7 +22,7 @@ uniform     mat3 mat_domain;
             float z;
             float c;
             vec3 transformed_vertex_position;
-
+            
 /*{$UNIFORMS$}*/
 
 void main() {
@@ -37,5 +38,5 @@ void main() {
     /*{$KERNEL$}*/
 
     fragment_color = point_color;
-    gl_Position = vec4(x, y, z, c/c_scale);
+    gl_Position = vec4(x+shift.x, y+shift.y, z, c/c_scale);
 }

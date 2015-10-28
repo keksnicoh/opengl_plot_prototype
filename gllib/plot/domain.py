@@ -13,20 +13,26 @@ from OpenGL.GL import *
 import numpy 
 
 class Domain():
-    def __init__(self, vbo_id, dimension=2):
+    def __init__(self, vbo_id, dimension=2, offset=0, length=None):
         self._vbo_id = vbo_id
         self.dimension = dimension
+        self.offset = offset
+        self._length = length
     def set_vbo(self, vbo_id):
         self._vbo_id = vbo_id
     def get_vbo(self):
         return self._vbo_id
     def get_transformation_matrix(self, axis, origin):
         return numpy.identity(3).flatten()
+    def get_offset(self):
+        return self.offset*4*self.dimension
     def get_length(self):
-        glBindBuffer(GL_ARRAY_BUFFER, self._vbo_id)
-        size = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        return float(size)
+        if self._length is None:
+            glBindBuffer(GL_ARRAY_BUFFER, self._vbo_id)
+            size = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE)
+            glBindBuffer(GL_ARRAY_BUFFER, 0)
+            return float(size)
+        return self._length*4*self.dimension
 
 class DynamicContinousDomain(Domain):
     """
@@ -127,6 +133,7 @@ class RealAxis(DynamicContinousDomain):
         self._dynamic = dynamic
         self._axis = axis 
         self._length = length
+        self.offset = 0
         self._vbo_id = None
         self.dimension = 2
 

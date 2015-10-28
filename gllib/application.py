@@ -44,7 +44,16 @@ class GlApplication():
         formatter = logging.Formatter('%(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         root.addHandler(ch)
-        
+    
+    @classmethod
+    def run_controller(cls, controller, *args, **kwargs):
+        app = GlApplication()
+        window = GlWindow(*args, **kwargs)
+        app.windows.append(window)
+        window.set_controller(controller)
+        app.init()
+        app.run()
+
     def initGlCoreProfile(self):
         """
         setup opengl 4.1

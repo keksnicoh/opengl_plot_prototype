@@ -1,6 +1,7 @@
 from gllib.application import GlApplication, GlWindow
 from gllib.controller import Controller
 from gllib.plot import plotter2d
+from gllib.framelayout import FramelayoutController
 
 import numpy 
 
@@ -13,6 +14,42 @@ def plot2d(f, **kwargs):
     app.init()
     f(plotter)
     app.run()
+
+
+def plot2dRows(f, n, **kwargs):
+    window = GlWindow(800, 500, '2 cool quads 4 yolo')
+    app = GlApplication()
+    app.windows.append(window)
+
+    plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
+
+
+    window.set_controller(FramelayoutController([[c] for c in plotters]))
+    app.init()
+    f(plotters)
+
+    app.run()
+
+def plot2dColumns(f, n, **kwargs):
+    window = GlWindow(1000, 700, '2 cool quads 4 yolo')
+    app = GlApplication()
+    app.windows.append(window)
+
+    plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
+
+    def bla():
+        print('CYCLE')
+    controller = FramelayoutController([[c for c in plotters]])
+    if hasattr(f, 'pre_cycle'):
+        controller.on_pre_cycle.append(f.pre_cycle)
+    window.set_controller(controller)
+
+    app.init()
+    f(plotters)
+
+    app.run()
+
+
 
 
 def plot2dMulti(fs, **kwargs):

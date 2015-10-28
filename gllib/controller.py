@@ -18,6 +18,7 @@ class Controller():
         self.on_post_render   = Event()
         self.on_render        = Event()
         self.on_cycle         = Event()
+        self.on_destroy         = Event()
         self.on_keyboard      = Event()
         self.initialized      = False
         self.host_controller  = None

@@ -3,7 +3,7 @@ use geometry shader to plot a thick line
 
 @author Nicolas 'keksnicoh' Heimann <nicolas.heimann@gmail.com>
 """
-from lib.glfw import * 
+from gllib.glfw import * 
 from OpenGL.GL import * 
 import numpy 
 from time import time

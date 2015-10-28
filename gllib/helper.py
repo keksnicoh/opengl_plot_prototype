@@ -14,6 +14,9 @@ def load_lib_file(relative_path):
 
     return content
 
+def resource_path(*path):
+    return os.path.join(BASE, 'resources', *path)
+
 def hex_to_rgb(hexstr):
     return [float(i)/255 for i in struct.unpack('BBB', hexstr.decode('hex'))]
 

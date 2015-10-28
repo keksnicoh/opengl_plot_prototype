@@ -9,6 +9,7 @@ from gllib.shader import Shader, Program
 from gllib.helper import load_lib_file
 from gllib.application import GlApplication
 from gllib.matrix import ModelView
+
 from OpenGL.GL import *
 from PIL import ImageFont
 import numpy, os, uuid
@@ -17,15 +18,25 @@ DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/a
 class Text(object):
     RIGHT = "right"
 
-    def __init__(self, text, xy=(0,0), font=None, rel_xy=(0.0, 0.0), line_height_factor = 6.0/5.0, max_line_height = 0.0, aligned=False):
+    """
+    :param text: characters
+    :param font: font
+    :param rel_xy: relative xy within the text
+    :param max_line_height: 
+    :param line_height_factor:
+    """
+    def __init__(self, 
+        text, 
+        font               = None, 
+        line_spacing = 5, 
+        aligned            = False):
+
         self._text = text
         self.font = font
-        (self.x, self.y) = xy
+        self.rel_xy = (0.0,0.0)
+        self.line_spacing = line_spacing
+        max_line_height = 0.0
 
-        self.rel_xy = rel_xy
-        self.line_height_factor = line_height_factor
-        self.max_line_height = max_line_height
-        self.aligned = aligned
         self._boundaries = None
         self._render_data = range(len(self._text))
         self._vertex_data = numpy.zeros(self.gl_length(), dtype=numpy.float32)
@@ -33,6 +44,7 @@ class Text(object):
         self._texture_cache = {}
         self.is_prepared = False
         self.unique_id = None
+        self._boxsize = [0.0,0.0] 
 
         self._width = None
         self._height = None
@@ -52,15 +64,15 @@ class Text(object):
     def text_coord_data(self):
         return self._text_coord_data
 
-    # why this methods when you have get_boundaries()?
+    # why this methods when you have get_boxsize()?
     def get_width(self):
-        return self.get_boundaries()[0]
+        return self.get_boxsize()[0]
 
     def get_height(self):
-        return self.get_boundaries()[1]
+        return self.get_boxsize()[1]
 
 
-    def get_boundaries(self):
+    def get_boxsize(self):
         """
         returns boundaries of text 
         """
@@ -89,7 +101,7 @@ class Text(object):
 
 
     def has_changed(self, camera_updated=False):
-        if camera_updated and self.aligned:
+        if camera_updated:
             return True
         return self._has_changed
 
@@ -98,7 +110,8 @@ class Text(object):
         self.is_prepared = True
 
     def _process_text(self):
-        position_relative = 0
+        relpos = [0.0,.0]
+        max_line_height = 0.0
         for n, char in enumerate(self._text):
             glyph = self.font.getmask(char)
             glyph_width, glyph_height = glyph.size
@@ -107,8 +120,8 @@ class Text(object):
             # calculate the next power of two.
             # this is required to define a valid texture buffer
             # size.
-            width = next_p2 (glyph_width + 1)
-            height = next_p2 (glyph_height + 1)
+            width = glyph_width #next_p2 (glyph_width + 1)
+            height = glyph_height +1 #next_p2 (glyph_height + 1)
 
             # fragment coordinates
             frag_x = float (glyph_width) / float (width)
@@ -121,8 +134,10 @@ class Text(object):
 
             # if there is a newline, skip to next line.
             if char == FontRenderer.NEWLINE:
+                print('HAS NEWLINE')
                 self._render_data[n] = FontRenderer.NEWLINE
-                self.rel_xy = (0.0, self.rel_xy[1]-self.max_line_height*self.line_height_factor)
+                relpos[1] += max_line_height+self.line_spacing
+                relpos[0] = .0
                 continue
 
             # vertex data. note that opengl interpret this
@@ -136,16 +151,16 @@ class Text(object):
             #    |   |
             #   (offset_x + size_x)
             self._vertex_data[n*12:(n+1)*12] = numpy.array([
-                position_relative+self.x+vert_offset[0],              self.y+vert_offset[1],              #1 #left triangle
-                position_relative+self.x+vert_offset[0],              self.y+vert_offset[1]+vert_size[1], #2
-                position_relative+self.x+vert_offset[0]+vert_size[0], self.y+vert_offset[1]+vert_size[1], #3
-                position_relative+self.x+vert_offset[0]+vert_size[0], self.y+vert_offset[1]+vert_size[1], #4 #right triangle
-                position_relative+self.x+vert_offset[0]+vert_size[0], self.y+vert_offset[1],              #5
-                position_relative+self.x+vert_offset[0],              self.y+vert_offset[1]               #6
+                relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1],              #1 #left triangle
+                relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1]+vert_size[1], #2
+                relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+vert_offset[1]+vert_size[1], #3
+                relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+vert_offset[1]+vert_size[1], #4 #right triangle
+                relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+vert_offset[1],              #5
+                relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1]               #6
             ], dtype=numpy.float32)
 
             #print(vert_offset[0],              self.y+vert_offset[1]+vert_size[1])
-            position_relative += glyph_width
+            relpos[0] += glyph_width
             # text coord data implies the coords in fragment shader
             # for the texture. note that this must be inverse to the
             # vertex_data since opengl vertex_data is interpreted counter
@@ -160,9 +175,9 @@ class Text(object):
 
             # assign texture id and rel_xy to render_data
             self._render_data[n] = [ID, self.rel_xy]
-            self.rel_xy = (self.rel_xy[0]+vert_size[0]+vert_offset[0], self.rel_xy[1])
-            self.max_line_height = max(self.max_line_height, vert_size[1])
+            max_line_height = max(max_line_height, vert_size[1])
 
+        self._boxsize = [relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+max_line_height]
 
     def _create_texture(self, char, glyph, width, height, glyph_width, glyph_height):
         """
@@ -221,6 +236,8 @@ class Layout():
 
 class AbsoluteLayout(Layout):
 
+    def clear_texts(self):
+        self._texts = []
     def add_text(self, text, x, y, rotate=0, **kwargs):
         text = self._create_text(text, **kwargs)
         self._texts.append((text, x, y, rotate))
@@ -259,7 +276,7 @@ class FontRenderer(renderer.Renderer):
         self._texture_cache = {}
         
         #self.init()
-        self._is_prepared = False
+        self._texts_prepared = False
         self._is_camera_updated = False
         self.modelview = modelview or ModelView()
         """ local modelview matrix. """
@@ -271,7 +288,7 @@ class FontRenderer(renderer.Renderer):
 
     #def screen_resized(self, *args, **kwargs):
     #    self._is_camera_updated = True
-    #    self._is_prepared = False
+    #    self._texts_prepared = False
 
     def set_color(self, color):
         self.color = color
@@ -305,9 +322,10 @@ class FontRenderer(renderer.Renderer):
             self._texts[text.unique_id] = (text, None, None)
 
 
-    def prepare(self):
+    def prepare_texts(self):
+
         for unique_id, (text, vao, length) in self._texts.items():
-            if vao is None or text.is_prepared:
+            if vao is None or not text.is_prepared:
                 text.prepare()
                 vertex_data = text.vertex_data()
                 text_coord_data = text.text_coord_data()
@@ -333,7 +351,7 @@ class FontRenderer(renderer.Renderer):
 
         self.camera_updated()
         self.modelview_updated()
-        self._is_prepared = True    
+        self._texts_prepared = True    
 
     def camera_updated(self, *args, **kwargs):
         self.program.use()
@@ -352,10 +370,10 @@ class FontRenderer(renderer.Renderer):
         for name, layout in self.layouts.items():
             if layout.has_changed:
                 self._update_texts(layout.get_unique_texts())
-                self._is_prepared = False
+                self._texts_prepared = False
 
-        if not self._is_prepared:
-            self.prepare()
+        if not self._texts_prepared:
+            self.prepare_texts()
 
         self.program.use()
         glEnable(GL_BLEND)

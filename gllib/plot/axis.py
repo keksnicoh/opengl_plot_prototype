@@ -1,8 +1,11 @@
 from gllib.renderer import window
 from gllib.matrix import ModelView
 from gllib.shader import *
-from gllib.helper import load_lib_file
+from gllib.helper import load_lib_file, resource_path
 from OpenGL.GL import * 
+from gllib.renderer.font import FontRenderer, AbsoluteLayout
+
+from PIL import ImageFont
 import numpy
 class Scale():
 
@@ -17,6 +20,8 @@ class Scale():
         linecolor=[1,1,1,1],
         fontcolor=[1,1,1,1]):
 
+        self._font_renderer       = None
+
         self.unit                 = unit
         self.subunits             = subunits 
         self.size                 = size
@@ -29,6 +34,8 @@ class Scale():
         self._last_screen_scaling = None
         self._frame               = None
         self._axis                = axis
+        self._translation = 0
+        self._font_size = 18
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
         self.vao = None
@@ -53,9 +60,15 @@ class Scale():
         """
         initialize the whole object
         """
+        self._font_renderer = FontRenderer(self.camera)
+        self._font_renderer.layouts['axis'] = AbsoluteLayout(resource_path("fonts/arial.ttf"), self._font_size)
+        self._font_renderer.init()
+        self._font_renderer.set_color([1,1,1,1])
+
         self.init_shader()
         self.init_capturing()
         self.initialized = True
+
 
     def init_shader(self):
         """
@@ -121,8 +134,7 @@ class Scale():
         # set init state
         self._last_size = self.size[:]
         self._last_screen_scaling = self._scale_camera.get_screen_scaling()
-
-
+        
     def _init_capturing_vbo(self):
         """
         XXX
@@ -168,6 +180,29 @@ class Scale():
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         glBindVertexArray(0)
 
+    def prepare_fonts(self):
+        """
+        prepares axis fonts
+        """
+        capture_size     = self._frame.capture_size[self._axis]
+        translation      = self._frame.screen_translation[self._axis]
+        size             = self._last_size[self._axis] + translation
+        self._unit_count = int(numpy.floor(size/capture_size))
+        
+        axis_flayout = self._font_renderer.layouts['axis']
+        axis_flayout.clear_texts()
+        axis_flayout.set_position(*self._frame.modelview.position)
+        start_unit = numpy.floor(self._translation/capture_size)
+        if self._axis == 0:
+            position = [capture_size-translation,20]
+            for i in range(0, self._unit_count):
+                axis_flayout.add_text(str(i-start_unit), position[0]-20, position[1])
+                position[self._axis] += capture_size
+        else:
+            position = [0,size-capture_size]
+            for i in range(0, self._unit_count):
+                axis_flayout.add_text(str(start_unit+i+1), position[0], position[1]-float(self._font_size)/2)
+                position[self._axis] -= capture_size
 
 
     def update_camera(self, camera):
@@ -191,11 +226,16 @@ class Scale():
         position = self._scale_camera.get_position()
         if self._axis == 1:
             translation = 0.5*self.size[1]*position[1]
+            self._translation = translation
+
             self._frame.screen_translation[1] = translation%self._frame.capture_size[1]
+            self.prepare_fonts()
         if self._axis == 0:
             translation = 0.5*self.size[0]*position[0]
-            self._frame.screen_translation[0] = -translation%self._frame.capture_size[0]
+            self._translation = translation
 
+            self._frame.screen_translation[0] = -translation%self._frame.capture_size[0]
+            self.prepare_fonts()
 
     def update_modelview(self):
         """
@@ -211,19 +251,21 @@ class Scale():
         """
         if not self.initialized:
             self.init()
+            
         elif not self._last_size == self.size:
             self._frame.screensize = self.size
             self._frame.init_screen()
             self._last_size = self.size 
 
         if not self._frame.has_captured():
+            self.prepare_fonts()
             self._frame.use()
             self._render_scale_element()
             self._frame.unuse()
 
         # render the object
         self._frame.render()
-
+        self._font_renderer.render()
     def _render_scale_element(self):
         """
         renders one scale unit

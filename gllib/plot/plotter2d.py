@@ -68,7 +68,6 @@ class Plotter(Controller):
         self._axis_units          = axis_units 
         self._axis_subunits       = axis_subunits
         self._origin              = origin
-
         self.color_scheme = color_scheme
 
         self._plotframe = None
@@ -196,6 +195,8 @@ class Plotter(Controller):
             )
             self._yaxis.init()
             self._update_yaxis()
+
+
 
         # parent controller initialization
         Controller.init(self)

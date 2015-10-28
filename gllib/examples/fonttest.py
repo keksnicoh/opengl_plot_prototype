@@ -25,23 +25,23 @@ class MyCoolController(Controller):
 		
 		abs_layout = AbsoluteLayout(font_path=FONT_RESOURCES_DIR+"/cmunbmr.ttf", font_size=20)
 		abs_layout.set_position(20, 50)
-		abs_layout.set_rotation(90)
+		#abs_layout.set_rotation(90)
 
-		text = abs_layout.add_text("Ich bin ein fancy text", x=10, y=10, font=fancy_font)
-		abs_layout.add_text(text, x=30, y=30)
-		abs_layout.add_text(text, x=100, y=30, rotate=-90)
+		text = abs_layout.add_text("Ich bin ein fancy text\nblablabla bllslsl", x=10, y=10)
+		#abs_layout.add_text(text, x=30, y=30)
+		#abs_layout.add_text(text, x=100, y=30, rotate=-90)
 
-		text2 = abs_layout.add_text("Noch ein text", 10, 200, rotate=-45)
+		#text2 = abs_layout.add_text("Noch ein text", 10, 200, rotate=-45)
 
-		another_layout = AbsoluteLayout()
-		text = another_layout.add_text("standard", 50, 100)
-		another_layout.add_text(text, 200, 300, rotate=-90)
+		#another_layout = AbsoluteLayout()
+		#text = another_layout.add_text("standard", 50, 100)
+		#another_layout.add_text(text, 200, 300, rotate=-90)
 
 		#float_layout = FloatingLayout()
 		#float_layout.add_text(text, float=Text.FLOAT_RIGHT)
 
 		self.font_renderer.layouts['absolute'] = abs_layout
-		self.font_renderer.layouts['absolute_2'] = another_layout
+		#self.font_renderer.layouts['absolute_2'] = another_layout
 		#self.font_renderer.layouts['floating'] = float_layout
 		
 		#self.font_renderer.add_aligned_text("something", alignment=Text.RIGHT)

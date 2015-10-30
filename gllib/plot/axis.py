@@ -7,6 +7,12 @@ from gllib.renderer.font import FontRenderer, AbsoluteLayout, Text
 
 from PIL import ImageFont
 import numpy
+import numpy as np
+
+XAXIS = 0
+YAXIS = 1
+ZAXIS = 2
+
 class Scale():
     def __init__(self, 
         camera, 
@@ -38,7 +44,7 @@ class Scale():
         self._axis                = axis
         self._translation = 0
         self._font_size = 14
-        self._font = font or ImageFont.truetype(resource_path("fonts/arial.ttf"), 18, encoding='unic')
+        self._font = font or ImageFont.truetype(resource_path("fonts/arialbd.ttf"), 14, encoding='unic')
         self._unit_f = 1
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
@@ -201,21 +207,37 @@ class Scale():
 
         axis_flayout = self._font_renderer.layouts['axis']
         axis_flayout.clear_texts()
-        axis_flayout.set_position(*self._frame.modelview.position)
+        axis_flayout.modelview.set_position(*self._frame.modelview.position)
         start_unit = numpy.floor(self._translation/capture_size)
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):
-                text = Text(str(self._unit_f*(i-start_unit))+self.unit_symbol, self._font)
+                text = Text(self.format_number(self._unit_f*(i-start_unit), self.unit_symbol), self._font)
                 axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] += capture_size
         else:
             position = [self.size[0]-15,size-capture_size]
             for i in range(0, self._unit_count):
-                text = Text(str(self._unit_f*(start_unit+i+1))+self.unit_symbol, self._font)
+                text = Text(self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol), self._font)
                 axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] -= capture_size
 
+    def format_number(self, number, symbol):
+        if number == 0:
+            return '0'
+        if number == 1 and len(symbol):
+            return symbol
+        if number == -1 and len(symbol):
+            return '-' + symbol
+        if np.ceil(number) == number:
+            return '{:d}'.format(int(number))+symbol
+        return '{:.4g}'.format(number)+symbol
+        #if np.abs(number) < 1:
+        #    exponent = np.log10(np.abs(np.float32(number))).astype(int)
+        #    return '{:.3f}'.format(10**(-exponent+1)*number)+symbol
+        #if np.abs(number) > 1:
+        #    exponent = np.log10(np.abs(np.float32(number))).astype(int)
+        #    return '{:.f}'.format(10**(-exponent-1)*number)+symbol
 
     def update_camera(self, camera):
         """

@@ -15,6 +15,6 @@ void main()
     }
     else {  
         finalColor = texture(tex, fragTexCoord);
-        finalColor = color*finalColor;
+        finalColor = color*vec4(finalColor.x,finalColor.x,finalColor.x,finalColor.x);
     }
 }

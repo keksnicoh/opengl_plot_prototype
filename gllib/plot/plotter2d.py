@@ -6,13 +6,14 @@ plot2d
 """
 from gllib.renderer import renderer, primitives, window
 from gllib.shader import Shader, Program
-from gllib.helper import load_lib_file, hex_to_rgba
+from gllib.helper import load_lib_file, hex_to_rgba, resource_path
 from gllib.camera import Camera2d
 from gllib.application import GlApplication
 from gllib.controller import Controller
 from gllib.plot import axis 
 from gllib.renderer.primitives import SimplePrimitivesRenderer
 from gllib.glfw import *
+from PIL import ImageFont
 
 import numpy 
 
@@ -63,7 +64,7 @@ class Plotter(Controller):
         self.graphs               = graphs or {}
         self.plot_camera          = None
         self._axis_translation    = (5, 5)
-        self._axis_space          = (75, 75)
+        self._axis_space          = (75, 75, 10, 10)
         self._plot_plane_min_size = (100, 100)
         self._axis                = axis 
         self._axis_units          = axis_units 
@@ -71,11 +72,13 @@ class Plotter(Controller):
         self._axis_unit_symbols = axis_unit_symbols
         self._origin              = origin
         self.color_scheme = color_scheme
-        50
+
         self._plotframe = None
         self._xaxis     = None
         self._yaxis     = None
         self._debug     = False
+
+        self._axis_font = ImageFont.truetype(resource_path("fonts/arialbd.ttf"), 14, encoding='unic')
 
         # states
         self._render_graphs      = True
@@ -114,8 +117,8 @@ class Plotter(Controller):
         returns the absolute size of the plotframe
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-2*self._axis_space[1]), 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-2*self._axis_space[0])
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]-self._axis_space[3]), 
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0]-self._axis_space[2])
         ]
 
     def get_xaxis_size(self):
@@ -123,7 +126,7 @@ class Plotter(Controller):
         returns the absolute size of x axis
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-2*self._axis_space[1]), 
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]-self._axis_space[3]), 
             self._axis_space[0]
         ]
 
@@ -133,7 +136,7 @@ class Plotter(Controller):
         """
         return [
             self._axis_space[1], 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-2*self._axis_space[0]) 
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0]-self._axis_space[2]) 
         ]
 
     def init(self):
@@ -152,7 +155,7 @@ class Plotter(Controller):
         )
 
         plotframe.init()
-        plotframe.modelview.set_position(self._axis_space[1], self._axis_space[1])
+        plotframe.modelview.set_position(self._axis_space[0], self._axis_space[2])
         plotframe.update_modelview()
 
         # setup plotplane camera
@@ -175,8 +178,9 @@ class Plotter(Controller):
                 size         = self.get_xaxis_size(),
                 unit         = self._axis_units[0],
                 subunits     = self._axis_subunits[0],
-                axis         = 0,
-                unit_symbol = self._axis_unit_symbols[0],
+                font         = self._axis_font,
+                axis         = axis.XAXIS,
+                unit_symbol  = self._axis_unit_symbols[0],
                 bgcolor      = hex_to_rgba(self.color_scheme['xaxis-bgcolor']),
                 linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
@@ -191,16 +195,15 @@ class Plotter(Controller):
                 size         = self.get_yaxis_size(),
                 unit         = self._axis_units[1],
                 subunits     = self._axis_subunits[1],
-                axis         = 1,
-                unit_symbol = self._axis_unit_symbols[1],
+                font         = self._axis_font,
+                axis         = axis.YAXIS,
+                unit_symbol  = self._axis_unit_symbols[1],
                 bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
                 linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),
             )
             self._yaxis.init()
             self._update_yaxis()
-
-
 
         # parent controller initialization
         Controller.init(self)
@@ -234,7 +237,7 @@ class Plotter(Controller):
             self._xaxis.size = self.get_xaxis_size()
             self._xaxis.update_camera(self.camera)
 
-            self._xaxis.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[0])
+            self._xaxis.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[2])
             self._xaxis.update_modelview()
 
     def _update_yaxis(self):
@@ -246,7 +249,7 @@ class Plotter(Controller):
             self._yaxis.size = self.get_yaxis_size()
             self._yaxis.capture_size = self.get_yaxis_size()
             
-            self._yaxis.modelview.set_position(self._axis_translation[1],self._axis_space[0])
+            self._yaxis.modelview.set_position(self._axis_translation[1],self._axis_space[2])
             self._yaxis.update_modelview()       
             self._yaxis.update_camera(self.camera)
 

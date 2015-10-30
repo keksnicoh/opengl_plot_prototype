@@ -15,7 +15,7 @@ from OpenGL.GL import *
 from PIL import ImageFont
 import numpy, os, uuid
 DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/arial.ttf'
-
+from copy import deepcopy
 
 class Text():
     """
@@ -112,17 +112,13 @@ class Text():
             glBindTexture (GL_TEXTURE_2D, ID)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-            tex2d = ""
+            tex2d = []
             for j in xrange (height):
                 for i in xrange (width):
-                    if (i >= width) or (j >= height):
-                        value = chr (0)
-                        tex2d += value*4
-                    else:
-                        value = chr (glyph.getpixel ((i, j)))
-                        tex2d += value*4
-
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex2d)
+                    value = glyph.getpixel ((i, j))
+                    tex2d.append(float(value)/255)
+            tex2d = numpy.array(tex2d, dtype=numpy.float32)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, tex2d)
             Text._TEXTURE_CACHE[(id(self.font), char)] = ID
         return Text._TEXTURE_CACHE[(id(self.font), char)]
 
@@ -163,11 +159,11 @@ class AbsoluteLayout(Layout):
     LEFT_CENTER   = 11
     RIGHT_CENTER  = 12
 
-    def __init__(self, coord_system=LEFT_UPPER):
+    def __init__(self, modelview=None, coord_system=LEFT_UPPER):
         self.coord_system = coord_system
         self._position = [0,0] 
         self._texts = [] 
-
+        self.modelview = ModelView()
     def clear_texts(self):
         for text in self._texts:
             text[0].in_use_layouts.remove(self)
@@ -181,7 +177,7 @@ class AbsoluteLayout(Layout):
     def get_render_protocol(self):
         protocol = []
         for i, (text, pos) in enumerate(self._texts):
-            modelview = ModelView()
+            modelview = deepcopy(self.modelview)
             if self.coord_system == AbsoluteLayout.LEFT_UPPER:
                 translation = pos
             elif self.coord_system == AbsoluteLayout.UPPER_CENTER:
@@ -189,14 +185,10 @@ class AbsoluteLayout(Layout):
             elif self.coord_system == AbsoluteLayout.LEFT_CENTER:
                 translation = (pos[0], pos[1]+float(text.boxsize[1])/2)
             elif self.coord_system == AbsoluteLayout.RIGHT_CENTER:
-                print(float(text.boxsize[1]))
                 translation = (pos[0]-text.boxsize[0], pos[1]-float(text.boxsize[1])/2)
             else:
                 raise ValueError('invalid coord system')
-            modelview.set_position(*self._position)
-           # modelview.set_rotation(self._rotation)
             modelview.translate(*translation)
-            #modelview.rotate(rotate)
             protocol.append((text, modelview))
         return protocol
 

@@ -14,7 +14,7 @@ import numpy as np
 def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=10*sin(x)*cos(x)/x;x=10*cos(x)/x")
-    plotter.graphs['test3'] = Line2d(RealAxis(axis=1), "x=sin(y);", width=5)
+    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=5)
 GlApplication.DEBUG = False    
 plot2d(
     plot_main, 

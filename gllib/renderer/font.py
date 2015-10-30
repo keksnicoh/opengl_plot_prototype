@@ -16,6 +16,8 @@ from PIL import ImageFont
 import numpy, os, uuid
 DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/arial.ttf'
 from copy import deepcopy
+import re
+
 
 class Text():
     """
@@ -24,7 +26,47 @@ class Text():
     """
     _TEXTURE_CACHE = {}
 
-    def __init__(self, text, font= None, line_spacing=5):
+    _LATEX_CHARACTER_MAPPING = {
+        'pi'        : u'\u03C0',
+        'alpha'     : u'\u03b1',
+        'beta'      : u'\u03b2',
+        'gamma'     : u'\u03b3',
+        'delta'     : u'\u03b4',
+        'epsilon'   : u'\u03b5',
+        'zeta'      : u'\u03b6',
+        'eta'       : u'\u03b7',
+        'Gamma'     : u'\u0393',
+        'Delta'     : u'\u0394',
+        'Theta'     : u'\u0398',
+        'theta'     : u'\u03b8',
+        'vartheta'  : u'\u03d1',
+        'kappa'     : u'\u03ba',
+        'lambda'    : u'\u03bb',
+        'mu'        : u'\u03bc',
+        'nu'        : u'\u03bd',
+        'xi'        : u'\u03be',
+        'Lambda'    : u'\u039b',
+        'Xi'        : u'\u039e',
+        'Pi'        : u'\u03a0',
+        'rho'       : u'\u03c1',
+        'varrho'    : u'\u03f1',
+        'sigma'     : u'\u03c3',
+        'varsigma'  : u'\u03c2',
+        'Sigma'     : u'\u03a3',
+        'Upsilon'   : u'\u03a5',
+        'Phi'       : u'\u03d5',
+        'tau'       : u'\u03c4',
+        'phi'       : u'\u03d5',
+        'varphi'    : u'\u03a6',
+        'chi'       : u'\u03a7',
+        'psi'       : u'\u03c8',
+        'omega'     : u'\u03c9',
+        'Psi'       : u'\u03a8',
+        'Omega'     : u'\u03a9',
+
+    }
+
+    def __init__(self, text, font, line_spacing=5):
         self._text          = text
         self.font           = font
         self.line_spacing   = line_spacing
@@ -35,7 +77,7 @@ class Text():
         self.unique_id      = None
         self.font_renderer = None
         self.in_use_layouts = set()
-        self.render_data    = range(len(self._text))
+        self.render_data    = None
         self.vertex_data    = numpy.zeros(len(self._text)*2*6, dtype=numpy.float32)
         self.txt_data       = numpy.zeros(len(self._text)*2*6, dtype=numpy.float32)
 
@@ -47,10 +89,25 @@ class Text():
         self.prepare()
         self.on_update(self)
 
+    def _map_latex_placeholder(self, match):
+        if match.group(1) not in Text._LATEX_CHARACTER_MAPPING:
+            return match.group(0)
+
+        return Text._LATEX_CHARACTER_MAPPING[match.group(1)]
+
+    def _text_process(self):
+
+        latex_replaced = re.sub(r'\$([a-zA-Z0-9]+)\$', self._map_latex_placeholder, self._text)
+        return unicode(latex_replaced)
+
+
+
     def prepare(self):
         relpos          = [0.0,.0]
         max_line_height = 0.0
-        for n, char in enumerate(self._text):
+        processed_text = self._text_process()
+        self.render_data = list([None for j in range(0,len(processed_text))])
+        for n, char in enumerate(processed_text):
             glyph                          = self.font.getmask(char)
             glyph_width, glyph_height      = glyph.size
             glyph_offset_x, glyph_offset_y = self.font.getoffset(char)
@@ -123,18 +180,10 @@ class Text():
         return Text._TEXTURE_CACHE[(id(self.font), char)]
 
 class Layout():
-    def __init__(self, font_path=DEFAULT_FONT, font_size=12):
-        self._position = [0,0,0]
-        self._rotation = 0
+    def __init__(self):
         self._texts = []
-        self._font_path = font_path
-        self._font_size = font_size
         self.has_changed = True
 
-    def set_rotation(self, deg):
-        self._rotation = deg
-    def set_position(self, *position):
-        self._position = position
     def get_render_protocol(self):
         raise NotImplementedError('abstract method must not be empty')
 
@@ -142,6 +191,84 @@ class Layout():
         self.has_changed = False
         return set(text[0] for text in self._texts)
 
+class RelativeLayout(Layout):
+    """
+    layout can handle basic relative operations like
+    top/center/bottom alignment. to provide more power
+    there is a simple box model implemented which allows to
+    define 2 alignments per text. 
+    """
+
+    VTOP    = 1
+    VCENTER = 2
+    VBOTTOM = 4
+    HLEFT   = 8
+    HCENTER = 16
+    HRIGHT  = 32
+
+    def __init__(self, boxsize, modelview=None):
+        self.boxsize = boxsize
+        self._texts = [] 
+        self.has_changed = True
+        self.modelview = ModelView()
+
+    def clear_texts(self):
+        for text in self._texts:
+            text[0].in_use_layouts.remove(self)
+        self._texts = []
+
+    def add_text(self, text, alignment=VTOP|HLEFT, boxalignment=None, margin=[0,0,0,0], boxsize=(None, None), rotation=None):
+        self._texts.append((text, alignment, boxalignment or alignment, margin, boxsize, rotation))
+        text.in_use_layouts.add(self)
+        self.has_changed = True
+
+    def get_render_protocol(self):
+        protocol = []
+        for i, (text, alignment, boxalignment, margin, boxsize, rotation) in enumerate(self._texts):
+            translation = [0,0]
+            text_size = [text.boxsize[0]+margin[1]+margin[3], text.boxsize[1]+margin[0]+margin[2]]
+            text_boxsize = (boxsize[0] or self.boxsize[0], boxsize[1] or self.boxsize[1])
+
+            if alignment & RelativeLayout.HCENTER:
+                translation[0] += float(text_boxsize[0])/2 - float(text_size[0])/2
+            elif alignment & RelativeLayout.HRIGHT:
+                translation[0] += text_boxsize[0] - text_size[0]
+            else:
+                translation[0] += 0
+            if alignment & RelativeLayout.VCENTER:
+                translation[1] += float(text_boxsize[1])/2 - float(text_size[1])/2
+            elif alignment & RelativeLayout.VBOTTOM:
+                translation[1] += text_boxsize[1] - text_size[1]
+            else:
+                translation[1] += margin[0]
+
+
+            #modelview.translate(*translation)
+            
+
+            if boxalignment & RelativeLayout.HCENTER:
+                translation[0] += float(self.boxsize[0])/2 - float(text_boxsize[0])/2
+            elif boxalignment & RelativeLayout.HRIGHT:
+                translation[0] += self.boxsize[0] - text_boxsize[0]
+            else:
+                translation[0] += 0
+            if boxalignment & RelativeLayout.VCENTER:
+                translation[1] += float(self.boxsize[1])/2 - float(text_boxsize[1])/2
+            elif boxalignment & RelativeLayout.VBOTTOM:
+                translation[1] += self.boxsize[1] - text_boxsize[1]
+            else:
+                translation[1] += 0
+            modelview = deepcopy(self.modelview)
+            
+            if rotation is not None:
+                modelview.translate(-float(text_size[0])/2,-float(text_size[1])/2)
+                modelview.rotate(rotation)
+                modelview.translate(+float(text_size[0])/2,+float(text_size[1])/2)
+            modelview.translate(*translation)
+
+            protocol.append((text, modelview))
+
+        return protocol
 
 class AbsoluteLayout(Layout):
     # XXX
@@ -162,6 +289,7 @@ class AbsoluteLayout(Layout):
     def __init__(self, modelview=None, coord_system=LEFT_UPPER):
         self.coord_system = coord_system
         self._position = [0,0] 
+        self.has_changed = True
         self._texts = [] 
         self.modelview = ModelView()
     def clear_texts(self):
@@ -169,7 +297,7 @@ class AbsoluteLayout(Layout):
             text[0].in_use_layouts.remove(self)
         self._texts = []
 
-    def add_text(self, text, pos):
+    def add_text(self, text, pos=(0.0,0.0)):
         self._texts.append((text, pos))
         text.in_use_layouts.add(self)
         self.has_changed = True
@@ -191,13 +319,6 @@ class AbsoluteLayout(Layout):
             modelview.translate(*translation)
             protocol.append((text, modelview))
         return protocol
-
-class FloatingLayout(Layout):
-    def add_text(self, text, floating, **kwargs):
-        text = self._create_text(text)
-        self._texts.append(text)
-        self.has_changed = True
-
 
 class FontRenderer(renderer.Renderer):
     NEWLINE = '\n'

@@ -4,33 +4,51 @@ plot2d
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
-from gllib.renderer import renderer, primitives, window
+from gllib.renderer import window
 from gllib.shader import Shader, Program
-from gllib.helper import load_lib_file, hex_to_rgba, resource_path
-from gllib.camera import Camera2d
+from gllib.helper import hex_to_rgba, resource_path
 from gllib.application import GlApplication
 from gllib.controller import Controller
 from gllib.plot import axis 
-from gllib.renderer.primitives import SimplePrimitivesRenderer
 from gllib.glfw import *
+from gllib.renderer.font import FontRenderer, RelativeLayout, Text
+
+import numpy as np 
+
 from PIL import ImageFont
-
-import numpy 
-
 from OpenGL.GL import *
 
 DEFAULT_COLORS = {
+
     'bgcolor'              : 'ffffffff',
     'plotplane-bgcolor'    : 'ffffffff',
     'plotplane-bordercolor': '000000ff',
+
+    'axis-fontsize'        : 15,
+    'axis-font'            : 'fonts/arialbd.ttf',
+    
+    'title-fontsize'       : 25,
+    'title-boxheight'      : 40,
+    'title-font'           : 'fonts/arialbd.ttf',
+    
+    'xlabel-fontsize'      : 16,
+    'xlabel-boxheight'     : 35,
+    'xlabel-font'          : 'fonts/arialbd.ttf',
+    
+    'ylabel-fontsize'      : 16,
+    'ylabel-boxheight'     : 35,
+    'ylabel-font'          : 'fonts/arialbd.ttf',
+
     'xaxis-bgcolor'        : 'ffffffff',
-    'yaxis-bgcolor'        : 'ffffffff',
     'xaxis-linecolor'      : '000000ff',
     'xaxis-bgcolor'        : '00000000',
     'xaxis-fontcolor'      : '000000ff',
+
     'yaxis-linecolor'      : '000000ff',
     'yaxis-bgcolor'        : '00000000',
     'yaxis-fontcolor'      : '000000ff',
+    'yaxis-bgcolor'        : 'ffffffff',
+
     'graph-colors': [
         '000000ff',
         'aa0000ff',
@@ -44,42 +62,60 @@ DEFAULT_COLORS = {
 
 class Plotter(Controller):
     KEY_TRANSLATION_SPEED = 0.05
-    KEY_ZOOM_SPEED = 0.02
+    KEY_ZOOM_SPEED        = 0.02
+    FONT_ENCODING         = 'unic'
 
     def __init__(self, 
-        camera=None, 
-        axis=[2,2], 
-        origin=[1,-1],
-        axis_units=[1,1],
-        axis_unit_symbols=[None,None],
-        axis_subunits=[9,9],
-        color_scheme=DEFAULT_COLORS,
-        graphs={}
+        camera            = None, 
+        axis              = [2,2], 
+        origin            = [1,-1],
+        axis_units        = [1,1],
+        xlabel            = None,
+        ylabel            = None,
+        title             = None,
+        axis_unit_symbols = [None,None],
+        axis_subunits     = [9,9],
+        color_scheme      = DEFAULT_COLORS,
+        graphs            = {}
     ):
         Controller.__init__(self, camera)
 
         if GlApplication.DEBUG:
             color_scheme = DEBUG_COLORS
-
+        
         self.graphs               = graphs or {}
         self.plot_camera          = None
+        self.color_scheme         = color_scheme
+        
         self._axis_translation    = (5, 5)
-        self._axis_space          = (75, 75, 10, 10)
+        self._plotplane_margin    = (5, 5, 40, 75)
         self._plot_plane_min_size = (100, 100)
         self._axis                = axis 
         self._axis_units          = axis_units 
+        
+        self._xlabel              = xlabel
+        self._ylabel              = ylabel
+        self._title               = title
+        self._title_font          = None
+        self._xlabel_font         = None 
+        self._ylabel_font         = None
+        
         self._axis_subunits       = axis_subunits
-        self._axis_unit_symbols = axis_unit_symbols
+        self._axis_unit_symbols   = axis_unit_symbols
         self._origin              = origin
-        self.color_scheme = color_scheme
+        
+        self._plotframe           = None
+        self._xaxis               = None
+        self._yaxis               = None
+        self._debug               = False
 
-        self._plotframe = None
-        self._xaxis     = None
-        self._yaxis     = None
-        self._debug     = False
+        self._axis_font = ImageFont.truetype(
+            resource_path(color_scheme['axis-font']), 
+            color_scheme['axis-fontsize'], 
+            encoding=Plotter.FONT_ENCODING
+        )
 
-        self._axis_font = ImageFont.truetype(resource_path("fonts/arialbd.ttf"), 14, encoding='unic')
-
+        self._fontrenderer = None
         # states
         self._render_graphs      = True
         self._graphs_initialized = False
@@ -90,6 +126,7 @@ class Plotter(Controller):
         self.on_cycle.append(self.check_graphs)
         self.on_post_render.append(self.post_render)
         self.on_render.append(self.render)
+
     def keyboard_callback(self, active, pressed):
         update_camera = False
         if GLFW_KEY_W in active:
@@ -117,8 +154,8 @@ class Plotter(Controller):
         returns the absolute size of the plotframe
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]-self._axis_space[3]), 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0]-self._axis_space[2])
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2])
         ]
 
     def get_xaxis_size(self):
@@ -126,8 +163,8 @@ class Plotter(Controller):
         returns the absolute size of x axis
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._axis_space[1]-self._axis_space[3]), 
-            self._axis_space[0]
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
+            10
         ]
 
     def get_yaxis_size(self):
@@ -135,15 +172,65 @@ class Plotter(Controller):
         returns the absolute size of y axis
         """
         return [
-            self._axis_space[1], 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._axis_space[0]-self._axis_space[2]) 
+            10, 
+            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2]) 
         ]
+
+    def init_labels(self):
+        """
+        initializes plot labels.
+        """
+        axis_space = list(self._plotplane_margin)
+
+        if self._xlabel is not None:
+            axis_space[2] += self.color_scheme['xlabel-boxheight']
+            self._fontrenderer.layouts['labels'].add_text(
+                Text(self._xlabel, ImageFont.truetype(
+                    resource_path(self.color_scheme['xlabel-font']), 
+                    self.color_scheme['xlabel-fontsize'], 
+                    encoding=Plotter.FONT_ENCODING
+                )), 
+                alignment=RelativeLayout.HCENTER|RelativeLayout.VTOP,
+                boxalignment=RelativeLayout.VBOTTOM,
+                boxsize=(None, self.color_scheme['xlabel-boxheight'])
+            )
+        if self._ylabel is not None:
+            axis_space[3] += self.color_scheme['ylabel-boxheight']
+            self._fontrenderer.layouts['labels'].add_text(
+                Text(self._ylabel, ImageFont.truetype(
+                    resource_path(self.color_scheme['ylabel-font']), 
+                    self.color_scheme['ylabel-fontsize'], 
+                    encoding=Plotter.FONT_ENCODING
+                )), 
+                alignment=RelativeLayout.HCENTER|RelativeLayout.VCENTER,
+                boxalignment=RelativeLayout.HLEFT,
+                boxsize=(self.color_scheme['ylabel-boxheight'], None),
+                rotation=90
+            )
+        if self._title is not None:
+            axis_space[0] += self.color_scheme['title-boxheight']
+            self._fontrenderer.layouts['labels'].add_text(
+                Text(self._title, ImageFont.truetype(
+                    resource_path(self.color_scheme['title-font']), 
+                    self.color_scheme['title-fontsize'], 
+                    encoding=Plotter.FONT_ENCODING
+                )), 
+                alignment=RelativeLayout.HCENTER|RelativeLayout.VCENTER,
+                boxalignment=RelativeLayout.VTOP,
+                boxsize=(None, self.color_scheme['title-boxheight'])
+            )
+        self._plotplane_margin = axis_space
 
     def init(self):
         """
         initializes plot2d
         """
         # setup axis
+        self._fontrenderer = FontRenderer(self.camera)
+        self._fontrenderer.layouts['labels'] = RelativeLayout(boxsize=self.camera.screensize)
+        self._fontrenderer.init()
+        self._fontrenderer.set_color([1,1,1,1])
+        self.init_labels()
 
         # setup plotplane
         plotframe = window.Framebuffer(
@@ -155,23 +242,23 @@ class Plotter(Controller):
         )
 
         plotframe.init()
-        plotframe.modelview.set_position(self._axis_space[0], self._axis_space[2])
+        plotframe.modelview.set_position(self._plotplane_margin[3], self._plotplane_margin[0])
         plotframe.update_modelview()
 
         # setup plotplane camera
-        plotframe.inner_camera.set_base_matrix(numpy.array([
+        plotframe.inner_camera.set_base_matrix(np.array([
             1, 0, 0, 0,
             0, -1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
-        ], dtype=numpy.float32))
+        ], dtype=np.float32))
         plotframe.inner_camera.set_scaling(self._axis)
         plotframe.inner_camera.set_position(*self._origin)
 
         self._plotframe = plotframe
 
         # setup axis
-        if self._axis_space[0] > 0:
+        if self._plotplane_margin[0] > 0:
             self._xaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
@@ -188,7 +275,7 @@ class Plotter(Controller):
             self._xaxis.init()
             self._update_xaxis()
 
-        if self._axis_space[1] > 0:
+        if self._plotplane_margin[1] > 0:
             self._yaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
@@ -233,23 +320,23 @@ class Plotter(Controller):
         """
         updates camera and modelview of the x axis
         """
-        if self._axis_space[0] > 0:
+        if self._plotplane_margin[0] > 0:
             self._xaxis.size = self.get_xaxis_size()
             self._xaxis.update_camera(self.camera)
 
-            self._xaxis.modelview.set_position(self._axis_space[1], self.get_plotframe_size()[1]-1*self._axis_translation[0]+self._axis_space[2])
+            self._xaxis.modelview.set_position(self._plotplane_margin[3], self.get_plotframe_size()[1]-self._axis_translation[0]+self._plotplane_margin[0])
             self._xaxis.update_modelview()
 
     def _update_yaxis(self):
         """
         updates camera and modelview of the y axis
         """
-        if self._axis_space[1] > 0:
+        if self._plotplane_margin[1] > 0:
             translation = self._plotframe.inner_camera.get_position()[1]
             self._yaxis.size = self.get_yaxis_size()
             self._yaxis.capture_size = self.get_yaxis_size()
             
-            self._yaxis.modelview.set_position(self._axis_translation[1],self._axis_space[2])
+            self._yaxis.modelview.set_position(self._plotplane_margin[3]-self._axis_translation[1],self._plotplane_margin[0])
             self._yaxis.update_modelview()       
             self._yaxis.update_camera(self.camera)
 
@@ -273,7 +360,7 @@ class Plotter(Controller):
         self._update_graph_matricies()
 
         self._render_graphs = True
-
+        self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
         Controller.camera_updated(self, camera)
 
     def _update_graph_matricies(self):
@@ -334,12 +421,13 @@ class Plotter(Controller):
         self._plotframe.render()
         self._yaxis.render()
         self._xaxis.render()
-        
+        self._fontrenderer.render()
 
         
 
 
-DEBUG_COLORS = {
+DEBUG_COLORS = DEFAULT_COLORS.copy()
+DEBUG_COLORS.update({
     'bgcolor'              : '000000ff',
     'plotplane-bgcolor'    : 'ccccccff',
     'plotplane-bordercolor': '000000ff',
@@ -360,10 +448,11 @@ DEBUG_COLORS = {
         'ff00ffff',
         '00ffffff',
     ]
-}
+})
 
 
-DARK_COLORS = {
+DARK_COLORS = DEFAULT_COLORS.copy()
+DARK_COLORS.update({
     'bgcolor'              : '000000ff',
     'plotplane-bgcolor'    : '02050eff',
     'plotplane-bordercolor': 'FF9900ff',
@@ -382,5 +471,5 @@ DARK_COLORS = {
         'ff00ffbb',
         '00ffffbb',
     ]
-}
+})
 

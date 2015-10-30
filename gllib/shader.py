@@ -185,6 +185,8 @@ class Program():
             glUniform4f(location, *value)
         elif type == 'sampler2D':
             glUniform1i(location, value)
+        elif type == 'bool':
+            glUniform1i(location, value)
         else:
             raise NotImplementedError('oops! type "{}" not implemented by shader library.'.format(type))
 

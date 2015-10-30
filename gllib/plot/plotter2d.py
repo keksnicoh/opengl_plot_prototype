@@ -50,6 +50,7 @@ class Plotter(Controller):
         axis=[2,2], 
         origin=[1,-1],
         axis_units=[1,1],
+        axis_unit_symbols=[None,None],
         axis_subunits=[9,9],
         color_scheme=DEFAULT_COLORS,
         graphs={}
@@ -62,14 +63,15 @@ class Plotter(Controller):
         self.graphs               = graphs or {}
         self.plot_camera          = None
         self._axis_translation    = (5, 5)
-        self._axis_space          = (50, 50)
+        self._axis_space          = (75, 75)
         self._plot_plane_min_size = (100, 100)
         self._axis                = axis 
         self._axis_units          = axis_units 
         self._axis_subunits       = axis_subunits
+        self._axis_unit_symbols = axis_unit_symbols
         self._origin              = origin
         self.color_scheme = color_scheme
-
+        50
         self._plotframe = None
         self._xaxis     = None
         self._yaxis     = None
@@ -174,6 +176,7 @@ class Plotter(Controller):
                 unit         = self._axis_units[0],
                 subunits     = self._axis_subunits[0],
                 axis         = 0,
+                unit_symbol = self._axis_unit_symbols[0],
                 bgcolor      = hex_to_rgba(self.color_scheme['xaxis-bgcolor']),
                 linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
@@ -189,6 +192,7 @@ class Plotter(Controller):
                 unit         = self._axis_units[1],
                 subunits     = self._axis_subunits[1],
                 axis         = 1,
+                unit_symbol = self._axis_unit_symbols[1],
                 bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
                 linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),

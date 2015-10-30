@@ -9,133 +9,55 @@ from gllib.shader import Shader, Program
 from gllib.helper import load_lib_file
 from gllib.application import GlApplication
 from gllib.matrix import ModelView
+from gllib.util import Event
 
 from OpenGL.GL import *
 from PIL import ImageFont
 import numpy, os, uuid
 DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/arial.ttf'
 
-class Text(object):
-    RIGHT = "right"
 
+class Text():
     """
-    :param text: characters
-    :param font: font
-    :param rel_xy: relative xy within the text
-    :param max_line_height: 
-    :param line_height_factor:
+    global texture cache. keys are tuples of
+    (id(image_font_instance), character)
     """
-    def __init__(self, 
-        text, 
-        font               = None, 
-        line_spacing = 5, 
-        aligned            = False):
+    _TEXTURE_CACHE = {}
 
+    def __init__(self, text, font= None, line_spacing=5):
+        self._text          = text
+        self.font           = font
+        self.line_spacing   = line_spacing
+        self.on_update = Event()
+
+        # font renderer api attributes
+        self.is_prepared    = False
+        self.unique_id      = None
+        self.font_renderer = None
+        self.in_use_layouts = set()
+        self.render_data    = range(len(self._text))
+        self.vertex_data    = numpy.zeros(len(self._text)*2*6, dtype=numpy.float32)
+        self.txt_data       = numpy.zeros(len(self._text)*2*6, dtype=numpy.float32)
+
+        # layout api attributes
+        self.boxsize        = [0.0,0.0] 
+    
+    def set_text(self, text):
         self._text = text
-        self.font = font
-        self.rel_xy = (0.0,0.0)
-        self.line_spacing = line_spacing
-        max_line_height = 0.0
-
-        self._boundaries = None
-        self._render_data = range(len(self._text))
-        self._vertex_data = numpy.zeros(self.gl_length(), dtype=numpy.float32)
-        self._text_coord_data = numpy.zeros(self.gl_length(), dtype=numpy.float32)
-        self._texture_cache = {}
-        self.is_prepared = False
-        self.unique_id = None
-        self._boxsize = [0.0,0.0] 
-
-        self._width = None
-        self._height = None
-
-    def gl_length(self):
-        return len(self._text)*2*6
-
-    # XXX
-    # -> rename get_vertex_data
-    # OR just make vertex_Data a public attribute
-    def vertex_data(self):
-        return self._vertex_data
-
-    # XXX
-    # -> rename get_text_coord_data
-    # OR just make text_coord_data a public attribute
-    def text_coord_data(self):
-        return self._text_coord_data
-
-    # why this methods when you have get_boxsize()?
-    def get_width(self):
-        return self.get_boxsize()[0]
-
-    def get_height(self):
-        return self.get_boxsize()[1]
-
-
-    def get_boxsize(self):
-        """
-        returns boundaries of text 
-        """
-        if self._boundaries is None:
-            self._boundaries = self._calculate_boundaries()
-        return self._boundaries
-
-    def _calculate_boundaries(self):
-        height = 0.0
-        width  = 0.0
-        # TODO:
-        # height calculation broken.
-        #
-        # height: sum of all max heights of all lines.
-        # all line is seperated by NEWLINE from another line.
-        #
-        # also width must restart on NEWLIE and the total width
-        # is the maximum of all line widths
-        for n, char in enumerate(self._text):
-            glyph = self.font.getmask(char)
-            glyph_width, glyph_height = glyph.size
-            height += glyph_height
-            width += glyph_width
-
-        return (width, height)
-
-
-    def has_changed(self, camera_updated=False):
-        if camera_updated:
-            return True
-        return self._has_changed
+        self.prepare()
+        self.on_update(self)
 
     def prepare(self):
-        self._process_text()
-        self.is_prepared = True
-
-    def _process_text(self):
-        relpos = [0.0,.0]
+        relpos          = [0.0,.0]
         max_line_height = 0.0
         for n, char in enumerate(self._text):
-            glyph = self.font.getmask(char)
-            glyph_width, glyph_height = glyph.size
+            glyph                          = self.font.getmask(char)
+            glyph_width, glyph_height      = glyph.size
             glyph_offset_x, glyph_offset_y = self.font.getoffset(char)
 
-            # calculate the next power of two.
-            # this is required to define a valid texture buffer
-            # size.
-            width = glyph_width #next_p2 (glyph_width + 1)
-            height = glyph_height +1 #next_p2 (glyph_height + 1)
-
-            # fragment coordinates
-            frag_x = float (glyph_width) / float (width)
-            frag_y = float (glyph_height) / float (height)
-            frag_size = (frag_x, frag_y)
-
-            # vertex dimensions
-            vert_size = (glyph_width, glyph_height)
-            vert_offset = (-glyph_offset_x, glyph_offset_y)
-
-            # if there is a newline, skip to next line.
+            # special characters
             if char == FontRenderer.NEWLINE:
-                print('HAS NEWLINE')
-                self._render_data[n] = FontRenderer.NEWLINE
+                self.render_data[n] = FontRenderer.NEWLINE
                 relpos[1] += max_line_height+self.line_spacing
                 relpos[0] = .0
                 continue
@@ -150,7 +72,9 @@ class Text(object):
             #  2 +---+ 3,4    -
             #    |   |
             #   (offset_x + size_x)
-            self._vertex_data[n*12:(n+1)*12] = numpy.array([
+            vert_size = (glyph_width, glyph_height)
+            vert_offset = (-glyph_offset_x, glyph_offset_y)
+            self.vertex_data[n*12:(n+1)*12] = numpy.array([
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1],              #1 #left triangle
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1]+vert_size[1], #2
                 relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+vert_offset[1]+vert_size[1], #3
@@ -158,44 +82,40 @@ class Text(object):
                 relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+vert_offset[1],              #5
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1]               #6
             ], dtype=numpy.float32)
-
-            #print(vert_offset[0],              self.y+vert_offset[1]+vert_size[1])
             relpos[0] += glyph_width
+
             # text coord data implies the coords in fragment shader
             # for the texture. note that this must be inverse to the
             # vertex_data since opengl vertex_data is interpreted counter
             # clockwise, and text_data is clockwise.
-            self._text_coord_data[n*12:(n+1)*12] = numpy.array([
-                0,0,                          0,frag_size[1],   frag_size[0],frag_size[1],
-                frag_size[0], frag_size[1],   frag_size[0],0,   0,0,
+            frag_size = (1, 1)
+            self.txt_data[n*12:(n+1)*12] = numpy.array([
+                0,0, 0,frag_size[1], frag_size[0],frag_size[1],
+                frag_size[0], frag_size[1], frag_size[0],0, 0,0,
             ], dtype=numpy.float32)
 
-            # prepare opengl texture and append prepared data.
-            ID = self._create_texture(char, glyph, width, height, glyph_width, glyph_height)
-
-            # assign texture id and rel_xy to render_data
-            self._render_data[n] = [ID, self.rel_xy]
+            # create final render data
+            ID = self._create_texture(char, glyph, glyph_width, glyph_height)
+            self.render_data[n] = [ID, None]
             max_line_height = max(max_line_height, vert_size[1])
 
-        self._boxsize = [relpos[0]+vert_offset[0]+vert_size[0], relpos[1]+max_line_height]
+        self.boxsize = [relpos[0], relpos[1]+max_line_height]
+        self.is_prepared = True
 
-    def _create_texture(self, char, glyph, width, height, glyph_width, glyph_height):
+    def _create_texture(self, char, glyph, width, height):
         """
         creates an opengl 2d texture from a TTF font object.
         XXX optimize this, we only need a 2 channel i guess...
         """
-
-        if char not in self._texture_cache:
+        if (id(self.font), char) not in Text._TEXTURE_CACHE:
             ID = glGenTextures (1)
             glBindTexture (GL_TEXTURE_2D, ID)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
-            #glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            #glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             tex2d = ""
             for j in xrange (height):
                 for i in xrange (width):
-                    if (i >= glyph_width) or (j >= glyph_height):
+                    if (i >= width) or (j >= height):
                         value = chr (0)
                         tex2d += value*4
                     else:
@@ -203,9 +123,8 @@ class Text(object):
                         tex2d += value*4
 
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex2d)
-            self._texture_cache[char] = ID
-
-        return self._texture_cache[char]
+            Text._TEXTURE_CACHE[(id(self.font), char)] = ID
+        return Text._TEXTURE_CACHE[(id(self.font), char)]
 
 class Layout():
     def __init__(self, font_path=DEFAULT_FONT, font_size=12):
@@ -227,32 +146,57 @@ class Layout():
         self.has_changed = False
         return set(text[0] for text in self._texts)
 
-    def _create_text(self, text, **kwargs):
-        if not isinstance(text, Text):
-            if not 'font' in kwargs:
-                kwargs['font'] = ImageFont.truetype(self._font_path, self._font_size)
-            return Text(text, **kwargs)
-        return text
 
 class AbsoluteLayout(Layout):
+    # XXX
+    # - implement missing transformations
+    LEFT_UPPER    = 1
+    LEFT_CENTER   = 2
+    LEFT_BOTTOM   = 3
+    CENTER_UPPER  = 4
+    CENTER_CENTER = 5
+    CENTER_BOTTOM = 6
+    RIGHT_UPPER   = 7
+    RIGHT_CENTER  = 8
+    RIGHT_BOTTOM  = 9
+    UPPER_CENTER  = 10
+    LEFT_CENTER   = 11
+    RIGHT_CENTER  = 12
+
+    def __init__(self, coord_system=LEFT_UPPER):
+        self.coord_system = coord_system
+        self._position = [0,0] 
+        self._texts = [] 
 
     def clear_texts(self):
+        for text in self._texts:
+            text[0].in_use_layouts.remove(self)
         self._texts = []
-    def add_text(self, text, x, y, rotate=0, **kwargs):
-        text = self._create_text(text, **kwargs)
-        self._texts.append((text, x, y, rotate))
-        self.has_changed = True
 
-        return text
+    def add_text(self, text, pos):
+        self._texts.append((text, pos))
+        text.in_use_layouts.add(self)
+        self.has_changed = True
 
     def get_render_protocol(self):
         protocol = []
-        for i, (text, x, y, rotate) in enumerate(self._texts):
+        for i, (text, pos) in enumerate(self._texts):
             modelview = ModelView()
+            if self.coord_system == AbsoluteLayout.LEFT_UPPER:
+                translation = pos
+            elif self.coord_system == AbsoluteLayout.UPPER_CENTER:
+                translation = (pos[0]-float(text.boxsize[0])/2, pos[1])
+            elif self.coord_system == AbsoluteLayout.LEFT_CENTER:
+                translation = (pos[0], pos[1]+float(text.boxsize[1])/2)
+            elif self.coord_system == AbsoluteLayout.RIGHT_CENTER:
+                print(float(text.boxsize[1]))
+                translation = (pos[0]-text.boxsize[0], pos[1]-float(text.boxsize[1])/2)
+            else:
+                raise ValueError('invalid coord system')
             modelview.set_position(*self._position)
-            modelview.set_rotation(self._rotation)
-            modelview.translate(x, y)
-            modelview.rotate(rotate)
+           # modelview.set_rotation(self._rotation)
+            modelview.translate(*translation)
+            #modelview.rotate(rotate)
             protocol.append((text, modelview))
         return protocol
 
@@ -272,15 +216,19 @@ class FontRenderer(renderer.Renderer):
         self.program = None
         self.length = None
         self.xy = (0,0)
-        self._render_data = []
+        self.render_data = []
         self._texture_cache = {}
-        
         #self.init()
         self._texts_prepared = False
         self._is_camera_updated = False
         self.modelview = modelview or ModelView()
         """ local modelview matrix. """
+
+        """
+        stores all active text objects
+        """
         self._texts = {}
+
         self.layouts = {}
 
         # Has to be more specifierd later
@@ -321,17 +269,33 @@ class FontRenderer(renderer.Renderer):
             text.unique_id = uuid.uuid4()
             self._texts[text.unique_id] = (text, None, None)
 
+            text.on_update.append(self.text_updated)
+
+    def text_updated(self, text):
+        raise NotImplementedError('implement my behavior')
 
     def prepare_texts(self):
-
+        """
+        prepares all registred texts.
+        """
         for unique_id, (text, vao, length) in self._texts.items():
-            if vao is None or not text.is_prepared:
+            # text is not used by any layouts => remove text and cleanup buffers
+            if len(text.in_use_layouts) < 1:
+                text.unique_id = None
+                glDeleteVertexArrays(1, (vao,))
+                text.on_update.remove(self.text_updated)
+                del self._texts[unique_id]
+
+            # text is used by layouts but there is no vao
+            # or text was not prepared yet.
+            elif vao is None or not text.is_prepared:
+
                 text.prepare()
-                vertex_data = text.vertex_data()
-                text_coord_data = text.text_coord_data()
+                vertex_data = text.vertex_data
+                text_coord_data = text.txt_data
 
                 length = len(vertex_data)
-                vao = glGenVertexArrays(1)
+                vao = vao or glGenVertexArrays(1)
                 vbo = glGenBuffers(2)
                 glBindVertexArray(vao)
 
@@ -380,8 +344,7 @@ class FontRenderer(renderer.Renderer):
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
         if GlApplication.DEBUG == True:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
-
+            self.program.uniform('debug', True)
         glActiveTexture(GL_TEXTURE1) # XXX disale texture later??
         self.program.uniform('tex', 1)
         self.program.uniform('color', self.color)
@@ -393,7 +356,7 @@ class FontRenderer(renderer.Renderer):
                 self.program.uniform('mat_modelview', modelview)
                 glBindVertexArray(vao)
                 
-                render_data = text._render_data
+                render_data = text.render_data
                 for n, data in enumerate(render_data[0:length]):
                     if data == FontRenderer.NEWLINE: continue
                     (gl_tex_id, _) = data
@@ -401,13 +364,10 @@ class FontRenderer(renderer.Renderer):
                     glBindTexture (GL_TEXTURE_2D, gl_tex_id)
                     glDrawArrays(GL_TRIANGLES, n*6, 6)
     
-    
                 glBindVertexArray(0)
         
-
         if GlApplication.DEBUG == True:
-            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
-
+            self.program.uniform('debug', False)
         self.program.unuse()
 
 def next_p2 (num):

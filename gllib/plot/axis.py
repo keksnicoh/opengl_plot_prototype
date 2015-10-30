@@ -3,12 +3,11 @@ from gllib.matrix import ModelView
 from gllib.shader import *
 from gllib.helper import load_lib_file, resource_path
 from OpenGL.GL import * 
-from gllib.renderer.font import FontRenderer, AbsoluteLayout
+from gllib.renderer.font import FontRenderer, AbsoluteLayout, Text
 
 from PIL import ImageFont
 import numpy
 class Scale():
-
     def __init__(self, 
         camera, 
         scale_camera, 
@@ -16,9 +15,11 @@ class Scale():
         axis=0, 
         unit=1, 
         subunits=9,
+        unit_symbol=u'',
         bgcolor=[1,1,1,1],
         linecolor=[1,1,1,1],
-        fontcolor=[1,1,1,1]):
+        fontcolor=[1,1,1,1],
+        font=None):
 
         self._font_renderer       = None
 
@@ -30,18 +31,21 @@ class Scale():
         self.camera               = camera 
         self.linecolor            = linecolor
         self.fontcolor            = fontcolor
+        self.unit_symbol = unit_symbol or ''
         self.bgcolor              = bgcolor
         self._last_screen_scaling = None
         self._frame               = None
         self._axis                = axis
         self._translation = 0
-        self._font_size = 12
+        self._font_size = 14
+        self._font = font or ImageFont.truetype(resource_path("fonts/arial.ttf"), 18, encoding='unic')
         self._unit_f = 1
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
         self.vao = None
+
     def unit_density_factor(self, capture_size):
-        density = 100
+        density = 150
         size = capture_size
         f = 1.0 
         last_diff = density - size
@@ -62,7 +66,11 @@ class Scale():
         initialize the whole object
         """
         self._font_renderer = FontRenderer(self.camera)
-        self._font_renderer.layouts['axis'] = AbsoluteLayout(resource_path("fonts/arialbd.ttf"), self._font_size)
+
+        self._font_renderer.layouts['axis'] = AbsoluteLayout(
+            coord_system = AbsoluteLayout.UPPER_CENTER if self._axis == 0 \
+                      else AbsoluteLayout.RIGHT_CENTER
+        )
         self._font_renderer.init()
         self._font_renderer.set_color(self.fontcolor)
 
@@ -157,15 +165,15 @@ class Scale():
                 data[4*i+2] = subunit*i
                 data[4*i+3] = 9    
         else:
-            data[0+0] = 39
+            data[0+0] = self.size[0]-11
             data[1-0] = .999
-            data[2+0] = 50
+            data[2+0] = self.size[0]
             data[3-0] = .999
             subunit = float(self.unit)/self.subunits
             for i in range(1, self.subunits+1):
-                data[4*i+0] = 41
+                data[4*i+0] = self.size[0]-9
                 data[4*i+1] = subunit*i
-                data[4*i+2] = 45
+                data[4*i+2] = self.size[0]-5
                 data[4*i+3] = subunit*i   
 
         self.vao = glGenVertexArrays(1)
@@ -198,12 +206,14 @@ class Scale():
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):
-                axis_flayout.add_text(str(self._unit_f*(i-start_unit)), position[0]-10, position[1])
+                text = Text(str(self._unit_f*(i-start_unit))+self.unit_symbol, self._font)
+                axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] += capture_size
         else:
-            position = [0,size-capture_size]
+            position = [self.size[0]-15,size-capture_size]
             for i in range(0, self._unit_count):
-                axis_flayout.add_text(str(self._unit_f*(start_unit+i+1)), position[0], position[1]-float(self._font_size)/2)
+                text = Text(str(self._unit_f*(start_unit+i+1))+self.unit_symbol, self._font)
+                axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] -= capture_size
 
 

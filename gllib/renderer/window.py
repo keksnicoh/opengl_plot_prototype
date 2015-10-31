@@ -358,6 +358,10 @@ class Framebuffer(renderer.Renderer):
             glBlitFramebuffer(0, 0, self.capture_size[0], self.capture_size[1], 0, 0, self.capture_size[0], self.capture_size[1], GL_COLOR_BUFFER_BIT, GL_NEAREST);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
+
+            if len(GlApplication.GL__ACTIVE_FRAMEBUFFER):
+                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GlApplication.GL__ACTIVE_FRAMEBUFFER[-1])
+                
             self._record_captured = True
 
     def render(self):

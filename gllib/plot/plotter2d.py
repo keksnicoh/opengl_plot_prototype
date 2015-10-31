@@ -31,11 +31,11 @@ DEFAULT_COLORS = {
     'title-boxheight'      : 40,
     'title-font'           : 'fonts/arialbd.ttf',
     
-    'xlabel-fontsize'      : 16,
+    'xlabel-fontsize'      : 18,
     'xlabel-boxheight'     : 35,
     'xlabel-font'          : 'fonts/arialbd.ttf',
     
-    'ylabel-fontsize'      : 16,
+    'ylabel-fontsize'      : 18,
     'ylabel-boxheight'     : 35,
     'ylabel-font'          : 'fonts/arialbd.ttf',
 

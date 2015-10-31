@@ -98,5 +98,5 @@ class Camera2d(Camera):
             screen_factor[0]/scaling[0], 0, 0, 0,
             0, -screen_factor[1]/scaling[1], 0, 0,
             0, 0, 1, 0,
-            -1.0 + self.position[0], 1.0 + self.position[1], self.position[2], 1,
+            -1.0 + self.position[0]*screen_factor[0]/scaling[0], 1.0 + self.position[1]*screen_factor[1]/scaling[1], self.position[2], 1,
         ]).reshape(4,4), self._base_matrix.reshape(4,4)).flatten()

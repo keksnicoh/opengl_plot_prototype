@@ -11,7 +11,7 @@ void main()
 {
     if (debug) {
         finalColor = texture(tex, fragTexCoord);
-        finalColor = 1-color*finalColor;
+        finalColor = 1-color*vec4(finalColor.x,finalColor.x,finalColor.x,finalColor.x);
     }
     else {  
         finalColor = texture(tex, fragTexCoord);

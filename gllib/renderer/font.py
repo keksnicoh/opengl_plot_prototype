@@ -129,7 +129,7 @@ class Text():
             #  2 +---+ 3,4    -
             #    |   |
             #   (offset_x + size_x)
-            vert_size = (glyph_width, glyph_height)
+            vert_size = (glyph_width, glyph_height-1)
             vert_offset = (-glyph_offset_x, glyph_offset_y)
             self.vertex_data[n*12:(n+1)*12] = numpy.array([
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1],              #1 #left triangle

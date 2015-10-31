@@ -51,7 +51,7 @@ class Scale():
         self.vao = None
 
     def unit_density_factor(self, capture_size):
-        density = 150
+        density = 120
         size = capture_size
         f = 1.0 
         last_diff = density - size
@@ -209,6 +209,9 @@ class Scale():
         axis_flayout.clear_texts()
         axis_flayout.modelview.set_position(*self._frame.modelview.position)
         start_unit = numpy.floor(self._translation/capture_size)
+        print('START_UNIT', self._axis, start_unit, self._unit_count)
+        if self._axis == 0:
+            print(self._axis, size, capture_size, translation, self._unit_count, self.unit, self._scale_camera.position)
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):
@@ -259,16 +262,14 @@ class Scale():
         # translate the axis texture so it follows the scale_camera position.
         position = self._scale_camera.get_position()
         if self._axis == 1:
-            translation = 0.5*self.size[1]*position[1]
+            translation = self.size[1]*position[1]/self._last_screen_scaling[1]
             self._translation = translation
-
-            self._frame.screen_translation[1] = translation%self._frame.capture_size[1]
+            self._frame.screen_translation[1] = np.ceil(translation)%self._frame.capture_size[1]
             self.prepare_fonts()
         if self._axis == 0:
-            translation = 0.5*self.size[0]*position[0]
+            translation = self.size[0]*position[0]/self._last_screen_scaling[0]
             self._translation = translation
-
-            self._frame.screen_translation[0] = -translation%self._frame.capture_size[0]
+            self._frame.screen_translation[0] = -np.ceil(translation)%self._frame.capture_size[0]
             self.prepare_fonts()
 
     def update_modelview(self):

@@ -130,16 +130,34 @@ class Plotter(Controller):
     def keyboard_callback(self, active, pressed):
         update_camera = False
         if GLFW_KEY_W in active:
-            self._plotframe.inner_camera.move(0, +self.KEY_TRANSLATION_SPEED)
+            self._plotframe.inner_camera.move(
+                0, 
+                self.KEY_TRANSLATION_SPEED
+                *self._plotframe.inner_camera.scaling[1]
+                /self._plotframe.inner_camera.get_zoom()
+            )
             update_camera = True
         if GLFW_KEY_A in active:
-            self._plotframe.inner_camera.move(self.KEY_TRANSLATION_SPEED)
+            self._plotframe.inner_camera.move(
+                self.KEY_TRANSLATION_SPEED
+                *self._plotframe.inner_camera.scaling[0]
+                /self._plotframe.inner_camera.get_zoom()
+            )
             update_camera = True
         if GLFW_KEY_S in active:
-            self._plotframe.inner_camera.move(0, -self.KEY_TRANSLATION_SPEED)
+            self._plotframe.inner_camera.move(
+                0, 
+                -self.KEY_TRANSLATION_SPEED
+                *self._plotframe.inner_camera.scaling[1]
+                /self._plotframe.inner_camera.get_zoom()
+            )
             update_camera = True
         if GLFW_KEY_D in active:
-            self._plotframe.inner_camera.move(-self.KEY_TRANSLATION_SPEED)
+            self._plotframe.inner_camera.move(
+                -self.KEY_TRANSLATION_SPEED
+                *self._plotframe.inner_camera.scaling[0]
+                /self._plotframe.inner_camera.get_zoom()
+            )
             update_camera = True
         if GLFW_KEY_SPACE in active:
             zoom = 1+(-1 if GLFW_KEY_LEFT_SHIFT in active else 1)*self.KEY_ZOOM_SPEED
@@ -253,8 +271,10 @@ class Plotter(Controller):
             0, 0, 0, 1,
         ], dtype=np.float32))
         plotframe.inner_camera.set_scaling(self._axis)
+        print('ORIGIN', self._origin,self._axis)
         plotframe.inner_camera.set_position(*self._origin)
-
+        print('ORIGIN', self._origin)
+        print('AXIS', self._axis)
         self._plotframe = plotframe
 
         # setup axis

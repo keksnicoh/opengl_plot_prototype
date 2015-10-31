@@ -79,19 +79,19 @@ class DynamicContinousDomain(Domain):
             return numpy.array([
                 axis[0],        0,              0,
                 0,              1,              0,
-                -0.5*axis[0]*origin[0],     0,              1,
+                -origin[0],     0,              1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_Y:
            return numpy.array([
                 1,              0,              0,
                 0,              axis[1],        0,
-                0,              0.5*axis[1]*origin[1],     1,
+                0,              origin[1],     1,
             ], dtype=numpy.float32)
         elif self.mode == DynamicContinousDomain.MODE_DYNAMIC_XY:
             return numpy.array([
                 axis[0],        0,              0,
                 0,              axis[1],        0,
-                -0.5*axis[0]*origin[0],  0.5*axis[1]*origin[1],     1,
+                -origin[0],  origin[1],     1,
             ], dtype=numpy.float32)
         else:
             raise ValueError('mode must be either {}'.format(' or '.join([

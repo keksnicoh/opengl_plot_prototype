@@ -6,7 +6,7 @@ plot2d
 """
 from gllib.renderer import window
 from gllib.shader import Shader, Program
-from gllib.helper import hex_to_rgba, resource_path
+from gllib.helper import hex_to_rgba, resource_path, load_lib_file
 from gllib.application import GlApplication
 from gllib.controller import Controller
 from gllib.plot import axis 
@@ -255,10 +255,42 @@ class Plotter(Controller):
             camera      = self.camera, 
             screensize  = self.get_plotframe_size(), 
             screen_mode = window.Framebuffer.SCREEN_MODE_STRECH,
+            record_mode = window.Framebuffer.RECORD_TRACK_COMPLEX,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
             border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
         )
 
+        record_program = Program()
+        record_program.shaders.append(Shader(GL_VERTEX_SHADER, """
+#version 410
+in  vec2 vertex_position;
+in  vec2 text_coord;
+out vec2 frag_tex_coord;
+mat3 transformation;
+void main() {
+    transformation = mat3(
+        vec3(.95,0,0),
+        vec3(0,-.95,0),
+        vec3(0,.05,1)
+    );
+    frag_tex_coord = text_coord;
+    gl_Position = vec4((transformation*vec3(vertex_position,1)).xy, 0, 1); 
+}"""))
+        record_program.shaders.append(Shader(GL_FRAGMENT_SHADER, """
+#version 410
+in  vec2 frag_tex_coord;
+out vec4 output_color;
+uniform sampler2D tex[1];
+mat2 derp;
+void main() {
+    derp[0].x = 1; derp[0].y = 0;
+    derp[1].x = 0; derp[1].y = 1;
+    output_color = texture(tex[0], derp*frag_tex_coord);
+    //wsoutput_color.x = 1;
+}
+        """))
+        record_program.link()
+        plotframe.record_program = record_program
         plotframe.init()
         plotframe.modelview.set_position(self._plotplane_margin[3], self._plotplane_margin[0])
         plotframe.update_modelview()
@@ -271,10 +303,7 @@ class Plotter(Controller):
             0, 0, 0, 1,
         ], dtype=np.float32))
         plotframe.inner_camera.set_scaling(self._axis)
-        print('ORIGIN', self._origin,self._axis)
         plotframe.inner_camera.set_position(*self._origin)
-        print('ORIGIN', self._origin)
-        print('AXIS', self._axis)
         self._plotframe = plotframe
 
         # setup axis
@@ -325,14 +354,13 @@ class Plotter(Controller):
         graph_color_index = 0
         initial_scaling = [self._plotframe.inner_camera.get_matrix()[0], self._plotframe.inner_camera.get_matrix()[5]]
         for graph in [g for g in self.graphs.values() if not g.initialized]:
-            graph.init()
             if graph.color is None:
-                graph.program.use()
-                graph.program.uniform('color', hex_to_rgba(colors[graph_color_index%colors_length]))
-                graph.program.uniform('initial_scaling', initial_scaling)
-                graph.program.unuse()
+                graph.color = hex_to_rgba(colors[graph_color_index%colors_length])
                 graph_color_index+=1
-
+            graph.init()
+            graph.program.uniform('initial_scaling', initial_scaling)
+            graph.dot_program.uniform('initial_scaling', initial_scaling)
+            
         self._update_graph_matricies()
         self._graphs_initialized = True
 
@@ -399,12 +427,14 @@ class Plotter(Controller):
                 origin=(origin[0],origin[1]),
             )
 
-            graph.program.use()
             graph.program.uniform('mat_camera', plot_camera.get_matrix())
             graph.program.uniform('mat_domain', domain_matrix)
             graph.program.uniform('zoom', plot_camera.get_zoom())
-            graph.program.unuse() 
 
+            graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())
+            graph.dot_program.uniform('mat_domain', domain_matrix)
+            graph.dot_program.uniform('zoom', plot_camera.get_zoom())
+ 
     # controller action events
 
     def pre_render(self):

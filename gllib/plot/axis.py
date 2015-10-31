@@ -204,14 +204,12 @@ class Scale():
         translation      = self._frame.screen_translation[self._axis]
         size             = self._last_size[self._axis] + translation
         self._unit_count = int(numpy.floor(size/capture_size))
+        start_unit       = numpy.floor(self._translation/capture_size)
 
         axis_flayout = self._font_renderer.layouts['axis']
         axis_flayout.clear_texts()
         axis_flayout.modelview.set_position(*self._frame.modelview.position)
-        start_unit = numpy.floor(self._translation/capture_size)
-        print('START_UNIT', self._axis, start_unit, self._unit_count)
-        if self._axis == 0:
-            print(self._axis, size, capture_size, translation, self._unit_count, self.unit, self._scale_camera.position)
+
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):

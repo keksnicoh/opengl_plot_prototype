@@ -23,7 +23,8 @@ from gllib.gltype import *
 
 import re
 from OpenGL.GL import * 
-
+import numpy as np 
+from copy import deepcopy
 class ShaderError(GlError): 
     """
     error indicates problems with shaders and programs
@@ -101,9 +102,9 @@ class Program():
         self.gl_id      = None
         self.attributes = {}
         self.uniforms   = {}
-
-
-    def use(self):
+        self._uniform_changes = {}
+        self._uniform_values = {}
+    def use(self, flush_uniforms=True):
         """
         tells opengl state to use this program 
         """
@@ -115,6 +116,7 @@ class Program():
         if self.gl_id != Program.__LAST_USE_GL_ID:
             glUseProgram(self.gl_id)
             Program.__LAST_USE_GL_ID = self.gl_id
+            self.flush_uniforms()
 
     def unuse(self):
         """
@@ -160,13 +162,33 @@ class Program():
 
         return self.gl_id
 
-    def uniform(self, name, value):
+    def uniform(self, name, value, flush=False):
         if not name in self.uniforms:
             raise ShaderError('unkown uniform "{}"'.format(name))
 
+        if flush or self.gl_id == Program.__LAST_USE_GL_ID:
+            self._uniform(name, value)
+        else:
+            self._uniform_changes[name] = deepcopy(value)
+        #
+        #self.flush_uniforms()
+
+    def flush_uniforms(self, force=False):
+        for name, value in self._uniform_changes.items():
+            was_changed = False
+            if not force:
+                if isinstance(value, np.ndarray):
+                    was_changed = not np.array_equal(self._uniform_values[name], value)
+                else:
+                    was_changed = self._uniform_values[name] != value
+            if force or was_changed:
+                self._uniform(name, value)
+        self._uniform_changes = {} 
+
+    def _uniform(self, name, value):
         type = self.uniforms[name][1]
         location = self.uniforms[name][0]
-        
+
         if type == 'mat4':
             glUniformMatrix4fv(location, 1, GL_FALSE, mat4(value))
         elif type == 'mat3':
@@ -189,7 +211,8 @@ class Program():
             glUniform1i(location, value)
         else:
             raise NotImplementedError('oops! type "{}" not implemented by shader library.'.format(type))
-
+        self._uniform_values[name] = value
+        
     def get_vertex_shader(self):
         """
         returns vertex shader if appended
@@ -223,3 +246,5 @@ class Program():
                     ))
 
                 self.uniforms[k] = (glGetUniformLocation(self.gl_id, k), u[0], u[1])
+                self._uniform_values[k] = None
+

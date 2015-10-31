@@ -15,11 +15,19 @@ def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=10*sin(x)*cos(x)/x;x=10*cos(x)/x")
     plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=5)
+
+    plotter.graphs['dots'] = Line2d(
+        RealAxis(length=50),
+        'y=30*sin(0.1*x)',
+        draw_lines=True,
+        draw_dots=True,
+    )
+
 GlApplication.DEBUG = False    
 plot2d(
     plot_main, 
     axis         = [100, 100], 
-    origin       = [1, -1], 
+    origin       = [50, -50], 
     axis_units   = [np.pi,1],
     axis_unit_symbols=[u'\u03C0', ''] ,
     title='Hello plotting',

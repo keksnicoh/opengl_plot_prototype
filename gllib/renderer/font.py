@@ -96,11 +96,8 @@ class Text():
         return Text._LATEX_CHARACTER_MAPPING[match.group(1)]
 
     def _text_process(self):
-
         latex_replaced = re.sub(r'\$([a-zA-Z0-9]+)\$', self._map_latex_placeholder, self._text)
         return unicode(latex_replaced)
-
-
 
     def prepare(self):
         relpos          = [0.0,.0]

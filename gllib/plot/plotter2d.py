@@ -73,6 +73,7 @@ class Plotter(Controller):
         xlabel            = None,
         ylabel            = None,
         title             = None,
+        plotmode          = None,
         axis_unit_symbols = [None,None],
         axis_subunits     = [9,9],
         color_scheme      = DEFAULT_COLORS,
@@ -86,7 +87,18 @@ class Plotter(Controller):
         self.graphs               = graphs or {}
         self.plot_camera          = None
         self.color_scheme         = color_scheme
-        
+        self.plotmode = plotmode
+
+        if type(plotmode) is str:
+            if plotmode not in _PLOTMODE_ALIASES:
+                raise ValueError('unkown plotmode "{}". Available aliases are: {}'.format(
+                    ', '.join(_PLOTMODE_ALIASES.keys())
+                ))
+            self.plotmode = _PLOTMODE_ALIASES[plotmode][0](
+                *_PLOTMODE_ALIASES[plotmode][1], 
+                **_PLOTMODE_ALIASES[plotmode][2]
+            )
+
         self._axis_translation    = (5, 5)
         self._plotplane_margin    = (5, 5, 40, 75)
         self._plot_plane_min_size = (100, 100)
@@ -255,42 +267,14 @@ class Plotter(Controller):
             camera      = self.camera, 
             screensize  = self.get_plotframe_size(), 
             screen_mode = window.Framebuffer.SCREEN_MODE_STRECH,
-            record_mode = window.Framebuffer.RECORD_TRACK_COMPLEX,
+            record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
             border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
         )
 
-        record_program = Program()
-        record_program.shaders.append(Shader(GL_VERTEX_SHADER, """
-#version 410
-in  vec2 vertex_position;
-in  vec2 text_coord;
-out vec2 frag_tex_coord;
-mat3 transformation;
-void main() {
-    transformation = mat3(
-        vec3(1,0,0),
-        vec3(0,-1,0),
-        vec3(0,0,1)
-    );
-    frag_tex_coord = text_coord;
-    gl_Position = vec4((transformation*vec3(vertex_position,1)).xy, 0, 1); 
-}"""))
-        record_program.shaders.append(Shader(GL_FRAGMENT_SHADER, """
-#version 410
-in  vec2 frag_tex_coord;
-out vec4 output_color;
-uniform sampler2D tex[1];
-mat2 derp;
-void main() {
-    derp[0].x = 1; derp[0].y = 0;
-    derp[1].x = 0; derp[1].y = 1;
-    output_color = texture(tex[0], derp*frag_tex_coord);
-    output_color.w = 0.8;
-}
-        """))
-        record_program.link()
-        plotframe.record_program = record_program
+        if self.plotmode is not None:
+            plotframe.record_program = self.plotmode.get_shader()
+
         plotframe.init()
         plotframe.modelview.set_position(self._plotplane_margin[3], self._plotplane_margin[0])
         plotframe.update_modelview()
@@ -452,7 +436,6 @@ void main() {
             self.init_graphs()  
 
     def render(self):
-
         if self.render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
@@ -468,15 +451,56 @@ void main() {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
             self._plotframe.unuse()
-            self.render_graphs = False
 
+            self.render_graphs = False
+            
         self._plotframe.render()
         self._yaxis.render()
         self._xaxis.render()
         self._fontrenderer.render()
 
         
+class Plotter2dMode_Blur():
+    def __init__(self, w=0.8):
+        self.record_mode = window.Framebuffer.RECORD_TRACK_COMPLEX
+        self.w = w
+    def get_shader(self):
+        record_program = Program()
+        record_program.shaders.append(Shader(GL_VERTEX_SHADER, """
+#version 410
+in  vec2 vertex_position;
+in  vec2 text_coord;
+out vec2 frag_tex_coord;
+mat3 transformation;
+void main() {
+    transformation = mat3(
+        vec3(1,0,0),
+        vec3(0,-1,0),
+        vec3(0,0,1)
+    );
+    frag_tex_coord = text_coord;
+    gl_Position = vec4((transformation*vec3(vertex_position,1)).xy, 0, 1); 
+}"""))
+        record_program.shaders.append(Shader(GL_FRAGMENT_SHADER, """
+#version 410
+in  vec2 frag_tex_coord;
+out vec4 output_color;
+uniform sampler2D tex[1];
+mat2 derp;
+void main() {
+    derp[0].x = 1; derp[0].y = 0;
+    derp[1].x = 0; derp[1].y = 1;
+    output_color = texture(tex[0], derp*frag_tex_coord);
+    output_color.w = %f;
+}
+        """%self.w))
+        record_program.link()
+        return record_program
 
+_PLOTMODE_ALIASES = {
+    'blur'        : (Plotter2dMode_Blur, [], {}),
+    'blur_extreme': (Plotter2dMode_Blur, [], {'w':0.95}),
+}  
 
 DEBUG_COLORS = DEFAULT_COLORS.copy()
 DEBUG_COLORS.update({

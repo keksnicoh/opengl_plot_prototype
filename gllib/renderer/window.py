@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 """
+framebuffer utilities
 :author: Nicolas 'keksnicoh' Heimann 
 """
 
@@ -18,11 +19,46 @@ import numpy
 import logging
 
 class Framebuffer(renderer.Renderer):
-    SCREEN_MODE_STRECH = 1
-    SCREEN_MODE_REPEAT = 2
+    """
+    enables to record a scene to a framebuffer
+    and renders the scene to screen. 
+    has a lot of usefull features and settings:
+    
+    screensize: size of the screen in main frame
+    capture_size: size of the screen in inner frame
 
-    RECORD_CLEAR = 1
-    RECORD_TRACK = 2
+    screen_mode: whether the captured scene should be streched over to 
+      screenplane or should be repeated (if capture size is smaller than screensize).
+      (SCREEN_MODE_STRECH, SCREEN_MODE_REPEAT)
+
+    record_mode:
+    - RECORD_CLEAR: before start recording glClear is invoked
+    - RECORD_TRACK: glClear will only invoke on first record to reset the texture buffer
+    - RECORD_TRACK_COMPLEX: another framebuffer keeps track of the last rendered scene.
+        on next scene record the last record will be rendered to background.
+        it is possible to define a custom shader.
+    
+    border: can be a custom object with some required method which is rendered
+      after rendering the plane. allows to decorate the plane.
+
+    ..example
+      fw = Framebufer(controller.camera, (200, 200))
+      fw.init()
+
+      # ...
+      # in render cycle
+      if some_cache_should_be_reloaded:
+          fw.use()
+          render_funny_stuff()
+          fw.unuse()
+
+      fw.render()
+    """
+
+    SCREEN_MODE_STRECH   = 1
+    SCREEN_MODE_REPEAT   = 2
+    RECORD_CLEAR         = 1
+    RECORD_TRACK         = 2
     RECORD_TRACK_COMPLEX = 3
 
     """
@@ -361,7 +397,7 @@ class Framebuffer(renderer.Renderer):
 
             if len(GlApplication.GL__ACTIVE_FRAMEBUFFER):
                 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, GlApplication.GL__ACTIVE_FRAMEBUFFER[-1])
-                
+
             self._record_captured = True
 
     def render(self):

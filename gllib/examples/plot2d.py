@@ -18,14 +18,15 @@ from time import time
 
 def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
-    plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=10*sin(x)*cos(x)/x;x=10*cos(x)/x")
-    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=5)
+    plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=60*sin(x)*cos(x)/x;x=60*cos(x)/x")
+    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=2)
 
     plotter.graphs['dots'] = Line2d(
         RealAxis(length=100),
         'y=30*sin(0.1*x+10*time)*cos(5*x+5*time)',
         draw_lines=True,
         draw_dots=True,
+        dotcolor=[1,0,0,0.5]
     )
 
     plotter.on_pre_cycle.append(PlotTicker())
@@ -36,6 +37,7 @@ plot2d(
     axis         = [100, 100], 
     origin       = [50, -50], 
     axis_units   = [np.pi,1],
+    plotmode = 'blur_extreme',
     axis_unit_symbols=[u'\u03C0', ''] ,
     title='Hello plotting',
     xlabel='to cool space of $xi$',

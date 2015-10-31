@@ -100,7 +100,7 @@ class Plotter(Controller):
             )
 
         self._axis_translation    = (5, 5)
-        self._plotplane_margin    = (5, 5, 40, 75)
+        self._plotplane_margin    = (5, 5, 40, 45)
         self._plot_plane_min_size = (100, 100)
         self._axis                = axis 
         self._axis_units          = axis_units 

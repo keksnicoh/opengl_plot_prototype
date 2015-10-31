@@ -19,4 +19,7 @@ to the implementation.
 images
 ------
 first plots
-![Periodenverdopplung analytical for f(x) and f^2(x)](/firstplot.png)
+![firstplot](/firstplot.png)
+
+some weird blured plots (oszi...)
+![oszi](/weird-oszi)

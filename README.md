@@ -22,4 +22,4 @@ first plots
 ![firstplot](/firstplot.png)
 
 some weird blured plots (oszi...)
-![oszi](/weird-oszi)
+![oszi](/weird-oszi.jpg)

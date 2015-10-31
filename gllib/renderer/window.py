@@ -74,6 +74,7 @@ class Framebuffer(renderer.Renderer):
         self._record_vbo              = None
         self._record_framebuffer_id   = None
         self._gl_clear_executed       = False
+        self._record_captured         = False
 
     def __del__(self):
         """
@@ -213,6 +214,8 @@ class Framebuffer(renderer.Renderer):
         content to the record_texture
         """
         if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
+            self._record_captured = False
+
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
@@ -322,8 +325,8 @@ class Framebuffer(renderer.Renderer):
             self._gl_clear_executed = True
         glViewport(0, 0, *ivec2(self.capture_size))
 
-        # complex record texture to the background plane
-        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX and self._has_captured:
+        # draw complex record texture to the background plane
+        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX and self._record_captured:
             self.record_program.use()
             glActiveTexture(GL_TEXTURE0);
             glBindTexture (GL_TEXTURE_2D, self._record_texture_id)
@@ -331,6 +334,7 @@ class Framebuffer(renderer.Renderer):
             glDrawArrays(GL_TRIANGLES, 0, 6)
             glBindVertexArray(0)
             self.record_program.unuse()
+
         
     def unuse(self):
         """
@@ -351,9 +355,10 @@ class Framebuffer(renderer.Renderer):
         if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._record_framebuffer_id)
             glBindFramebuffer(GL_READ_FRAMEBUFFER, self._framebuffer_id)
-            glBlitFramebuffer(0, 0, 1000, 1000, 0, 0, 1000, 1000, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            glBlitFramebuffer(0, 0, self.capture_size[0], self.capture_size[1], 0, 0, self.capture_size[0], self.capture_size[1], GL_COLOR_BUFFER_BIT, GL_NEAREST);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
+            self._record_captured = True
 
     def render(self):
         """

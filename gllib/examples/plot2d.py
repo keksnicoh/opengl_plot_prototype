@@ -9,7 +9,12 @@ from gllib.plot.graph import Line2d
 from gllib.plot.app import plot2d
 from gllib.plot.plotter2d import DARK_COLORS, DEBUG_COLORS
 from gllib.application import GlApplication
+from gllib.plot.timedependency import PlotTicker
+
 import numpy as np 
+from time import time
+
+
 
 def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
@@ -17,11 +22,13 @@ def plot_main(plotter):
     plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=5)
 
     plotter.graphs['dots'] = Line2d(
-        RealAxis(length=50),
-        'y=30*sin(0.1*x)',
+        RealAxis(length=100),
+        'y=30*sin(0.1*x+10*time)*cos(5*x+5*time)',
         draw_lines=True,
         draw_dots=True,
     )
+
+    plotter.on_pre_cycle.append(PlotTicker())
 
 GlApplication.DEBUG = False    
 plot2d(

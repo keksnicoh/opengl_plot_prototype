@@ -117,13 +117,13 @@ class Plotter(Controller):
 
         self._fontrenderer = None
         # states
-        self._render_graphs      = True
+        self.render_graphs      = True
         self._graphs_initialized = False
         self._has_rendered       = False
 
         self.on_keyboard.append(self.keyboard_callback)
         self.on_pre_render.insert(0, self.pre_render)
-        self.on_cycle.append(self.check_graphs)
+        self.on_pre_cycle.append(Plotter.check_graphs)
         self.on_post_render.append(self.post_render)
         self.on_render.append(self.render)
 
@@ -269,9 +269,9 @@ out vec2 frag_tex_coord;
 mat3 transformation;
 void main() {
     transformation = mat3(
-        vec3(.95,0,0),
-        vec3(0,-.95,0),
-        vec3(0,.05,1)
+        vec3(1,0,0),
+        vec3(0,-1,0),
+        vec3(0,0,1)
     );
     frag_tex_coord = text_coord;
     gl_Position = vec4((transformation*vec3(vertex_position,1)).xy, 0, 1); 
@@ -286,7 +286,7 @@ void main() {
     derp[0].x = 1; derp[0].y = 0;
     derp[1].x = 0; derp[1].y = 1;
     output_color = texture(tex[0], derp*frag_tex_coord);
-    //wsoutput_color.x = 1;
+    output_color.w = 0.8;
 }
         """))
         record_program.link()
@@ -407,7 +407,7 @@ void main() {
         self._update_plotframe_camera()
         self._update_graph_matricies()
 
-        self._render_graphs = True
+        self.render_graphs = True
         self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
         Controller.camera_updated(self, camera)
 
@@ -435,6 +435,8 @@ void main() {
             graph.dot_program.uniform('mat_domain', domain_matrix)
             graph.dot_program.uniform('zoom', plot_camera.get_zoom())
  
+
+
     # controller action events
 
     def pre_render(self):
@@ -451,7 +453,7 @@ void main() {
 
     def render(self):
 
-        if self._render_graphs:
+        if self.render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
 
@@ -466,7 +468,7 @@ void main() {
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
             self._plotframe.unuse()
-            self._render_graphs = False
+            self.render_graphs = False
 
         self._plotframe.render()
         self._yaxis.render()

@@ -20,17 +20,18 @@ class Line2d(Graph):
     """
     line plotter
     """
-    def __init__(self, domain, kernel='', draw_dots=False, draw_lines=True, color=None, width=1, dot_size=None, shift=(0.0,0.0)):
+    def __init__(self, domain, kernel='', draw_dots=False, draw_lines=True, color=None, width=1, dotsize=None, shift=(0.0,0.0)):
         Graph.__init__(self, domain)
         self.color       = color
         self._kernel     = kernel
         self.color_index = None
         self.draw_lines  = draw_lines
         self.draw_dots   = draw_dots 
-        self.dot_size = dot_size or width*5
+        self.dotsize = dotsize or width*5
         self.initialized = False 
         self._width      = width
         self.shift       = shift
+
 
     def init(self):
         """
@@ -90,9 +91,13 @@ class Line2d(Graph):
         self.program.uniform('width', Line2d.GEOMETRY_SHADER_WIDTH*self._width)
         self.dot_program.uniform('color', self.color or [0,0,0,1])
         self.dot_program.uniform('mat_domain', numpy.identity(4).flatten())
-        self.dot_program.uniform('width', Line2d.GEOMETRY_SHADER_WIDTH*self.dot_size)
+        self.dot_program.uniform('width', Line2d.GEOMETRY_SHADER_WIDTH*self.dotsize)
 
         self.initialized = True
+
+    def set_time(self, time):
+        self.program.uniform('time', time)
+        self.dot_program.uniform('time', time)
 
     def render(self, plotter):
         """

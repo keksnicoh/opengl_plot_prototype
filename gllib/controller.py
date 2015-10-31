@@ -43,8 +43,7 @@ class Controller():
     def cycle(self, 
         keyboard_active=set(),
         keyboard_pressed=set()):
-
-        self.on_pre_cycle()
+        self.on_pre_cycle(self)
         if len(keyboard_pressed) or len(keyboard_active):
             self.on_keyboard(keyboard_active, keyboard_pressed)
 

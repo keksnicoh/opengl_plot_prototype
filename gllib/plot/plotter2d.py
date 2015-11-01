@@ -92,7 +92,7 @@ class Plotter(Controller):
         if type(plotmode) is str:
             if plotmode not in _PLOTMODE_ALIASES:
                 raise ValueError('unkown plotmode "{}". Available aliases are: {}'.format(
-                    ', '.join(_PLOTMODE_ALIASES.keys())
+                    plotmode, ', '.join(_PLOTMODE_ALIASES.keys())
                 ))
             self.plotmode = _PLOTMODE_ALIASES[plotmode][0](
                 *_PLOTMODE_ALIASES[plotmode][1], 

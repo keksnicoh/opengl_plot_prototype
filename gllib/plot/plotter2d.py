@@ -336,14 +336,23 @@ class Plotter(Controller):
         colors = self.color_scheme['graph-colors']
         colors_length = len(colors)
         graph_color_index = 0
-        initial_scaling = [self._plotframe.inner_camera.get_matrix()[0], self._plotframe.inner_camera.get_matrix()[5]]
+        initial_scaling = [
+            self._plotframe.inner_camera.get_matrix()[0], 
+            self._plotframe.inner_camera.get_matrix()[5]
+        ]
+        initial_plane_scaling = [
+            self._plotframe.camera.get_matrix()[0], 
+            self._plotframe.camera.get_matrix()[5]
+        ]
         for graph in [g for g in self.graphs.values() if not g.initialized]:
             if graph.color is None:
                 graph.color = hex_to_rgba(colors[graph_color_index%colors_length])
                 graph_color_index+=1
             graph.init()
             graph.program.uniform('initial_scaling', initial_scaling)
+            graph.program.uniform('initial_plane_scaling', initial_plane_scaling)
             graph.dot_program.uniform('initial_scaling', initial_scaling)
+            graph.dot_program.uniform('initial_plane_scaling', initial_plane_scaling)
             
         self._update_graph_matricies()
         self._graphs_initialized = True
@@ -498,8 +507,17 @@ void main() {
         return record_program
 
 _PLOTMODE_ALIASES = {
-    'blur'        : (Plotter2dMode_Blur, [], {}),
-    'blur_extreme': (Plotter2dMode_Blur, [], {'w':0.95}),
+    'oszi' : (Plotter2dMode_Blur, [], {}),
+    'oszi0': (Plotter2dMode_Blur, [], {'w':0.05}),
+    'oszi1': (Plotter2dMode_Blur, [], {'w':0.15}),
+    'oszi2': (Plotter2dMode_Blur, [], {'w':0.25}),
+    'oszi3': (Plotter2dMode_Blur, [], {'w':0.35}),
+    'oszi4': (Plotter2dMode_Blur, [], {'w':0.45}),
+    'oszi5': (Plotter2dMode_Blur, [], {'w':0.55}),
+    'oszi6': (Plotter2dMode_Blur, [], {'w':0.65}),
+    'oszi7': (Plotter2dMode_Blur, [], {'w':0.75}),
+    'oszi8': (Plotter2dMode_Blur, [], {'w':0.85}),
+    'oszi9': (Plotter2dMode_Blur, [], {'w':0.95}),
 }  
 
 DEBUG_COLORS = DEFAULT_COLORS.copy()

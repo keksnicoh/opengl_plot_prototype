@@ -19,6 +19,7 @@ uniform         mat4 mat_camera;
 uniform         float width = 0.002;
 uniform         float zoom = 1;          
 uniform         vec2 initial_scaling = vec2(1,1);  
+uniform         vec2 initial_plane_scaling = vec2(1,1);  
                 vec2 p[4]; // verticies
                 vec2 t[2]; // tangents between 0-1, 2-3
                 vec2 m[2];
@@ -45,11 +46,11 @@ void main(void)
     m[1] = vec2(-t[1].y, t[1].x);
     l[0] = width/(0.0001+dot(m[0], n(p[0], p[1])))/zoom;
     l[1] = width/(0.0001+dot(m[1], n(p[1], p[2])))/zoom;
-
-    m[0].x /= initial_scaling.x/2;
-    m[0].y /= initial_scaling.y/2;
-    m[1].x /= initial_scaling.x/2;
-    m[1].y /= initial_scaling.y/2;
+    float p = initial_plane_scaling.x/initial_plane_scaling.y;
+    m[0].x /= 1.0/p*initial_scaling.x/2;
+    m[0].y /= p*initial_scaling.y/2;
+    m[1].x /= 1.0/p*initial_scaling.x/2;
+    m[1].y /= p*initial_scaling.y/2;
 
     // emit
     color = fragment_color[0];

@@ -14,6 +14,7 @@ layout (max_vertices = 4) out;
 out             vec4 color;
 out             vec2 coord;
 in              vec4 fragment_color[1];
+uniform         vec2 initial_plane_scaling = vec2(1,1);  
 
 uniform         mat4 mat_camera;
 uniform         float width = 2;

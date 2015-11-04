@@ -399,7 +399,6 @@ class FontRenderer(renderer.Renderer):
             # text is used by layouts but there is no vao
             # or text was not prepared yet.
             elif vao is None or not text.is_prepared:
-
                 text.prepare()
                 vertex_data = text.vertex_data
                 text_coord_data = text.txt_data

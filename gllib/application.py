@@ -147,15 +147,15 @@ class GlWindow():
     into the given controller. a GlWindow does not render something,
     it is the adapter between a Controller and Glfw. 
     """
-    def __init__(self, width, height, title='no title'):
+    def __init__(self, width, height, title='no title', x=0, y=0):
         """
         basic state initialization.
         """
         self.width = width
         self.height = height
         self.title = title 
-        self.x = 0
-        self.y = 0
+        self.x = x
+        self.y = y
 
         self.controller = Controller(Camera2d((width, height)))
         self.event_queue = CommandQueue()
@@ -224,9 +224,12 @@ class GlWindow():
         glfwSwapBuffers(self._glfw_window)
 
     def set_position(self, x, y):
-        glfwSetWindowPos(self._glfw_window, int(x), int(y))
-        self.x = x
-        self.y = y
+        if self.x and self.y:
+            glfwSetWindowPos(self._glfw_window, int(self.x), int(self.y))
+        else:
+            glfwSetWindowPos(self._glfw_window, int(x), int(y))
+            self.x = x
+            self.y = y
 
     def make_context(self):
         glfwMakeContextCurrent(self._glfw_window)

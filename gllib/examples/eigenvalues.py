@@ -1,9 +1,9 @@
 #-*- coding: utf-8 -*-
 
-from lib.plot.domain import RealAxisData
-from lib.plot.graph import Line2d
-from lib.plot.app import plot2dMulti, plot2d
-from lib.plot.plotter2d import DARK_COLORS
+from gllib.plot.domain import RealAxisData
+from gllib.plot.graph import Line2d
+from gllib.plot.app import plot2dMulti, plot2d
+from gllib.plot.plotter2d import DARK_COLORS
 
 import numpy as np
 from numpy import linalg as LA

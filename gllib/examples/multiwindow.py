@@ -6,8 +6,8 @@ from gllib.plot.domain import RealAxis
 from gllib.plot.graph import Line2d
 
 app = GlApplication()
-window1 = GlWindow(200, 200, x=10, y=10)
-window2 = GlWindow(200, 200, x=10, y=210)
+window1 = GlWindow(200, 200, x=0, y=0)
+window2 = GlWindow(200, 200, x=0, y=210)
 
 
 def plot_main(plotter):

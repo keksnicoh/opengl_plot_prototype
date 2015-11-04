@@ -147,7 +147,7 @@ class GlWindow():
     into the given controller. a GlWindow does not render something,
     it is the adapter between a Controller and Glfw. 
     """
-    def __init__(self, width, height, title='no title', x=0, y=0):
+    def __init__(self, width, height, title='no title', x=None, y=None):
         """
         basic state initialization.
         """
@@ -224,7 +224,7 @@ class GlWindow():
         glfwSwapBuffers(self._glfw_window)
 
     def set_position(self, x, y):
-        if self.x and self.y:
+        if not self.x == None and not self.y == None:
             glfwSetWindowPos(self._glfw_window, int(self.x), int(self.y))
         else:
             glfwSetWindowPos(self._glfw_window, int(x), int(y))

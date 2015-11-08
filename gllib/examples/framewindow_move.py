@@ -27,7 +27,7 @@ class ExampleController(Controller):
             capture_size=[150, 150], 
             screen_mode=Framebuffer.SCREEN_MODE_REPEAT,
             clear_color=[1,0,0,1])
-        self.framebuffer.init(self)
+        self.framebuffer.init()
 
         # first quad
         self.rectangle1 = SimplePrimitivesRenderer(self.framebuffer.inner_camera)
@@ -46,9 +46,9 @@ class ExampleController(Controller):
     def run(self):
         if self.framebuffer.has_captured():
             self.framebuffer.use()
-            self.rectangle1.render(self)
+            self.rectangle1.render()
             self.framebuffer.unuse()
-        self.framebuffer.render(self)
+        self.framebuffer.render()
         self.framebuffer.screen_translation[0] = 100*(time()-self.start_time)
         self.framebuffer.screen_translation[1] = 100*numpy.sin(0.1*self.framebuffer.screen_translation[0])
 window = GlWindow(600, 600, '2 cool quads 4 yolo')

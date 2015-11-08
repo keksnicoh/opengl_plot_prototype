@@ -14,8 +14,6 @@ from gllib.plot.timedependency import PlotTicker
 import numpy as np 
 from time import time
 
-
-
 def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=60*sin(x)*cos(x)/x;x=60*cos(x)/x")

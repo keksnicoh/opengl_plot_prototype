@@ -1,18 +1,18 @@
-from lib.application import GlWindow, GlApplication
-from lib.controller import Controller
-from lib.plot.plotter2d import Plotter
+from gllib.application import GlWindow, GlApplication
+from gllib.controller import Controller
+from gllib.plot.plotter2d import Plotter
 
-from lib.plot.domain import RealAxis, RealAxisDual
-from lib.plot.graph import Line2d
+from gllib.plot.domain import RealAxis
+from gllib.plot.graph import Line2d
 
 app = GlApplication()
-window1 = GlWindow(200, 200)
-window2 = GlWindow(200, 200)
+window1 = GlWindow(200, 200, x=0, y=0)
+window2 = GlWindow(200, 200, x=0, y=210)
 
 
 def plot_main(plotter):
 	
-    domain = RealAxisDual(length=100)
+    domain = RealAxis(length=100)
     plotter.graphs['test'] = Line2d(domain, "y=sin(x)")
 
 plotter = Plotter()

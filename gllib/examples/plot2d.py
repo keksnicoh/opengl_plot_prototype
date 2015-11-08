@@ -34,13 +34,13 @@ def plot_main(plotter):
 GlApplication.DEBUG = False    
 plot2d(
     plot_main, 
-    axis         = [100, 100], 
-    origin       = [50, -50], 
-    axis_units   = [np.pi,1],
-    plotmode = 'blur_extreme',
-    axis_unit_symbols=[u'\u03C0', ''] ,
-    title='Hello plotting',
-    xlabel='to cool space of $xi$',
-    ylabel='fancy measurement f($xi$) [$omega$^2 kg/m^2]',
-    color_scheme = DARK_COLORS
+    axis              = [100, 100], 
+    origin            = [50, -50], 
+    axis_units        = [np.pi,1],
+    plotmode          = 'oszi9',
+    axis_unit_symbols = ['$pi$', ''] ,
+    title             = 'Hello plotting',
+    xlabel            = 'to cool space of $xi$',
+    ylabel            = 'fancy measurement f($xi$) [$omega$^2 kg/m^2]',
+    color_scheme      = DARK_COLORS
 )

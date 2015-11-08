@@ -21,5 +21,5 @@ images
 first plots
 ![firstplot](/firstplot.png)
 
-some weird blured plots (oszi...)
+weird test plot with plotmode=oszi9
 ![oszi](/weird-oszi.jpg)

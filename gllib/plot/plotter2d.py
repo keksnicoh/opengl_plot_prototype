@@ -14,6 +14,7 @@ from gllib.glfw import *
 from gllib.renderer.font import FontRenderer, RelativeLayout, Text
 
 import numpy as np 
+from collections import OrderedDict
 
 from PIL import ImageFont
 from OpenGL.GL import *
@@ -84,7 +85,7 @@ class Plotter(Controller):
         if GlApplication.DEBUG:
             color_scheme = DEBUG_COLORS
         
-        self.graphs               = graphs or {}
+        self.graphs               = graphs or OrderedDict()
         self.plot_camera          = None
         self.color_scheme         = color_scheme
         self.plotmode = plotmode

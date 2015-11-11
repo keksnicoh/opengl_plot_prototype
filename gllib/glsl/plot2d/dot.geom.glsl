@@ -21,7 +21,7 @@ uniform         float width = 2;
 uniform         float zoom = 1;          
 uniform         vec2 initial_scaling = vec2(1,1);  
 
-float l;
+float l,h;
 /**
  * calculates the normal of 2 vec2 
  */
@@ -32,23 +32,24 @@ vec2 n(vec2 x0, vec2 x1)
 
 void main(void)
 {
-    l = width/initial_scaling[0]/zoom;
+    l = width/initial_scaling[0]/(2*zoom);
+    h = width/initial_scaling[1]/zoom;
     // emit
     color = fragment_color[0];
     coord = vec2(0,1);
-    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(-l, l, 0, 0));
+    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(-l, h, 0, 0));
     EmitVertex();
     color = fragment_color[0];
     coord = vec2(0,l);
-    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(l, l, 0, 0));
+    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(l, h, 0, 0));
     EmitVertex();
     color = fragment_color[0];
     coord = vec2(0,l);
-    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(-l, -l, 0, 0));
+    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(-l, -h, 0, 0));
     EmitVertex();
     color = fragment_color[0];
     coord = vec2(0,l);
-    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(l, -l, 0, 0));
+    gl_Position = mat_camera*(gl_in[0].gl_Position + vec4(l, -h, 0, 0));
     EmitVertex();
 
     EndPrimitive();

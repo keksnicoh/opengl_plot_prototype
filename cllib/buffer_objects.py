@@ -50,7 +50,7 @@ class ClStructDict():
         self.assert_fieldname(name)
         if not name in self._values:
             return None 
-        return self._values
+        return self._values[name]
 
     def assert_fieldname(self, name):
         """

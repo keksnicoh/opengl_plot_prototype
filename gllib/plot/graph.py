@@ -33,7 +33,6 @@ class Line2d(Graph):
         self._width      = width
         self.shift       = shift
 
-
     def init(self):
         """
         creates shader and vao 
@@ -80,6 +79,12 @@ class Line2d(Graph):
         vertex_attribute = self.program.attributes['vertex_position']
         self.vao         = glGenVertexArrays(1)
 
+
+        #self.vao = VertexAttayObject(self.program, attributes={
+        #    'vertex_position': VertexBufferObject(self.length),
+        #    'vertex_text': VertexBufferObject(self.length),
+        #})
+    
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, self.domain.get_vbo())
         glVertexAttribPointer(vertex_attribute, dimension, GL_FLOAT, GL_FALSE, 0, None)

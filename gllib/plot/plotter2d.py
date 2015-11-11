@@ -519,6 +519,7 @@ _PLOTMODE_ALIASES = {
     'oszi7': (Plotter2dMode_Blur, [], {'w':0.75}),
     'oszi8': (Plotter2dMode_Blur, [], {'w':0.85}),
     'oszi9': (Plotter2dMode_Blur, [], {'w':0.95}),
+    'oszi95': (Plotter2dMode_Blur, [], {'w':0.995}),
 }  
 
 DEBUG_COLORS = DEFAULT_COLORS.copy()
@@ -541,7 +542,6 @@ DEBUG_COLORS.update({
         '0000ffff',
         'ffff00ff',
         'ff00ffff',
-        '00ffffff',
     ]
 })
 
@@ -564,7 +564,10 @@ DARK_COLORS.update({
         '00ff00bb',
         '0000ffbb',
         'ff00ffbb',
+        'f0ff0fbb',
         '00ffffbb',
+        'f0f0f0bb',
+        'aaff66bb',
     ]
 })
 

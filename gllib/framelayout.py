@@ -13,8 +13,7 @@ class FramelayoutController(Controller):
     def init(self):
         Controller.init(self)
         self.camera.on_change_matrix.append(self.rescale_camera)
-
-
+        self.prepare()
     def keyboard_callback(self, *args, **kwargs):
         for frame, column in self._frames:
             column.controller.keyboard_callback(*args, **kwargs)

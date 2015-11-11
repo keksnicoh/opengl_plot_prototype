@@ -126,7 +126,7 @@ class Text():
             #  2 +---+ 3,4    -
             #    |   |
             #   (offset_x + size_x)
-            vert_size = (glyph_width, glyph_height-1)
+            vert_size = (glyph_width, glyph_height)
             vert_offset = (-glyph_offset_x, glyph_offset_y)
             self.vertex_data[n*12:(n+1)*12] = numpy.array([
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1],              #1 #left triangle
@@ -164,8 +164,8 @@ class Text():
         if (id(self.font), char) not in Text._TEXTURE_CACHE:
             ID = glGenTextures (1)
             glBindTexture (GL_TEXTURE_2D, ID)
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
-            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+            glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
             tex2d = []
             for j in xrange (height):
                 for i in xrange (width):

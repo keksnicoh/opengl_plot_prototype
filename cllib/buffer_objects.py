@@ -89,7 +89,6 @@ class ClStructDict():
             if not name in self._synced_values or self._values[name] != self._synced_values[name]:
                 has_changes = True
             host[name].fill(self._values[name])
-            print(name, self._values[name])
             self._synced_values[name] = self._values[name]
 
         if force or has_changes:

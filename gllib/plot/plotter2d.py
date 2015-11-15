@@ -520,6 +520,7 @@ _PLOTMODE_ALIASES = {
     'oszi8': (Plotter2dMode_Blur, [], {'w':0.85}),
     'oszi9': (Plotter2dMode_Blur, [], {'w':0.95}),
     'oszi95': (Plotter2dMode_Blur, [], {'w':0.995}),
+    'oszi100': (Plotter2dMode_Blur, [], {'w':1}),
 }  
 
 DEBUG_COLORS = DEFAULT_COLORS.copy()

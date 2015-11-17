@@ -94,6 +94,7 @@ class Framebuffer(renderer.Renderer):
         self.modelview          = modelview or ModelView()
         self.record_mode        = record_mode 
         self.record_program     = None
+        self.custom_texture_filters = None
 
         self._rgb_texture_id          = None 
         self._framebuffer_id          = None 
@@ -221,7 +222,7 @@ class Framebuffer(renderer.Renderer):
         if self._rgb_texture_id is not None:
             glDeleteTextures([self._rgb_texture_id])
 
-        self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=[
+        self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters or [
             # those filters enable translation on 
             # texture without anyoing blur effects.
             (GL_TEXTURE_MAG_FILTER, GL_NEAREST),
@@ -255,7 +256,7 @@ class Framebuffer(renderer.Renderer):
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
-            self._record_texture_id = glutil.simple_texture(self.capture_size)  
+            self._record_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters)  
             if self._record_framebuffer_id is None:
                 self._record_framebuffer_id = glGenFramebuffers(1);
                 

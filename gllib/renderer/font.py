@@ -63,7 +63,7 @@ class Text():
         'omega'     : u'\u03c9',
         'Psi'       : u'\u03a8',
         'Omega'     : u'\u03a9',
-
+        'Int'       : u'\u222B',
     }
 
     def __init__(self, text, font, line_spacing=5):

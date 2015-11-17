@@ -65,7 +65,8 @@ class ClStructDict():
         returns struct code to inject
         into opencl kernel
         """
-        self._dtype, my_struct_c_decl = cl.tools.match_dtype_to_c_struct(self.ctx.devices[0], self.struct_name, self._dtype)
+        _, my_struct_c_decl = cl.tools.match_dtype_to_c_struct(self.ctx.devices[0], self.struct_name, self._dtype)
+        
         return my_struct_c_decl
 
     def update(self, values):

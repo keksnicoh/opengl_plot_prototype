@@ -40,6 +40,8 @@ DEFAULT_COLORS = {
     'ylabel-boxheight'     : 35,
     'ylabel-font'          : 'fonts/arialbd.ttf',
 
+    'font-color': '000000ff',
+
     'xaxis-bgcolor'        : 'ffffffff',
     'xaxis-linecolor'      : '000000ff',
     'xaxis-bgcolor'        : '00000000',
@@ -260,7 +262,7 @@ class Plotter(Controller):
         self._fontrenderer = FontRenderer(self.camera)
         self._fontrenderer.layouts['labels'] = RelativeLayout(boxsize=self.camera.screensize)
         self._fontrenderer.init()
-        self._fontrenderer.set_color([1,1,1,1])
+        self._fontrenderer.set_color(hex_to_rgba(self.color_scheme['font-color']))
         self.init_labels()
 
         # setup plotplane
@@ -270,6 +272,7 @@ class Plotter(Controller):
             screen_mode = window.Framebuffer.SCREEN_MODE_STRECH,
             record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
+            multisampling = 8,
             border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
         )
         plotframe.custom_texture_filters = [

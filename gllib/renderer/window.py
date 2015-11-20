@@ -73,7 +73,8 @@ class Framebuffer(renderer.Renderer):
         inner_camera = None, 
         modelview    = None,
         clear_color  = [0,0,0,1],
-        border       = None):
+        border       = None,
+        multisampling = None):
         """
         initializes attributes
         :param camera: camera instance 
@@ -95,6 +96,7 @@ class Framebuffer(renderer.Renderer):
         self.record_mode        = record_mode 
         self.record_program     = None
         self.custom_texture_filters = None
+        self.multisampling = multisampling or 1 
 
         self._rgb_texture_id          = None 
         self._framebuffer_id          = None 
@@ -123,6 +125,7 @@ class Framebuffer(renderer.Renderer):
             glDeleteFramebuffers([self._framebuffer_id])
 
     def init(self):
+        glEnable( GL_MULTISAMPLE )
         """
         initializes shader program, framebuffer and plane vao/vbo
         """
@@ -221,20 +224,24 @@ class Framebuffer(renderer.Renderer):
         # cleanup if there was allready a texture
         if self._rgb_texture_id is not None:
             glDeleteTextures([self._rgb_texture_id])
+        self._rgb_texture_id = self._multisample_texture(*self.capture_size)
 
-        self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters or [
-            # those filters enable translation on 
-            # texture without anyoing blur effects.
-            (GL_TEXTURE_MAG_FILTER, GL_NEAREST),
-            (GL_TEXTURE_MIN_FILTER, GL_NEAREST),
-        ])
+        #glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, self.capture_size[0], self.capture_size[1], 0, GL_RGBA, GL_UNSIGNED_BYTE, None);
+        #glTexParameterf(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        #glTexParameterf(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        #self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters or [
+        #    # those filters enable translation on 
+        #    # texture without anyoing blur effects.
+        #    (GL_TEXTURE_MAG_FILTER, GL_NEAREST),
+        #    (GL_TEXTURE_MIN_FILTER, GL_NEAREST),
+        #])
 
         if self._framebuffer_id is None:
             self._framebuffer_id = glGenFramebuffers(1);
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._framebuffer_id)
         glDrawBuffer(GL_COLOR_ATTACHMENT0)
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, self._rgb_texture_id, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, self._rgb_texture_id, 0);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0)
 
         self.inner_camera.set_screensize(self.capture_size)
@@ -243,6 +250,20 @@ class Framebuffer(renderer.Renderer):
         self._gl_clear_executed = False
 
         self.init_record_track_complex()
+        self.program.uniform('u_samples', self.multisampling)
+
+    def _multisample_texture(self, width, height):
+        textid = glGenTextures(1);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, textid);
+        try:
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.multisampling, GL_RGBA, numpy.int32(self.capture_size[0]), numpy.int32(self.capture_size[1]), True );
+        except error.GLError as e:
+            if self.multisampling < 2:
+                raise e
+            logging.warning('could not create multisample texture. maybe multisampling=%s is too high? gonna disable multisampling ...', self.multisampling)
+            self.multisampling = 1 
+            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.multisampling, GL_RGBA, numpy.int32(self.capture_size[0]), numpy.int32(self.capture_size[1]), False );
+        return textid
 
     def init_record_track_complex(self):
         """
@@ -256,7 +277,7 @@ class Framebuffer(renderer.Renderer):
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
-            self._record_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters)  
+            self._record_texture_id = self._multisample_texture(*self.capture_size)
             if self._record_framebuffer_id is None:
                 self._record_framebuffer_id = glGenFramebuffers(1);
                 
@@ -416,7 +437,7 @@ class Framebuffer(renderer.Renderer):
 
         # final rendering
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture (GL_TEXTURE_2D, self._rgb_texture_id)
+        glBindTexture (GL_TEXTURE_2D_MULTISAMPLE, self._rgb_texture_id)
         glBindVertexArray(self._vao)
         self.program.use()
         if GlApplication.DEBUG:

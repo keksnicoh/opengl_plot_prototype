@@ -198,7 +198,7 @@ class Program():
         elif type == 'float':
             glUniform1f(location, value)
         elif type == 'int':
-            glUniform1f(location, value)
+            glUniform1i(location, value)
         elif type == 'vec2':
             glUniform2f(location, *value)
         elif type == 'vec3':

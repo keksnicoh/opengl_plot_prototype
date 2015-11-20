@@ -19,26 +19,26 @@ def plot_main(plotter):
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=60*sin(x)*cos(x)/x;x=60*cos(x)/x")
     plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=2)
 
-    plotter.graphs['dots'] = Line2d(
-        RealAxis(length=100),
-        'y=30*sin(0.1*x+10*time)*cos(5*x+5*time)',
-        draw_lines=True,
-        draw_dots=True,
-        dotcolor=[1,0,0,0.5]
-    )
+   # plotter.graphs['dots'] = Line2d(
+   #     RealAxis(length=100),
+   #     'y=30*sin(0.1*x+10*time)*cos(5*x+5*time)',
+   #     draw_lines=True,
+   #     draw_dots=True,
+   #     dotcolor=[1,0,0,0.5]
+   # )
 
     plotter.on_pre_cycle.append(PlotTicker())
 
 GlApplication.DEBUG = False    
 plot2d(
     plot_main, 
-    axis              = [100, 100], 
-    origin            = [50, -50], 
+    axis              = [50, 50], 
+    origin            = [25, -25], 
     axis_units        = [np.pi,1],
-    plotmode          = 'oszi9',
+    #plotmode          = 'oszi9',
     axis_unit_symbols = ['$pi$', ''] ,
     title             = 'Hello plotting',
     xlabel            = 'to cool space of $xi$',
     ylabel            = 'fancy measurement f($xi$) [$omega$^2 kg/m^2]',
-    color_scheme      = DARK_COLORS
+  #  color_scheme      = DARK_COLORS
 )

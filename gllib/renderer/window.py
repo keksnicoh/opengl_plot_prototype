@@ -387,7 +387,7 @@ class Framebuffer(renderer.Renderer):
         if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX and self._record_captured:
             self.record_program.use()
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture (GL_TEXTURE_2D, self._record_texture_id)
+            glBindTexture (GL_TEXTURE_2D_MULTISAMPLE, self._record_texture_id)
             glBindVertexArray(self._record_vao)
             glDrawArrays(GL_TRIANGLES, 0, 6)
             glBindVertexArray(0)

@@ -275,12 +275,6 @@ class Plotter(Controller):
             multisampling = 8,
             border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
         )
-        plotframe.custom_texture_filters = [
-            # those filters enable translation on 
-            # texture without anyoing blur effects.
-            (GL_TEXTURE_MAG_FILTER, GL_LINEAR),
-            (GL_TEXTURE_MIN_FILTER, GL_LINEAR),
-        ]
 
         if self.plotmode is not None:
             plotframe.record_program = self.plotmode.get_shader()

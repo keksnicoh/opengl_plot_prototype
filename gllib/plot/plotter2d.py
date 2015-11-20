@@ -50,7 +50,7 @@ DEFAULT_COLORS = {
     'yaxis-linecolor'      : '000000ff',
     'yaxis-bgcolor'        : '00000000',
     'yaxis-fontcolor'      : '000000ff',
-    'yaxis-bgcolor'        : 'ffffffff',
+    'yaxis-bgcolor'        : 'ffffff00',
 
     'graph-colors': [
         '000000ff',
@@ -349,14 +349,20 @@ class Plotter(Controller):
             self._plotframe.camera.get_matrix()[5]
         ]
         for graph in [g for g in self.graphs.values() if not g.initialized]:
-            if graph.color is None:
+            if hasattr(graph, 'color') and graph.color is None:
                 graph.color = hex_to_rgba(colors[graph_color_index%colors_length])
                 graph_color_index+=1
+
             graph.init()
-            graph.program.uniform('initial_scaling', initial_scaling)
-            graph.program.uniform('initial_plane_scaling', initial_plane_scaling)
-            graph.dot_program.uniform('initial_scaling', initial_scaling)
-            graph.dot_program.uniform('initial_plane_scaling', initial_plane_scaling)
+            if hasattr(graph, 'program'):
+                if 'initial_scaling' in graph.program.uniforms:
+                    graph.program.uniform('initial_scaling', initial_scaling)
+                if 'initial_plane_scaling' in graph.program.uniforms:
+                    graph.program.uniform('initial_plane_scaling', initial_plane_scaling)
+
+            if hasattr(graph, 'dot_program'):
+                graph.dot_program.uniform('initial_scaling', initial_scaling)
+                graph.dot_program.uniform('initial_plane_scaling', initial_plane_scaling)
             
         self._update_graph_matricies()
         self._graphs_initialized = True
@@ -428,9 +434,10 @@ class Plotter(Controller):
             graph.program.uniform('mat_domain', domain_matrix)
             graph.program.uniform('zoom', plot_camera.get_zoom())
 
-            graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())
-            graph.dot_program.uniform('mat_domain', domain_matrix)
-            graph.dot_program.uniform('zoom', plot_camera.get_zoom())
+            if hasattr(graph, 'dot_program'):
+                graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())
+                graph.dot_program.uniform('mat_domain', domain_matrix)
+                graph.dot_program.uniform('zoom', plot_camera.get_zoom())
  
 
 
@@ -529,6 +536,7 @@ _PLOTMODE_ALIASES = {
 DEBUG_COLORS = DEFAULT_COLORS.copy()
 DEBUG_COLORS.update({
     'bgcolor'              : '000000ff',
+    'font-color'           : 'ffffffff',
     'plotplane-bgcolor'    : 'ccccccff',
     'plotplane-bordercolor': '000000ff',
     'xaxis-bgcolor'        : 'ffffffff',
@@ -555,6 +563,8 @@ DARK_COLORS.update({
     'bgcolor'              : '000000ff',
     'plotplane-bgcolor'    : '02050eff',
     'plotplane-bordercolor': 'FF9900ff',
+    'font-color'           : 'ffffffff',
+
     'xaxis-bgcolor'        : '020609ff',
     'yaxis-bgcolor'        : '020609ff',
     'xaxis-linecolor'      : '99D699ff',

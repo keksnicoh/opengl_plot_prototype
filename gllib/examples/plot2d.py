@@ -35,7 +35,7 @@ plot2d(
     axis              = [50, 50], 
     origin            = [25, -25], 
     axis_units        = [np.pi,1],
-    plotmode          = 'oszi9',
+    #plotmode          = 'oszi9',
     axis_unit_symbols = ['$pi$', ''] ,
     title             = 'Hello plotting',
     xlabel            = 'to cool space of $xi$',

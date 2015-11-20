@@ -393,7 +393,6 @@ class Framebuffer(renderer.Renderer):
             glBindVertexArray(0)
             self.record_program.unuse()
 
-        
     def unuse(self):
         """
         disable framebuffer and restores old opengl state.

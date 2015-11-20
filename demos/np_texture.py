@@ -20,7 +20,7 @@ np_data = np.array([
 dim = int(np.sqrt(len(np_data)))
 
 
-VERT_SHADER_ID = """
+VERT_SHADER = """
 #version 410
 in vec2 vertex_position;
 in vec2 text_coord;
@@ -30,7 +30,7 @@ void main() {
     frag_text_coord = text_coord;
 }
 """
-FRAG_SHADER_ID = """
+FRAG_SHADER = """
 #version 410
 out vec4 output_color;
 uniform sampler2D tex[1];
@@ -57,14 +57,14 @@ glfwMakeContextCurrent(window)
 program = glCreateProgram()
 
 vertex_shader = glCreateShader(GL_VERTEX_SHADER)
-glShaderSource(vertex_shader, VERT_SHADER_ID)
+glShaderSource(vertex_shader, VERT_SHADER)
 glCompileShader(vertex_shader)
 glAttachShader(program, vertex_shader)
 log = glGetShaderInfoLog(vertex_shader)
 if log: raise Exception(log)
 
 fragment_shader = glCreateShader(GL_FRAGMENT_SHADER)
-glShaderSource(fragment_shader, FRAG_SHADER_ID)
+glShaderSource(fragment_shader, FRAG_SHADER)
 glCompileShader(fragment_shader)
 glAttachShader(program, fragment_shader)
 log = glGetShaderInfoLog(fragment_shader)

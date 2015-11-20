@@ -11,6 +11,9 @@ API methods:
 """
 from OpenGL.GL import *
 import numpy 
+from gllib.util import Event
+from gllib import texture
+
 
 class Domain():
     def __init__(self, vbo_id, dimension=2, offset=0, length=None):
@@ -33,6 +36,59 @@ class Domain():
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             return float(size)
         return self._length*4*self.dimension
+
+class FieldDomain():
+    """
+    texture based domain
+    """
+    def __init__(self, texture):
+        self.texture       = texture
+        self.gl_texture_id = None
+        self.channels      = None 
+        self.dimensions    = None
+
+    # helper methods to spawn a FieldDomain
+    @classmethod
+    def from_numpy(cls, np_data, discrete=True):
+        return cls(texture.NumpyTexture(np_data, gl_texture_parameters=[
+            (GL_TEXTURE_MAG_FILTER, GL_NEAREST if discrete else GL_LINEAR),
+            (GL_TEXTURE_MIN_FILTER, GL_NEAREST if discrete else GL_LINEAR),
+        ]))
+
+    # XXX
+    # - spawn methods for image files (png, bmp, ...)
+    # - spawn methods for text files
+    # - spawn methods for external languages (fortran, c, cython, ...)
+    # - spawn methods for opencl textures ??
+    # - future: spawn methods for other domains / plotting results
+
+    def gl_init(self):
+        """ 
+        initializes texture and fetches properties
+        """
+        if hasattr(self.texture, 'gl_texture_id'):
+            if hasattr(self.texture, 'gl_init'):
+                self.texture.gl_init()
+            self.gl_texture_id = self.texture.gl_texture_id
+        else:
+            self.gl_texture_id = self.texture
+
+        glBindTexture(GL_TEXTURE_2D, self.gl_texture_id)
+        self.dimensions = (
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH),
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT)
+        )
+
+        self.channels = sum([1 if a == 8 else 0 for a in (
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_RED_SIZE),
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_GREEN_SIZE),
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_BLUE_SIZE),
+            glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_ALPHA_SIZE)
+        )])
+        
+        glBindTexture (GL_TEXTURE_2D, 0)
+    def get_transformation_matrix(self, axis, origin):
+        return numpy.identity(3).flatten()
 
 class DynamicContinousDomain(Domain):
     """

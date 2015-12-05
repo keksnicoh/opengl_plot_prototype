@@ -34,8 +34,9 @@ class ClStructDict():
         self._dtype         = np.dtype(fields)
         self.ctx            = None
         self._values        = {}
-        self.cl_array = None
+        self.cl_array       = None
         self._synced_values = {}
+        self.host           = None
 
     def init_cl(self, ctx):
         self.ctx = ctx
@@ -82,19 +83,19 @@ class ClStructDict():
         :param queue:
         :param force: forces sync even if there are no changes within python state
         """
-        host = np.empty(1, self._dtype)
+        self.host = np.empty(1, self._dtype)
         has_changes = False
         for name in self._dtype.fields:
             if name not in self._values or self._values[name] is None:
                 raise ValueError('field "{}->{}" must be neither undefined nor None'.format(self.struct_name, name))
             if not name in self._synced_values or self._values[name] != self._synced_values[name]:
                 has_changes = True
-            host[name].fill(self._values[name])
+            self.host[name].fill(self._values[name])
             self._synced_values[name] = self._values[name]
 
         if force or has_changes:
             try:
-                self.cl_array = cl.array.to_device(queue, host)
+                self.cl_array = cl.array.to_device(queue, self.host)
             except Exception as e:
                 self._synced_values = {}
                 raise e

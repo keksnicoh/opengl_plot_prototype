@@ -122,6 +122,7 @@ class Scale():
             capture_size = capture_size,
             screen_mode  = window.Framebuffer.SCREEN_MODE_REPEAT, 
             clear_color  = self.bgcolor,
+            multisampling=4,
             modelview    = self.modelview,
         )
         

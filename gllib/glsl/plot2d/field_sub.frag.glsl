@@ -9,8 +9,8 @@ uniform vec4 color2;
 void main() {
     if (fragment_position.x > 9) {}
 
-    mediump vec4 color1 = texture(tex1[0], fragment_position);
-    mediump vec4 color2 = texture(tex2[0], fragment_position);
+    mediump vec4 color1 = texture(tex1[0], vec2(fragment_position.x, fragment_position.y));
+    mediump vec4 color2 = texture(tex2[0], vec2(fragment_position.x, fragment_position.y));
 
-    fragment_color = vec4(color1.rgb - color2.rgb, color1.a);
+    fragment_color = 10*vec4(color1.rgb - color2.rgb, color1.a);
 }

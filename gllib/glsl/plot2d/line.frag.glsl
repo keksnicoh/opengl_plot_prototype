@@ -8,6 +8,7 @@ out             vec4 output_color;
 in              vec4 color;
 in              vec2 coord;
 
+
 void main() 
 {
     output_color = color;  

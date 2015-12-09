@@ -17,11 +17,12 @@ class Field():
     """
     draw a 2d field by using Field Domain (OpenGL textures)
     """
-    def __init__(self, domain, top_left=None, bottom_right=None):
+    def __init__(self, domain, top_left=None, bottom_right=None, color_scheme=None):
 
         self.top_left            = top_left 
         self.bottom_right        = bottom_right
         self.domain              = domain
+        self.color_scheme        = color_scheme
         self.initialized         = False
         self.program             = None
         
@@ -67,13 +68,20 @@ class Field():
         """
         self.program = Program()
         self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/field.vert.glsl')))
-        self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/field.frag.glsl')))
+        if self.color_scheme:
+            self.program.shaders.append(self.color_scheme.get_fragment_shader())
+        else:
+            self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/field.frag.glsl')))
         self.program.link()
 
         self.vertex_array = VertexArray({
             'vertex_position': VertexBuffer.from_numpy(self._np_vertex_data),
             'texture_position': VertexBuffer.from_numpy(self._np_texture_data),
-        }, self.program.attributes) 
+        }, self.program.attributes)
+
+        if self.color_scheme:
+            for uniform in self.color_scheme.uniform_data:
+                self.program.uniform(*uniform)
 
 
     def render(self, plotter):

@@ -81,6 +81,8 @@ class Shader():
             glShaderSource(self.gl_id, source)
             glCompileShader(self.gl_id)
 
+            print(source)
+
             error_log = glGetShaderInfoLog(self.gl_id)
             if error_log:
                 self.delete()

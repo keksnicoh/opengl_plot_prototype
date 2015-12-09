@@ -106,9 +106,8 @@ class FramelayoutController(Controller):
 
                 frame.modelview.set_position(*column.absolute_position)
                 frame.update_modelview()
-
+                print(type(controller))
                 current_x += column.absolute_width
-
                 controller.camera = frame.inner_camera
                 controller.init()
                 controller.host_controller = self

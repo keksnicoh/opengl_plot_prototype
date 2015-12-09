@@ -20,9 +20,9 @@ import numpy as np
 # it will set it automatically to 1 so
 # only GL_RED channel is used.
 #
-w = 10
-h = 100
-color_channels = 2
+w = 1000
+h = 1000
+color_channels = 3
 data = np.random.random_sample(w*h*color_channels).reshape(w, h, color_channels)
 
 def plot_main(plotter): 

@@ -1,7 +1,7 @@
 from gllib.shader import * 
 from gllib.helper import load_lib_file
 from OpenGL.GL import * 
-
+from gllib.application import GlApplication
 class Graph():
     def __init__(self, domain):
         self.program = None
@@ -112,6 +112,9 @@ class Line2d(Graph):
         if not self.initialized:
             self.init()
 
+        if GlApplication.DEBUG == True:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            
         if self.draw_lines:
             self.program.use()
             self.program.uniform('shift', self.shift)
@@ -137,7 +140,8 @@ class Line2d(Graph):
             glBindVertexArray(0)
             self.dot_program.unuse()
 
-
+        if GlApplication.DEBUG == True:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
 
 

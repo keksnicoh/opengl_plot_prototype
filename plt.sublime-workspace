@@ -4,6 +4,30 @@
 		"selected_items":
 		[
 			[
+				"gl_",
+				"gl_texture_id	statement"
+			],
+			[
+				"Vertex",
+				"VertexBuffer	class"
+			],
+			[
+				"fragme",
+				"fragment_position"
+			],
+			[
+				"_np_",
+				"_np_vertex_data"
+			],
+			[
+				"_coor",
+				"_coord_bottom_right	function"
+			],
+			[
+				"simple",
+				"simple_texture"
+			],
+			[
 				"RECO",
 				"RECORD_CLEAR	statement"
 			],
@@ -490,40 +514,33 @@
 			[
 				"lya",
 				"lyapunov2"
-			],
-			[
-				"LYA",
-				"LYAPUNOV_NORMIERT	statement"
-			],
-			[
-				"LYAPUNOV_",
-				"LYAPUNOV_ANALYTISCH	statement"
-			],
-			[
-				"iter",
-				"intervals	statement"
-			],
-			[
-				"_init",
-				"_init_inner_matrix	function"
-			],
-			[
-				"_re",
-				"_real_projection_matrix	function"
-			],
-			[
-				"inter",
-				"interval	forstmt"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "gllib/application.py",
+			"file": "gllib/renderer/window.py",
 			"settings":
 			{
-				"buffer_size": 8373,
+				"buffer_size": 21129,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "gllib/examples/plot2d_pixeltest.py",
+			"settings":
+			{
+				"buffer_size": 1209,
+				"line_ending": "Unix",
+				"name": "plot2d_pixeltest.py"
+			}
+		},
+		{
+			"file": "gllib/glsl/plot2d/line.geom.glsl",
+			"settings":
+			{
+				"buffer_size": 2786,
 				"line_ending": "Unix"
 			}
 		},
@@ -531,58 +548,15 @@
 			"file": "gllib/plot/graph.py",
 			"settings":
 			{
-				"buffer_size": 4648,
+				"buffer_size": 5099,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "gllib/glsl/plot2d/line.vert.glsl",
+			"file": "demos/np_texture.py",
 			"settings":
 			{
-				"buffer_size": 994,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/shader.py",
-			"settings":
-			{
-				"buffer_size": 7918,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/renderer/window.py",
-			"settings":
-			{
-				"buffer_size": 19648,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "README.md",
-			"settings":
-			{
-				"buffer_size": 662,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/glsl/framewindow.vert.glsl",
-			"settings":
-			{
-				"buffer_size": 262,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"contents": "#version 410\nin  vec2 frag_tex_coord;\nout vec4 output_color;\nuniform sampler2D tex[1];\nvoid main() {\n\n    output_color = texture(tex[0], frag_tex_coord);\n\n}",
-			"file": "gllib/glsl/framewindow_record.frag.glsl",
-			"file_size": 157,
-			"file_write_time": 130907881300000000,
-			"settings":
-			{
-				"buffer_size": 156,
+				"buffer_size": 3238,
 				"line_ending": "Unix"
 			}
 		},
@@ -590,72 +564,7 @@
 			"file": "gllib/plot/plotter2d.py",
 			"settings":
 			{
-				"buffer_size": 20329,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/examples/plot2d.py",
-			"settings":
-			{
-				"buffer_size": 1373,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/plot/timedependency.py",
-			"settings":
-			{
-				"buffer_size": 588,
-				"line_ending": "Unix",
-				"name": "timedependence.py"
-			}
-		},
-		{
-			"file": "gllib/controller.py",
-			"settings":
-			{
-				"buffer_size": 1524,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/examples/framelayout.py",
-			"settings":
-			{
-				"buffer_size": 845,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/plot/app.py",
-			"settings":
-			{
-				"buffer_size": 1771,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/plot/axis.py",
-			"settings":
-			{
-				"buffer_size": 11153,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/helper.py",
-			"settings":
-			{
-				"buffer_size": 615,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/examples/fonttest.py",
-			"settings":
-			{
-				"buffer_size": 2703,
+				"buffer_size": 21033,
 				"line_ending": "Unix"
 			}
 		}
@@ -878,20 +787,40 @@
 	],
 	"file_history":
 	[
-		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow_record.vert.glsl",
-		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow_record.frag.glsl",
+		"/Users/keksnicoh/py/plt/gllib/plot/field.py",
+		"/Users/keksnicoh/py/plt/gllib/texture.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/domain.py",
+		"/Users/keksnicoh/py/plt/gllib/examples/fieldplot.py",
+		"/Users/keksnicoh/py/plt/gllib/buffer.py",
+		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/field.vert.glsl",
+		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/field.frag.glsl",
+		"/Users/keksnicoh/py/plt/gllib/examples/plot2d.py",
+		"/Users/keksnicoh/py/plt/gllib/glsl/texture.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow.vert.glsl",
+		"/Users/keksnicoh/py/plt/gllib/examples/fonttest.py",
+		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow_record.frag.glsl",
+		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow.frag.glsl",
+		"/Users/keksnicoh/py/plt/gllib/shader.py",
+		"/Users/keksnicoh/py/plt/gllib/helper.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/axis.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/app.py",
+		"/Users/keksnicoh/py/plt/demos/np_texture.py",
+		"/Users/keksnicoh/py/plt/gllib/controller.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/timedependency.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/plotter2d.py",
+		"/Users/keksnicoh/py/plt/gllib/renderer/window.py",
+		"/Users/keksnicoh/py/plt/README.md",
+		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/line.vert.glsl",
+		"/Users/keksnicoh/py/plt/gllib/plot/graph.py",
+		"/Users/keksnicoh/py/plt/gllib/application.py",
+		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow_record.vert.glsl",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/dot.frag.glsl",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/dot.geom.glsl",
 		"/Users/keksnicoh/unih/bsc/numerical/controller/kspaceplot.py",
 		"/Users/keksnicoh/py/plt/gllib/matrix.py",
-		"/Users/keksnicoh/py/plt/gllib/shader.py",
 		"/Users/keksnicoh/py/plt/gllib/renderer/font.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/font/font.frag.glsl",
 		"/Users/keksnicoh/py/plt/gllib/examples/multiwindow.py",
-		"/Users/keksnicoh/py/plt/gllib/renderer/window.py",
-		"/Users/keksnicoh/py/plt/gllib/plot/axis.py",
-		"/Users/keksnicoh/py/plt/gllib/examples/plot2d.py",
 		"/Users/keksnicoh/py/plt/demos/framebuffer.py",
 		"/Users/keksnicoh/py/plt/demos/geometry_line.py",
 		"/Users/keksnicoh/py/plt/demos/geometry_line_details.py",
@@ -899,9 +828,6 @@
 		"/Users/keksnicoh/py/plt/gllib/examples/framewindow.py",
 		"/Users/keksnicoh/py/plt/gllib/examples/framewindow_move.py",
 		"/Users/keksnicoh/py/plt/gllib/examples/primitives.py",
-		"/Users/keksnicoh/py/plt/gllib/plot/app.py",
-		"/Users/keksnicoh/py/plt/gllib/plot/graph.py",
-		"/Users/keksnicoh/py/plt/gllib/plot/plotter2d.py",
 		"/Users/keksnicoh/py/plt/gllib/renderer/plotter2d.py",
 		"/Users/keksnicoh/py/plt/gllib/renderer/primitives.py",
 		"/Users/keksnicoh/py/plt/lib/examples/plot2d.py",
@@ -920,7 +846,6 @@
 		"/Users/keksnicoh/py/plt/lib/plot/graph.py",
 		"/Users/keksnicoh/py/plt/lib/glsl/framewindow.frag.glsl",
 		"/Users/keksnicoh/py/plt/lib/renderer/primitives.py",
-		"/Users/keksnicoh/py/plt/README.md",
 		"/Users/keksnicoh/py/plt/demos/__init__.py",
 		"/Users/keksnicoh/py/plt/lib/glsl/id.frag.glsl",
 		"/Users/keksnicoh/py/plt/lib/renderer/plotter2d.py",
@@ -989,23 +914,7 @@
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_api.py",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_util.py",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/sv.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/etc/made.stage/peers/vbm/api.yml",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/brutto.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/netto.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/calcresult.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/application/__init__.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/application/test.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/steuerrechner.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/compiler.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/converter/save_calculation_payload.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test_client.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/vre.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/__init__.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/.ssh/rrepnak.pub",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/ssh_tunnel_config",
-		"/Users/keksnicoh/slice-dice/valuenet.life/.gitignore",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/.ssh/id_rsa.pub",
-		"/Users/keksnicoh/slice-dice/valuenet.life/docker-compose.yml"
+		"/Users/keksnicoh/slice-dice/valuenet.life/etc/made.stage/peers/vbm/api.yml"
 	],
 	"find":
 	{
@@ -1028,6 +937,46 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"0",
+			"m",
+			"init_gl",
+			"FRAG_SHADER_ID",
+			"VERT_SHADER_ID",
+			"dimension",
+			"OrderedDict",
+			"_origin",
+			"z",
+			"GL_NEAREST",
+			"init",
+			"domain.gl_init",
+			"'tex",
+			"tex",
+			"_coord_top_left",
+			"bottom_right",
+			"top_left",
+			"gl_program",
+			"np",
+			"numpy",
+			"self._texture_id",
+			"_texture_id",
+			"coord_min",
+			"coord_max",
+			"NumpyField",
+			"internal_format",
+			"custom_texture_filters",
+			"self._rgb_texture_id",
+			"u_sample_number",
+			"vao1",
+			"GL_NEAREST",
+			"tex_position",
+			"1",
+			"2",
+			"1",
+			"0",
+			"numpy",
+			"link_record_program_to_vbo",
+			"vbo1",
+			"numpy",
 			"PLOTMODE_ALIASES",
 			"_record_captures",
 			"dot_size",
@@ -1115,47 +1064,7 @@
 			"has_changed",
 			"_process_text",
 			"_boxsize",
-			"_text_coord_data",
-			"text_coord_data",
-			"get_width",
-			"get_height",
-			"frag_x",
-			"relpos",
-			"_render_data",
-			"_width",
-			"_unit_density_factor",
-			"prepare_fonts",
-			"_texts",
-			"self.max_line_height",
-			"relx",
-			"position_relative",
-			"self.y+",
-			"+self.x",
-			"rel_xy",
-			"line_height_factor",
-			"max_line_height",
-			"get_boundaries",
-			"self.aligned",
-			"rel_xy",
-			"self.x",
-			"self._texts",
-			"self._texts[text.unique_id]",
-			"_is_prepared",
-			"prepare",
-			"layouts",
-			"_texts",
-			"_render_data",
-			"self.color",
-			"self.length",
-			"length",
-			"xy",
-			"_texture_cache",
-			"_render_data",
-			"_is_camera_updated",
-			"_texts",
-			"has_changed",
-			"from lib",
-			"from lib."
+			"_text_coord_data"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1187,24 +1096,24 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 2,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "gllib/application.py",
+					"file": "gllib/renderer/window.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 8373,
+						"buffer_size": 21129,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								175,
-								175
+								18886,
+								18734
 							]
 						],
 						"settings":
@@ -1216,59 +1125,58 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 13,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "gllib/plot/graph.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4648,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3350,
-								3350
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 175.0,
+						"translation.y": 6139.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 3,
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "gllib/glsl/plot2d/line.vert.glsl",
+					"buffer": 1,
+					"file": "gllib/examples/plot2d_pixeltest.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 994,
+						"buffer_size": 1209,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								743,
-								743
+								518,
+								518
+							]
+						],
+						"settings":
+						{
+							"auto_name": "plot2d_pixeltest.py",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "gllib/glsl/plot2d/line.geom.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2786,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1447,
+								1448
 							]
 						],
 						"settings":
@@ -1280,27 +1188,27 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 556.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 4,
+					"stack_index": 0,
 					"type": "text"
 				},
 				{
 					"buffer": 3,
-					"file": "gllib/shader.py",
+					"file": "gllib/plot/graph.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 7918,
+						"buffer_size": 5099,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								6641,
-								6641
+								4095,
+								4095
 							]
 						],
 						"settings":
@@ -1312,7 +1220,7 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 1207.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 2,
@@ -1320,19 +1228,19 @@
 				},
 				{
 					"buffer": 4,
-					"file": "gllib/renderer/window.py",
+					"file": "demos/np_texture.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 19648,
+						"buffer_size": 3238,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								3052,
-								3052
+								605,
+								605
 							]
 						],
 						"settings":
@@ -1344,123 +1252,27 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1020.0,
+						"translation.y": 441.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 9,
+					"stack_index": 4,
 					"type": "text"
 				},
 				{
 					"buffer": 5,
-					"file": "README.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 662,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								662,
-								662
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Markdown/Markdown.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "gllib/glsl/framewindow.vert.glsl",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 262,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								86,
-								111
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 11,
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "gllib/glsl/framewindow_record.frag.glsl",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 156,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								156,
-								0
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 12,
-					"type": "text"
-				}
-			]
-		},
-		{
-			"selected": 4,
-			"sheets":
-			[
-				{
-					"buffer": 8,
 					"file": "gllib/plot/plotter2d.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 20329,
+						"buffer_size": 21033,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								2680,
-								2680
+								20512,
+								20512
 							]
 						],
 						"settings":
@@ -1472,258 +1284,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 8,
-					"type": "text"
-				},
-				{
-					"buffer": 9,
-					"file": "gllib/examples/plot2d.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1373,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1164,
-								1164
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				},
-				{
-					"buffer": 10,
-					"file": "gllib/plot/timedependency.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 588,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								118,
-								118
-							]
-						],
-						"settings":
-						{
-							"auto_name": "timedependence.py",
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 10,
-					"type": "text"
-				},
-				{
-					"buffer": 11,
-					"file": "gllib/controller.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1524,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1261,
-								1261
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 12,
-					"file": "gllib/examples/framelayout.py",
-					"semi_transient": true,
-					"settings":
-					{
-						"buffer_size": 845,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								826,
-								826
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 13,
-					"file": "gllib/plot/app.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1771,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								243,
-								243
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 14,
-					"type": "text"
-				},
-				{
-					"buffer": 14,
-					"file": "gllib/plot/axis.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 11153,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								7234,
-								7234
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2564.0,
+						"translation.y": 5525.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 15,
-					"file": "gllib/helper.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 615,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								401,
-								401
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 15,
-					"type": "text"
-				},
-				{
-					"buffer": 16,
-					"file": "gllib/examples/fonttest.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2703,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								612,
-								555
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 16,
 					"type": "text"
 				}
 			]
@@ -1746,18 +1310,11 @@
 				0,
 				1,
 				1
-			],
-			[
-				1,
-				0,
-				2,
-				1
 			]
 		],
 		"cols":
 		[
 			0.0,
-			0.50806853813,
 			1.0
 		],
 		"rows":
@@ -1993,7 +1550,7 @@
 		],
 		"width": 0.0
 	},
-	"selected_group": 1,
+	"selected_group": 0,
 	"settings":
 	{
 	},

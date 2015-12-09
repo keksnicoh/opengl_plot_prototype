@@ -12,7 +12,7 @@ from gllib.controller import Controller
 from gllib.plot import axis 
 from gllib.glfw import *
 from gllib.renderer.font import FontRenderer, RelativeLayout, Text
-
+from gllib.buffer import VertexBuffer, VertexArray
 import numpy as np 
 from collections import OrderedDict
 
@@ -20,7 +20,6 @@ from PIL import ImageFont
 from OpenGL.GL import *
 
 DEFAULT_COLORS = {
-
     'bgcolor'              : 'ffffffff',
     'plotplane-bgcolor'    : 'ffffffff',
     'plotplane-bordercolor': '000000ff',
@@ -52,6 +51,9 @@ DEFAULT_COLORS = {
     'yaxis-fontcolor'      : '000000ff',
     'yaxis-bgcolor'        : 'ffffff00',
 
+    'select-area-bgcolor'  : 'dddddd66',
+    'select-area-pending-bgcolor'  : '6666ffbb',
+
     'graph-colors': [
         '000000ff',
         'aa0000ff',
@@ -67,6 +69,10 @@ class Plotter(Controller):
     KEY_TRANSLATION_SPEED = 0.05
     KEY_ZOOM_SPEED        = 0.02
     FONT_ENCODING         = 'unic'
+
+    STATE_SELECT_AREA         = 'STATE_SELECT_AREA'
+    STATE_IDLE                = 'STATE_IDLE'
+    STATE_SELECT_AREA_PENDING = 'STATE_SELECT_AREA_PENDING'
 
     def __init__(self, 
         camera            = None, 
@@ -102,27 +108,36 @@ class Plotter(Controller):
                 **_PLOTMODE_ALIASES[plotmode][2]
             )
 
-        self._axis_translation    = (5, 5)
-        self._plotplane_margin    = (5, 5, 40, 45)
-        self._plot_plane_min_size = (100, 100)
-        self._axis                = axis 
-        self._axis_units          = axis_units 
+        self._axis_translation     = (5, 5)
+        self._plotplane_margin     = (5, 5, 40, 45)
+        self._plot_plane_min_size  = (100, 100)
+        self._axis                 = axis 
+        self._axis_units           = axis_units 
         
-        self._xlabel              = xlabel
-        self._ylabel              = ylabel
-        self._title               = title
-        self._title_font          = None
-        self._xlabel_font         = None 
-        self._ylabel_font         = None
+        self._xlabel               = xlabel
+        self._ylabel               = ylabel
+        self._title                = title
+        self._title_font           = None
+        self._xlabel_font          = None 
+        self._ylabel_font          = None
         
-        self._axis_subunits       = axis_subunits
-        self._axis_unit_symbols   = axis_unit_symbols
-        self._origin              = origin
+        self._axis_subunits        = axis_subunits
+        self._axis_unit_symbols    = axis_unit_symbols
+        self._origin               = origin
         
-        self._plotframe           = None
-        self._xaxis               = None
-        self._yaxis               = None
-        self._debug               = False
+        self._plotframe            = None
+        self._xaxis                = None
+        self._yaxis                = None
+        self._debug                = False
+        self._fontrenderer         = None
+
+        # states
+        self.render_graphs         = True
+        self._graphs_initialized   = False
+        self._has_rendered         = False
+        self._state = 0 
+        self._select_area          = [0,0,0,0]
+        self._select_area_renderer = None
 
         self._axis_font = ImageFont.truetype(
             resource_path(color_scheme['axis-font']), 
@@ -130,17 +145,49 @@ class Plotter(Controller):
             encoding=Plotter.FONT_ENCODING
         )
 
-        self._fontrenderer = None
-        # states
-        self.render_graphs      = True
-        self._graphs_initialized = False
-        self._has_rendered       = False
 
         self.on_keyboard.append(self.keyboard_callback)
+        self.on_mouse.append(self.mouse_callback)
         self.on_pre_render.insert(0, self.pre_render)
         self.on_pre_cycle.append(Plotter.check_graphs)
         self.on_post_render.append(self.post_render)
         self.on_render.append(self.render)
+
+    # -- HELPER UTILITIES -----------------------------------------------------------
+    
+    def coord_in_plotframe(self, pos):
+        """
+        checks whether a given 
+        coordinate is inside plotspace frame.
+        """
+        frame_pos = self.plotframe_position
+        frame_size = self.plotframe_size
+
+        return pos[0] > frame_pos[0] and pos[0] < frame_pos[0] + frame_size[0] \
+           and pos[1] > frame_pos[1] and pos[1] < frame_pos[1] + frame_size[1]
+
+    def coord_to_plotframe(self, coord):
+        """
+        transforms a given window space coordinate into
+        plotspace coordinates. 
+        """
+        plotcam = self._plotframe.inner_camera
+        frame_size = self.plotframe_size
+
+        relative = (
+            coord[0]-self.plotframe_position[0],
+            frame_size[1]-coord[1]+ self.plotframe_position[1]
+        )
+        scaled = (
+            float(plotcam.scaling[0])/plotcam.get_zoom()/frame_size[0]*relative[0], 
+            float(plotcam.scaling[1])/plotcam.get_zoom()/frame_size[1]*relative[1]
+        )
+        return (
+            scaled[0]-plotcam.position[0],
+            scaled[1]+plotcam.position[1]
+        )
+
+    # -- EVENTS -------------------------------------------------------------------
 
     def keyboard_callback(self, active, pressed):
         update_camera = False
@@ -175,25 +222,91 @@ class Plotter(Controller):
             )
             update_camera = True
         if GLFW_KEY_SPACE in active:
-            zoom = 1+(-1 if GLFW_KEY_LEFT_SHIFT in active else 1)*self.KEY_ZOOM_SPEED
-            translation = self._plotframe.inner_camera.get_position()
-            self._plotframe.inner_camera.zoom(zoom)
-            update_camera = True
+            self.zoom(1+(+1 if GLFW_KEY_LEFT_SHIFT in active else -1)*self.KEY_ZOOM_SPEED)
         if update_camera:
             self.camera_updated(self._plotframe.inner_camera)
 
-    def get_plotframe_size(self):
-        """
-        returns the absolute size of the plotframe
-        """
-        return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2])
-        ]
+    def mouse_callback(self, win, button, action, mod):
+        # STATE SELECT AREA 
+        def area_selecting():
+            self._state = self.STATE_SELECT_AREA
+            self._select_area = list(self.cursor) + [0,0]
 
+        def area_selected():
+            self._state = self.STATE_IDLE
+            pos = self.cursor 
+
+            # only if mouse is in the selected area with a 
+            # tolerance of 20.
+            if pos[0] > self._select_area[0]-20 and pos[0] < self._select_area[2]+20 \
+               and pos[1] > self._select_area[1]-20 and pos[1] < self._select_area[3]+20:
+                coord_a = self.coord_to_plotframe(self._select_area[0:2])
+                coord_b = self.coord_to_plotframe(self._select_area[2:4])
+                self.show_area(coord_a+coord_b)
+                self._select_area = [0,0,0,0]
+
+        def area_pending():
+            self._state = self.STATE_SELECT_AREA_PENDING
+            self._select_area = self._select_area[0:2] + list(self.cursor)
+
+            # if user opens the box in the wrong direction
+            # we need to fix the coordinates so that the upper
+            # left corner stays in upper left corner and so 
+            # for the lower right corner...
+            if self._select_area[0] > self._select_area[2]:
+                tmp = self._select_area[2]
+                self._select_area[2] = self._select_area[0]
+                self._select_area[0] = tmp
+            if self._select_area[1] > self._select_area[3]:
+                tmp = self._select_area[3]
+                self._select_area[3] = self._select_area[1]
+                self._select_area[1] = tmp
+
+        if button == GLFW_MOUSE_BUTTON_2:
+            if action == 1:
+                if self._state == self.STATE_IDLE:
+                    if self.coord_in_plotframe(self.cursor):
+                        area_selecting()
+                elif self._state == self.STATE_SELECT_AREA:
+                    area_pending()
+                    area_selected()
+        elif button == GLFW_MOUSE_BUTTON_1:
+            if self._state == self.STATE_SELECT_AREA and action == 0:
+                area_pending()
+            elif self._state == self.STATE_SELECT_AREA_PENDING and action == 0:
+                area_selected()
+
+    # -- PLOTTER INTERACTION --------------------------------------------------------------
+    def zoom(self, factor):
+        #self._plotframe.inner_camera.zoom(factor)
+        plotcam = self._plotframe.inner_camera
+        scaling = plotcam.scaling
+        plotcam.set_scaling((scaling[0]*factor, scaling[1]*factor))
+        self.camera_updated(self._plotframe.inner_camera)
+
+    def show_area(self, area):
+        plotcam = self._plotframe.inner_camera
+        old_scaling = plotcam.scaling
+        axis = (abs(area[2]-area[0]), abs(area[3]-area[1]))
+        plotcam.set_scaling(axis)
+        plotcam.set_position(-area[0], area[3])
+        self.camera_updated(self._plotframe.inner_camera)
+
+    # -- PROPERTIES -------------------------------------------------------------------
+
+    @property 
+    def plotframe_position(self): return self._plotplane_margin[3], self._plotplane_margin[0]
+    @property
+    def plotframe_size(self): return [
+        max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
+        max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2])
+    ]
+
+    
     def get_xaxis_size(self):
         """
         returns the absolute size of x axis
+        DEPRECATED (need to implement multi axis stuff REMOVE THIS STATIC STUFF HERE)
         """
         return [
             max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
@@ -203,11 +316,14 @@ class Plotter(Controller):
     def get_yaxis_size(self):
         """
         returns the absolute size of y axis
+        DEPRECATED (need to implement multi axis stuff REMOVE THIS STATIC STUFF HERE)
         """
         return [
             10, 
             max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2]) 
         ]
+
+    # -- BUSINESS -------------------------------------------------------------------
 
     def init_labels(self):
         """
@@ -268,7 +384,7 @@ class Plotter(Controller):
         # setup plotplane
         plotframe = window.Framebuffer(
             camera      = self.camera, 
-            screensize  = self.get_plotframe_size(), 
+            screensize  = self.plotframe_size, 
             screen_mode = window.Framebuffer.SCREEN_MODE_STRECH,
             record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
@@ -329,9 +445,11 @@ class Plotter(Controller):
             self._yaxis.init()
             self._update_yaxis()
 
+        self._select_area_renderer = RectangleRenderer()
+        self._select_area_renderer.gl_init()
         # parent controller initialization
         Controller.init(self)
-
+        self._state = self.STATE_IDLE
     def init_graphs(self):
         """
         initializes the graphs if neccessary and 
@@ -375,7 +493,7 @@ class Plotter(Controller):
             self._xaxis.size = self.get_xaxis_size()
             self._xaxis.update_camera(self.camera)
 
-            self._xaxis.modelview.set_position(self._plotplane_margin[3], self.get_plotframe_size()[1]-self._axis_translation[0]+self._plotplane_margin[0])
+            self._xaxis.modelview.set_position(self._plotplane_margin[3], self.plotframe_size[1]-self._axis_translation[0]+self._plotplane_margin[0])
             self._xaxis.update_modelview()
 
     def _update_yaxis(self):
@@ -395,10 +513,10 @@ class Plotter(Controller):
         """
         updates plotframe camera
         """
-        self._plotframe.screensize = self.get_plotframe_size()
-        self._plotframe.capture_size = self.get_plotframe_size()
+        self._plotframe.screensize = self.plotframe_size
+        self._plotframe.capture_size = self.plotframe_size
         self._plotframe.update_camera(self.camera)
-        self._plotframe.inner_camera.set_screensize(self.get_plotframe_size())
+        self._plotframe.inner_camera.set_screensize(self.plotframe_size)
       
     def camera_updated(self, camera):
         """
@@ -479,7 +597,75 @@ class Plotter(Controller):
         self._xaxis.render()
         self._fontrenderer.render()
 
-        
+        if self._state == self.STATE_SELECT_AREA:
+            cursor = list(self.cursor) 
+            frame_pos = self.plotframe_position
+            frame_size = self.plotframe_size
+            cursor[0] = min(frame_pos[0]+frame_size[0], max(frame_pos[0], cursor[0]))
+            cursor[1] = min(frame_pos[1]+frame_size[1], max(frame_pos[1], cursor[1]))
+                
+            self._select_area_renderer.program.uniform('rectangle', self._select_area[0:2] + cursor)
+            self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
+            self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-bgcolor']))
+            self._select_area_renderer.render()
+
+        if self._state == self.STATE_SELECT_AREA_PENDING:
+            self._select_area_renderer.program.uniform('rectangle', self._select_area)
+            self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
+            self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-pending-bgcolor']))
+            self._select_area_renderer.render()
+
+class RectangleRenderer():
+    def __init__(self):
+        self.vbo = None 
+        self.vao = None 
+    def gl_init(self):
+        self.vbo = VertexBuffer.from_numpy(np.array([
+            0, 0, 1, 0, 1, 1,
+            1, 1, 0, 1, 0, 0,
+        ], dtype=np.float32).reshape(6,2))
+        self.vao = VertexArray({'vertex_position': self.vbo})
+        self.program = Program()
+        self.program.shaders.append(Shader(GL_VERTEX_SHADER, """
+            #version /*{$VERSION$}*/
+            uniform mat4 mat_camera;
+            uniform vec4 rectangle;
+
+            //out vec2 frag_tex_coord;
+            in vec2 vertex_position;
+            void main() {
+                vec2 pos = vertex_position;
+                if (pos.x == 0) pos.x = rectangle.x;
+                else if (pos.x == 1) pos.x = rectangle.z; 
+                if (pos.y == 0) pos.y = rectangle.y;
+                else if (pos.y == 1) pos.y = rectangle.w;
+                gl_Position = mat_camera*vec4(pos, 0, 1);
+                //frag_tex_coord = vertex_position;
+            }
+        """))
+        self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, """
+            #version /*{$VERSION$}*/
+            out vec4 color;
+            in vec2 frag_tex_coord;
+            uniform vec4 rectangle;
+            uniform vec4 bgcolor;
+            void main() {
+                color = bgcolor;
+                if (abs(gl_FragCoord.x-rectangle.x) < 2)
+                    color = vec4(1,0,0,1);
+                if (abs(gl_FragCoord.x-rectangle.z) < 2)
+                    color = vec4(1,0,0,1);
+
+            }
+        """))
+        self.program.link()
+        self.vao.enable_attributes(self.program.attributes)
+    def render(self):
+        self.program.use()
+        self.vao.bind()
+        glDrawArrays(GL_TRIANGLES, 0, 6)
+        self.vao.unbind()
+        self.program.unuse()        
 class Plotter2dMode_Blur():
     def __init__(self, w=0.8):
         self.record_mode = window.Framebuffer.RECORD_TRACK_COMPLEX

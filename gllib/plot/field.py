@@ -15,7 +15,7 @@ from OpenGL.GL import *
 
 class Field():
     """
-    draw a 2d field by using Field Domain (OpenGL textures)
+    draw a 2d field by using Field Domain (OpenGL textures).
     """
     def __init__(self, domain, top_left=None, bottom_right=None, color_scheme=None):
 
@@ -93,3 +93,4 @@ class Field():
         glDrawArrays(GL_TRIANGLES, 0, 6)
         self.vertex_array.unbind()
         self.program.unuse()
+

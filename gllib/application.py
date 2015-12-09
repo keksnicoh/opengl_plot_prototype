@@ -188,9 +188,9 @@ class GlWindow():
         glfwSetMouseButtonCallback(self._glfw_window, self.event_queue.queue(self.mouse_callback))
         glfwSetWindowSizeCallback(self._glfw_window, self.resize_callback)
         glfwSetKeyCallback(self._glfw_window, self.key_callback)
+
         #self.controller.camera.initial_screensize = self.controller.camera.screensize
         self.controller.camera.screensize = glfwGetWindowSize(self._glfw_window)
-
 
     def key_callback(self, window, keycode, scancode, action, option):
         if action == GLFW_PRESS:
@@ -201,6 +201,9 @@ class GlWindow():
         elif action == GLFW_REPEAT:
             self._keyboard_pressed.add((keycode, option))
 
+    def mouse_callback(self, win, button, action, mod):
+        print(win, button, action, mod)
+        self.controller.on_mouse(win, button, action, mod)
     def set_controller(self, controller):
         """
         sets a controller. if controller has no camera
@@ -224,6 +227,7 @@ class GlWindow():
         glfwSwapBuffers(self._glfw_window)
 
     def set_position(self, x, y):
+        return
         if not self.x == None and not self.y == None:
             glfwSetWindowPos(self._glfw_window, int(self.x), int(self.y))
         else:
@@ -236,9 +240,11 @@ class GlWindow():
         GlApplication.WINDOW_CURRENT = self
         
     def cycle(self):
+        
         self.controller.cycle(**{
             'keyboard_active': self._keyboard_active,
             'keyboard_pressed': self._keyboard_pressed,
+            'cursor': glfwGetCursorPos(self._glfw_window),
         })
         self._keyboard_pressed = set()
 
@@ -252,8 +258,6 @@ class GlWindow():
     def scroll_callback(self, win, bla, scrolled):
         print('scrolled', win, bla, scrolled)
 
-    def mouse_callback(self, win, button, action, mod):
-        print('mouse', win, button, action, mod)
 
     def onKeyboard(self, win, key, scancode, action, mods):
         print('keyboard', win, key, scancode, action, mods)

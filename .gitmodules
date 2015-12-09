@@ -1,0 +1,3 @@
+[submodule "vendor/glsl-colormap"]
+	path = vendor/glsl-colormap
+	url = https://github.com/kbinani/glsl-colormap.git

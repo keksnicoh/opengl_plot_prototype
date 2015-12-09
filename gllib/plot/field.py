@@ -37,7 +37,6 @@ class Field():
             raise ValueError('domain must have attribute domain.gl_texture_id')
 
         self.domain.gl_init()
-
         if self.top_left is None:
             self.top_left = (1,self.domain.dimensions[1])
         if self.bottom_right is None:

@@ -26,7 +26,7 @@ class ColorScheme():
 
 class ColorMap(ColorScheme):
     COLOR_KERNEL = """
-        float scaled = range.x + fragment_color.r * (range.y - range.x);
+        float scaled = (-range.x + (fragment_color.r)) / abs(range.y - range.x);
         fragment_color = colormap(scaled);
     """
     def __init__(self, filename):
@@ -37,7 +37,7 @@ class ColorMap(ColorScheme):
         ]
 
         self.uniform_data = [
-            ('range', [0, 1]),
+            ('range', [-.1,.1]),
         ]
 
     def get_fragment_shader(self):

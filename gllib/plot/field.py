@@ -43,10 +43,22 @@ class Field():
         if self.bottom_right is None:
             self.bottom_right = (self.domain.dimensions[0], 1)
 
-        unit_size_x = 0.5*float(self.bottom_right[0]-self.top_left[0])/(self.domain.dimensions[0]-1)
-        unit_size_y = 0.5*float(self.top_left[1]-self.bottom_right[1])/(self.domain.dimensions[1]-1)
-        self._coord_top_left = (self.top_left[0]-unit_size_x, self.top_left[1]+unit_size_y)
-        self._coord_bottom_right = (self.bottom_right[0]+unit_size_x, self.bottom_right[1]-unit_size_y)
+        self.gl_init()   
+
+        self._np_texture_data = np.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=np.float32).reshape(6,2)
+        self.scale(self.top_left, self.bottom_right)
+
+        self.initialized = True
+
+    def scale(self, top_left, bottom_right):
+        """
+        scales to field to a rectangle with top_left
+        and bottom_right corner
+        """
+        unit_size_x = 0.5*float(bottom_right[0]-top_left[0])/(self.domain.dimensions[0]-1)
+        unit_size_y = 0.5*float(top_left[1]-bottom_right[1])/(self.domain.dimensions[1]-1)
+        self._coord_top_left = (top_left[0]-unit_size_x, top_left[1]+unit_size_y)
+        self._coord_bottom_right = (bottom_right[0]+unit_size_x, bottom_right[1]-unit_size_y)
 
         self._np_vertex_data = np.array([
             self._coord_top_left[0], self._coord_top_left [1], 
@@ -57,10 +69,13 @@ class Field():
             self._coord_top_left [0], self._coord_top_left [1]
         ], dtype=np.float32).reshape(6,2)
 
-        self._np_texture_data = np.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=np.float32).reshape(6,2)
+        self.vertex_array = VertexArray({
+            'vertex_position': VertexBuffer.from_numpy(self._np_vertex_data),
+            'texture_position': VertexBuffer.from_numpy(self._np_texture_data),
+        }, self.program.attributes)
 
-        self.gl_init()   
-        self.initialized = True
+        self.top_left            = top_left 
+        self.bottom_right        = bottom_right
 
     def gl_init(self):
         """
@@ -73,11 +88,6 @@ class Field():
         else:
             self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/field.frag.glsl')))
         self.program.link()
-
-        self.vertex_array = VertexArray({
-            'vertex_position': VertexBuffer.from_numpy(self._np_vertex_data),
-            'texture_position': VertexBuffer.from_numpy(self._np_texture_data),
-        }, self.program.attributes)
 
         if self.color_scheme:
             for uniform in self.color_scheme.uniform_data:
@@ -93,4 +103,14 @@ class Field():
         glDrawArrays(GL_TRIANGLES, 0, 6)
         self.vertex_array.unbind()
         self.program.unuse()
+
+    @classmethod
+    def create_texture1f(cls, size):
+        texture = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size[0], size[1], 0, GL_RED, GL_FLOAT, np.zeros(size[0]*size[1], dtype=np.float32))
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
+        glBindTexture(GL_TEXTURE_2D, 0);
+        return texture
 

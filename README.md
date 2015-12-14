@@ -22,8 +22,9 @@ first plots
 ![firstplot](/firstplot.png)
 
 some field plots
-<img src="assets/varf-deltan-kapitza-colors.png" alt="Drawing" style="width: 100px;" width="100"/>
-![field2](assets/variance-cool2.png  =100x20)
+<img src="assets/varf-deltan-kapitza-colors.png" width="200"/>
+<img src="assets/variance-cool2.png"  width="200"/>
+
 
 weird test plot with plotmode=oszi9
 ![oszi](/weird-oszi.jpg)

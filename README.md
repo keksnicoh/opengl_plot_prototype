@@ -23,8 +23,8 @@ first plots
 
 some field plots
 
-![field1](assets/varf-deltan-kapitza-colors.png)
-![field2](assets/variance-cool2.png)
+![field1](assets/varf-deltan-kapitza-colors.png =250x)
+![field2](assets/variance-cool2.png =250x)
 
 weird test plot with plotmode=oszi9
 ![oszi](/weird-oszi.jpg)

@@ -19,7 +19,8 @@ to the implementation.
 images
 ------
 first plots
-![firstplot](/firstplot.png)
+
+<img src="/firstplot.png"  width="300"/>
 
 
 some field plots

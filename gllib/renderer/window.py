@@ -74,7 +74,6 @@ class Framebuffer(renderer.Renderer):
         inner_camera = None, 
         modelview    = None,
         clear_color  = [0,0,0,1],
-        border       = None,
         multisampling = None):
         """
         initializes attributes
@@ -92,7 +91,6 @@ class Framebuffer(renderer.Renderer):
         self.screen_mode        = screen_mode
         self.program            = None
         self.screen_translation = [0,0]
-        self.border             = border
         self.modelview          = modelview or ModelView()
         self.record_mode        = record_mode 
         self.record_program     = None
@@ -217,9 +215,6 @@ class Framebuffer(renderer.Renderer):
 
         self._last_screensize = self.screensize[:]
         self._texture_matrix_changed = True
-        if self.border is not None:
-            self.border.init(self.screensize)
-
 
     def init_capturing(self):
         """
@@ -351,16 +346,14 @@ class Framebuffer(renderer.Renderer):
 
     def update_modelview(self):
         self.program.uniform('mat_modelview', self.modelview)
-        if self.border is not None:
-            self.border.set_matricies(self.camera.get_matrix(), self.modelview)
+
 
     def update_camera(self, camera):
         """
         camera update -> tell the shader
         """
         self.program.uniform('mat_camera', self.get_camera().get_matrix())
-        if self.border is not None:
-            self.border.set_matricies(self.camera.get_matrix(), self.modelview)
+
 
     def has_captured(self):
         """
@@ -439,8 +432,7 @@ class Framebuffer(renderer.Renderer):
         if self._last_screensize != self.screensize:
             self.init_screen()
             self.program.uniform('mat_camera', self.get_camera().get_matrix())
-            if self.border is not None:
-                self.border.set_matricies(self.camera.get_matrix(), self.modelview)
+
         if self._screen_has_changed():
             self.program.uniform('mat_texture', self._get_texture_matrix())
             self._texture_matrix_changed = False
@@ -463,62 +455,6 @@ class Framebuffer(renderer.Renderer):
             self.program.uniform('color_debug', [0,0,0,0])
         else:
             glDrawArrays(GL_TRIANGLES, 0, 6)
-        glBindVertexArray(0)
-        self.program.unuse()
-
-        if self.border is not None:
-            self.border.render()
-
-class PixelBorder():
-    def __init__(self, color):
-        self.color = color
-    def init(self, screensize):
-        """
-        initializes shader program, framebuffer and plane vao/vbo
-        """
-        program = Program()
-        vertex_shader = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/id.vert.glsl'))
-        fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/id.frag.glsl'))
-        program.shaders.append(vertex_shader)
-        program.shaders.append(fragment_shader)
-        program.link()
-
-        self.program = program
-        self.init_border(screensize)
-
-    def init_border(self, screensize):
-        """
-        init vbo and stuff from the screen plane
-        """
-        vertex_position = numpy.array([
-            0, screensize[1], 0, 0, 0, 0, screensize[0], 0, screensize[0], 0, 
-            screensize[0], screensize[1], screensize[0], screensize[1], 0, screensize[1],
-        ], dtype=numpy.float32)
-
-        self._vao = glGenVertexArrays(1)
-        vbo_frame = glGenBuffers(1)
-        
-        glBindVertexArray(self._vao)
-        glBindBuffer(GL_ARRAY_BUFFER, vbo_frame)
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(vertex_position), vertex_position, GL_STATIC_DRAW)
-        glVertexAttribPointer(self.program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-        glBindVertexArray(0)  
-    def set_matricies(self, camera, modelview):
-        self.program.use()
-        self.program.uniform('mat_camera', camera)
-        self.program.uniform('mat_modelview', modelview)
-        self.program.uniform('color', self.color)
-        self.program.unuse()
-    def render(self):
-        """
-        renders the plane 
-        """
-        self.program.use()
-        glBindVertexArray(self._vao)
-        glDrawArrays(GL_LINES, 0, 45)
         glBindVertexArray(0)
         self.program.unuse()
 

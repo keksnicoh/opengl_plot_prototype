@@ -406,7 +406,6 @@ class Plotter(object, Controller):
             record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
             multisampling = 8,
-            border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
         )
 
         if self.plotmode is not None:

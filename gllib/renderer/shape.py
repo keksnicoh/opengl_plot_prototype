@@ -63,19 +63,29 @@ class ShapeRenderer(object):
         if shape_object_id in self._instances:
             self._instances[shape_object_id].remove(instance)
             self.on_instances_changed(self, instance, False)
+
     def update_camera(self):
+        # XXX
+        # - clean me. maybe watch some events or so...
         self.program.uniform('mat_camera', self.camera.get_matrix())
         self.border_program.uniform('mat_camera', self.camera.get_matrix())
         self._borderframe.capture_size = self.camera.screensize
+
     def render(self):
+        # Render border texture
+        # XXX
+        # - only do if neccessary.
         self._borderframe.use()
         self._render_borders()
         self._borderframe.unuse()
+
         self.program.use()
         glActiveTexture(GL_TEXTURE0);
         for shape_object_id, instances in self._instances.items():
             self._shape_vaos[shape_object_id].bind()
             for instance in instances:
+                # XXX
+                # - define the exact behavior of mix_texture.
                 if instance.texture is not None: 
                     self.program.uniform('mix_texture', 1)
                     self.program.uniform('tex', 0)
@@ -84,19 +94,32 @@ class ShapeRenderer(object):
                     self.program.uniform('mix_texture', 0)
                     glBindTexture(GL_TEXTURE_2D, 0)
 
+                # XXX
+                # - cache the modelview matrix
                 modelview = ModelView()
                 modelview.set_scaling(*instance.size)
                 modelview.set_position(*instance.position)
                 self.program.uniform('color', instance.color)
                 self.program.uniform('mat_modelview', modelview.mat4)
                 glDrawArrays(GL_TRIANGLES, 0, 6)
-
             self._shape_vaos[shape_object_id].unbind()
         self.program.unuse()
+
+        # render borders
+        # XXX
+        # - only if neccessary
         self._borderframe.render()
 
     def _render_borders(self):
+        """
+        renders a texture containing the borders
+        of all shapes.
+        """
+
+        # XXX
+        # - read the old glBlendFunc value and restore it if neccessary.
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
         self.border_program.use()
         for shape_object_id, instances in self._instances.items():
             self._shape_vaos[shape_object_id].bind()
@@ -104,6 +127,8 @@ class ShapeRenderer(object):
                 border_size = instance.border['size']
                 if instance.border > 0:
                     glEnable(GL_BLEND)
+                    # XXX
+                    # - cache the modelview matrix
                     modelview = ModelView()
                     modelview.set_scaling(instance.size[0]+2*border_size, instance.size[1]+2*border_size)
                     modelview.set_position(instance.position[0]-border_size, instance.position[1]-border_size)
@@ -112,6 +137,8 @@ class ShapeRenderer(object):
                     glDrawArrays(GL_TRIANGLES, 0, 6)
 
                     glDisable(GL_BLEND)
+                    # XXX
+                    # - cache the modelview matrix
                     modelview = ModelView()
                     modelview.set_scaling(*instance.size)
                     modelview.set_position(*instance.position)

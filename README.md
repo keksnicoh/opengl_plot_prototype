@@ -30,4 +30,6 @@ some field plots
 
 
 weird test plot with plotmode=oszi9
-![oszi](/weird-oszi.jpg)
+
+<img src="/weird-oszi.jpg"  width="300"/>
+

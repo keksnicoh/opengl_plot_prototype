@@ -21,7 +21,10 @@ images
 first plots
 ![firstplot](/firstplot.png)
 
+
 some field plots
+
+
 <img src="assets/varf-deltan-kapitza-colors.png" width="300"/>
 <img src="assets/variance-cool2.png"  width="300"/>
 

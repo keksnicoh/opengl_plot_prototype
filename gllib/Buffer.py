@@ -36,7 +36,6 @@ class VertexBuffer():
         glBufferData(GL_ARRAY_BUFFER, self.dimension*self.length*self._FLT32, data.flatten(), GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.gl_buffer_length = self.length
-        print(self.length)
 
     def bind(self):
         glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
@@ -55,7 +54,6 @@ class VertexArray():
         glBindVertexArray(self.gl_vao_id)
         for i, (name, buffer) in enumerate(self.attributes.items()):
             buffer.bind()
-            print(i, name, buffer.dimension)
             glVertexAttribPointer(program_attributes[name], buffer.dimension, GL_FLOAT, GL_FALSE, 0, None)
             glEnableVertexAttribArray(i)
         glBindVertexArray(0)

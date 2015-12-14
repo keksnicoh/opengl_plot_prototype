@@ -60,6 +60,7 @@ class Framebuffer(renderer.Renderer):
     RECORD_CLEAR         = 1
     RECORD_TRACK         = 2
     RECORD_TRACK_COMPLEX = 3
+    RECORD_BLIT          = 4
 
     """
     simple framebuffer which renders to a 2d plane.
@@ -123,6 +124,14 @@ class Framebuffer(renderer.Renderer):
             glDeleteTextures([self._rgb_texture_id])
         if self._framebuffer_id is not None:
             glDeleteFramebuffers([self._framebuffer_id])
+
+    @property
+    def gl_texture_id(self):
+        if self.record_mode in [Framebuffer.RECORD_BLIT, Framebuffer.RECORD_TRACK_COMPLEX]:
+            return self._record_texture_id
+
+        return self._rgb_texture_id
+     
 
     def init(self):
         glEnable( GL_MULTISAMPLE )
@@ -211,6 +220,7 @@ class Framebuffer(renderer.Renderer):
         if self.border is not None:
             self.border.init(self.screensize)
 
+
     def init_capturing(self):
         """
         initialized framebuffer & texture
@@ -271,9 +281,7 @@ class Framebuffer(renderer.Renderer):
         mode. the second framebuffer is required to swap old framebuffer
         content to the record_texture
         """
-        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
-            self._record_captured = False
-
+        if self.record_mode == Framebuffer.RECORD_BLIT or self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
@@ -285,6 +293,9 @@ class Framebuffer(renderer.Renderer):
             glReadBuffer(GL_COLOR_ATTACHMENT0)
             glFramebufferTexture(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, self._record_texture_id, 0);
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)      
+
+        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
+            self._record_captured = False
 
             # spawn complex track record texture plane.
             # use default opengl coordinates since the vertex shader should not use and
@@ -409,7 +420,7 @@ class Framebuffer(renderer.Renderer):
         self._has_captured = True
 
         # blit texture data from framebuffer into record texture
-        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
+        if self.record_mode in [Framebuffer.RECORD_BLIT, Framebuffer.RECORD_TRACK_COMPLEX]:
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._record_framebuffer_id)
             glBindFramebuffer(GL_READ_FRAMEBUFFER, self._framebuffer_id)
             glBlitFramebuffer(0, 0, self.capture_size[0], self.capture_size[1], 0, 0, self.capture_size[0], self.capture_size[1], GL_COLOR_BUFFER_BIT, GL_NEAREST);

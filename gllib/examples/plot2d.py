@@ -40,5 +40,5 @@ plot2d(
     title             = 'Hello plotting',
     xlabel            = 'to cool space of $xi$',
     ylabel            = 'fancy measurement f($xi$) [$omega$^2 kg/m^2]',
-  #  color_scheme      = DARK_COLORS
+    dark=True
 )

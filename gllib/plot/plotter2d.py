@@ -14,6 +14,7 @@ from gllib.util import Event
 from gllib.glfw import *
 from gllib.renderer.font import FontRenderer, RelativeLayout, Text
 from gllib.buffer import VertexBuffer, VertexArray
+from gllib.renderer.shape import ShapeInstance, ShapeRenderer, Rectangle 
 import numpy as np 
 from collections import OrderedDict
 
@@ -55,6 +56,8 @@ DEFAULT_COLORS = {
     'select-area-bgcolor'  : 'dddddd66',
     'select-area-pending-bgcolor'  : '6666ffbb',
 
+    'plotframe-border-size': 2,
+    'plotframe-border-color': '000000ff',
     'graph-colors': [
         '000000ff',
         'aa0000ff',
@@ -465,6 +468,20 @@ class Plotter(object, Controller):
         Controller.init(self)
         self.state = self.STATE_IDLE
 
+        self.shaperenderer = ShapeRenderer(self.camera)
+        self.shaperenderer.gl_init()
+
+        self._plotplane = ShapeInstance(Rectangle(), **{
+            'size': self.plotframe_size,
+            'position': self.plotframe_position,
+            'border': {
+                'size': self.color_scheme['plotframe-border-size'],
+                'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
+            },
+            'color': [0,0,0,0],
+        })
+        self.shaperenderer.draw_instance(self._plotplane)
+
     def init_graphs(self):
         """
         initializes the graphs if neccessary and 
@@ -545,6 +562,8 @@ class Plotter(object, Controller):
 
         self.render_graphs = True
         self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
+        self.shaperenderer.update_camera()
+        self._plotplane.size = self.plotframe_size
         Controller.camera_updated(self, camera)
 
     def _update_graph_matricies(self):
@@ -589,6 +608,7 @@ class Plotter(object, Controller):
             self.init_graphs()  
 
     def render(self):
+        
         if self.render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
@@ -608,10 +628,11 @@ class Plotter(object, Controller):
             self.render_graphs = False
             
         self._plotframe.render()
+        self.shaperenderer.render()
         self._yaxis.render()
         self._xaxis.render()
         self._fontrenderer.render()
-
+        
         if self.state == self.STATE_SELECT_AREA:
             cursor = list(self.cursor) 
             frame_pos = self.plotframe_position
@@ -774,6 +795,9 @@ DARK_COLORS.update({
     'yaxis-linecolor'      : '99D699ff',
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
+
+    'plotframe-border-size': 2,
+    'plotframe-border-color': 'FF9900ff',
     'graph-colors': [
         'FF0000bb',
         '00ff00bb',

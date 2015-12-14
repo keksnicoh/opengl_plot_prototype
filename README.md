@@ -21,5 +21,10 @@ images
 first plots
 ![firstplot](/firstplot.png)
 
+some field plots
+
+![field1](assets/varf-deltan-kapitza-colors.png)
+![field2](assets/variance-cool2.png)
+
 weird test plot with plotmode=oszi9
 ![oszi](/weird-oszi.jpg)

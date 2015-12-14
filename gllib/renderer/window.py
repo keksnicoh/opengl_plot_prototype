@@ -72,6 +72,7 @@ class Framebuffer(renderer.Renderer):
         screen_mode  = SCREEN_MODE_STRECH,
         record_mode  = RECORD_CLEAR,
         inner_camera = None, 
+        blit_texture = False,
         modelview    = None,
         clear_color  = [0,0,0,1],
         multisampling = None):
@@ -96,6 +97,10 @@ class Framebuffer(renderer.Renderer):
         self.record_program     = None
         self.custom_texture_filters = None
         self.multisampling = multisampling or 1 
+        self.blit_texture = blit_texture
+
+        if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
+            self.blit_texture = True
 
         self._rgb_texture_id          = None 
         self._framebuffer_id          = None 
@@ -125,7 +130,7 @@ class Framebuffer(renderer.Renderer):
 
     @property
     def gl_texture_id(self):
-        if self.record_mode in [Framebuffer.RECORD_BLIT, Framebuffer.RECORD_TRACK_COMPLEX]:
+        if self.blit_texture:
             return self._record_texture_id
 
         return self._rgb_texture_id
@@ -276,7 +281,7 @@ class Framebuffer(renderer.Renderer):
         mode. the second framebuffer is required to swap old framebuffer
         content to the record_texture
         """
-        if self.record_mode == Framebuffer.RECORD_BLIT or self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
+        if self.blit_texture:
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
@@ -413,7 +418,7 @@ class Framebuffer(renderer.Renderer):
         self._has_captured = True
 
         # blit texture data from framebuffer into record texture
-        if self.record_mode in [Framebuffer.RECORD_BLIT, Framebuffer.RECORD_TRACK_COMPLEX]:
+        if self.blit_texture:
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, self._record_framebuffer_id)
             glBindFramebuffer(GL_READ_FRAMEBUFFER, self._framebuffer_id)
             glBlitFramebuffer(0, 0, self.capture_size[0], self.capture_size[1], 0, 0, self.capture_size[0], self.capture_size[1], GL_COLOR_BUFFER_BIT, GL_NEAREST);

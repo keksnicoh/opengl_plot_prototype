@@ -406,6 +406,7 @@ class Plotter(object, Controller):
             record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
             multisampling = 8,
+            blit_texture=True,
         )
 
         if self.plotmode is not None:
@@ -478,6 +479,7 @@ class Plotter(object, Controller):
                 'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
             },
             'color': [0,0,0,0],
+            'texture': self._plotframe
         })
         self.shaperenderer.draw_instance(self._plotplane)
 
@@ -626,7 +628,7 @@ class Plotter(object, Controller):
 
             self.render_graphs = False
             
-        self._plotframe.render()
+        #self._plotframe.render()
         self.shaperenderer.render()
         self._yaxis.render()
         self._xaxis.render()

@@ -119,7 +119,7 @@ class Plotter(object, Controller):
         self.on_state = Event()
 
         self._axis_translation     = (5, 5)
-        self._plotplane_margin     = (5, 50, 40, 45)
+        self._plotplane_margin     = (5, 10, 40, 45)
         self._plot_plane_min_size  = (100, 100)
         self._axis                 = axis 
         self._axis_units           = axis_units 
@@ -524,16 +524,7 @@ class Plotter(object, Controller):
                 graph_color_index+=1
 
             graph.init()
-            if hasattr(graph, 'program'):
-                if 'initial_scaling' in graph.program.uniforms:
-                    graph.program.uniform('initial_scaling', initial_scaling)
-                if 'initial_plane_scaling' in graph.program.uniforms:
-                    graph.program.uniform('initial_plane_scaling', initial_plane_scaling)
 
-            if hasattr(graph, 'dot_program'):
-                graph.dot_program.uniform('initial_scaling', initial_scaling)
-                graph.dot_program.uniform('initial_plane_scaling', initial_plane_scaling)
-            
         self._update_graph_matricies()
         self._graphs_initialized = True
 
@@ -620,8 +611,8 @@ class Plotter(object, Controller):
 
             if hasattr(graph, 'dot_program'):
                 graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())
+                graph.dot_program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
                 graph.dot_program.uniform('mat_domain', domain_matrix)
-                graph.dot_program.uniform('zoom', plot_camera.get_zoom())
  
 
 
@@ -830,7 +821,7 @@ DARK_COLORS.update({
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
 
-    'plotframe-border-size': 5,
+    'plotframe-border-size': 2,
     'plotframe-border-color': 'FF9900ff',
     'graph-colors': [
         'FF0000bb',

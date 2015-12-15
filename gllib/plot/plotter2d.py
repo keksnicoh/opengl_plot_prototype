@@ -56,6 +56,8 @@ DEFAULT_COLORS = {
 
     'select-area-bgcolor'  : 'dddddd66',
     'select-area-pending-bgcolor'  : '6666ffbb',
+    'select-area-border-color': '000000ff',
+    'select-area-border-size': 1,
 
     'plotframe-border-size': 2,
     'plotframe-border-color': '000000ff',
@@ -89,7 +91,7 @@ class Plotter(object, Controller):
         title             = None,
         plotmode          = None,
         axis_unit_symbols = [None,None],
-        axis_subunits     = [9,9],
+        axis_subunits     = [4,4],
         color_scheme      = DEFAULT_COLORS,
         graphs            = {},
         axis_measures     = [] 
@@ -118,7 +120,7 @@ class Plotter(object, Controller):
 
         self.on_state = Event()
 
-        self._axis_translation     = (5, 5)
+        self._axis_translation     = (10, 0)
         self._plotplane_margin     = (5, 10, 40, 45)
         self._plot_plane_min_size  = (100, 100)
         self._axis                 = axis 
@@ -252,7 +254,10 @@ class Plotter(object, Controller):
         # STATE SELECT AREA 
         def area_selecting():
             self.state = self.STATE_SELECT_AREA
+            self._select_area_renderer.color = hex_to_rgba(self.color_scheme['select-area-bgcolor'])
+
             self._select_area = list(self.cursor) + [0,0]
+            self.shaperenderer.draw_instance(self._select_area_renderer)
 
         def area_selected():
             pos = self.cursor 
@@ -267,8 +272,10 @@ class Plotter(object, Controller):
                 self._select_area = [0,0,0,0]
 
             self.state = self.STATE_IDLE
+            self.shaperenderer.erase_instance(self._select_area_renderer)
         def area_pending():
             self.state = self.STATE_SELECT_AREA_PENDING
+            self._select_area_renderer.color = hex_to_rgba(self.color_scheme['select-area-pending-bgcolor'])
             self._select_area = self._select_area[0:2] + list(self.cursor)
 
             # if user opens the box in the wrong direction
@@ -481,16 +488,25 @@ class Plotter(object, Controller):
             self._maxis.init()
             self._update_measure_axis()
 
-        self._select_area_renderer = RectangleRenderer()
-        self._select_area_renderer.gl_init()
+        self._select_area_renderer = ShapeInstance('default_rectangle', **{
+            'size': (0,0),
+            'position': (0,0),
+            'border': {
+                'size': self.color_scheme['select-area-border-size'],
+                'color': hex_to_rgba(self.color_scheme['select-area-border-color']),
+            },
+            'color': hex_to_rgba(self.color_scheme['select-area-bgcolor']),
+        })
+
         # parent controller initialization
         Controller.init(self)
         self.state = self.STATE_IDLE
 
         self.shaperenderer = ShapeRenderer(self.camera)
+        self.shaperenderer.shapes['default_rectangle'] = Rectangle()
         self.shaperenderer.gl_init()
 
-        self._plotplane = ShapeInstance(Rectangle(), **{
+        self._plotplane = ShapeInstance('default_rectangle', **{
             'size': self.plotframe_size,
             'position': self.plotframe_position,
             'border': {
@@ -649,7 +665,30 @@ class Plotter(object, Controller):
             self._plotframe.unuse()
 
             self.render_graphs = False
+        if self.state == self.STATE_SELECT_AREA:
+            cursor = list(self.cursor) 
+            frame_pos = self.plotframe_position
+            frame_size = self.plotframe_size
+            cursor[0] = min(frame_pos[0]+frame_size[0], max(frame_pos[0], cursor[0]))
+            cursor[1] = min(frame_pos[1]+frame_size[1], max(frame_pos[1], cursor[1]))
             
+            self._select_area_renderer.size = (
+                cursor[0]-self._select_area[0],
+                cursor[1]-self._select_area[1],
+            )
+            self._select_area_renderer.position = self._select_area[0:2]
+
+            #self._select_area_renderer.program.uniform('rectangle', self._select_area[0:2] + cursor)
+            #self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
+            #self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-bgcolor']))
+            #elf._select_area_renderer.render()
+            
+        if self.state == self.STATE_SELECT_AREA_PENDING:
+            a = 5
+            #self._select_area_renderer.program.uniform('rectangle', self._select_area)
+            #self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
+            #self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-pending-bgcolor']))
+            #self._select_area_renderer.render()       
         #self._plotframe.render()
         self.shaperenderer.render()
         self._yaxis.render()
@@ -658,23 +697,7 @@ class Plotter(object, Controller):
             self._maxis.render()
         self._fontrenderer.render()
         
-        if self.state == self.STATE_SELECT_AREA:
-            cursor = list(self.cursor) 
-            frame_pos = self.plotframe_position
-            frame_size = self.plotframe_size
-            cursor[0] = min(frame_pos[0]+frame_size[0], max(frame_pos[0], cursor[0]))
-            cursor[1] = min(frame_pos[1]+frame_size[1], max(frame_pos[1], cursor[1]))
-                
-            self._select_area_renderer.program.uniform('rectangle', self._select_area[0:2] + cursor)
-            self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
-            self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-bgcolor']))
-            self._select_area_renderer.render()
 
-        if self.state == self.STATE_SELECT_AREA_PENDING:
-            self._select_area_renderer.program.uniform('rectangle', self._select_area)
-            self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
-            self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-pending-bgcolor']))
-            self._select_area_renderer.render()
 
 class RectangleRenderer():
     def __init__(self):
@@ -811,6 +834,12 @@ DARK_COLORS.update({
     'plotplane-bgcolor'    : '02050eff',
     'plotplane-bordercolor': 'FF9900ff',
     'font-color'           : 'ffffffff',
+
+    'select-area-bgcolor'  : 'aaaaaa66',
+    'select-area-pending-bgcolor'  : 'FF990066',
+    'select-area-border-color': 'FF9900ff',
+    'select-area-border-size': 1,
+
 
     'xaxis-bgcolor'        : '020609ff',
     'yaxis-bgcolor'        : '020609ff',

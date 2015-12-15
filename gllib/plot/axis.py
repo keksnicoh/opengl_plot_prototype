@@ -25,7 +25,7 @@ class Fixed():
         linecolor=[1,1,1,1]):
 
         self.size = size
-        self.measurements = numpy.array(measurements, dtype=numpy.float32).reshape(len(measurements),1)
+        self.measurements = numpy.array([(x,10) for x in measurements], dtype=numpy.float32).reshape(len(measurements),2)
         self.bgcolor = bgcolor
         self.camera = camera
         self.scale_camera = scale_camera
@@ -58,8 +58,8 @@ class Fixed():
 
     def init_shader(self):
         self.program = Program()
-        self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/axis/marker.vert.glsl')))
-        self.program.shaders.append(Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker.geom.glsl')))
+        self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/axis/marker_y.vert.glsl')))
+        self.program.shaders.append(Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker_y.geom.glsl')))
         self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/axis/marker.frag.glsl')))
         self.program.link()
         
@@ -194,15 +194,17 @@ class Scale():
         initializes shader
         """
         axis_program = Program()
-        vertex_shader = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/id.vert.glsl'))
-        fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/id.frag.glsl'))
+        vertex_shader = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/axis/marker_{}.vert.glsl'.format('x' if self._axis == 0 else 'y')))
+        geometry_shader = Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker_{}.geom.glsl'.format('x' if self._axis == 0 else 'y')))
+        fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/axis/marker.frag.glsl'))
         axis_program.shaders.append(vertex_shader)
+        axis_program.shaders.append(geometry_shader)
         axis_program.shaders.append(fragment_shader)
         axis_program.link()
         self.axis_program = axis_program   
 
         self.axis_program.use()
-        self.axis_program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
+        #self.axis_program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
         self.axis_program.uniform('color', self.linecolor)
         self.axis_program.unuse()
 
@@ -226,13 +228,14 @@ class Scale():
             capture_size = capture_size,
             screen_mode  = window.Framebuffer.SCREEN_MODE_REPEAT, 
             clear_color  = self.bgcolor,
-            multisampling=1,
+            multisampling= 1,
             modelview    = self.modelview,
         )
         
         self._frame = frame
 
         self._frame.init()
+
         # create a special scaling. 
         # in self._axis direction the scaling should be like unit scaling,
         # on the perpendicular axis the scaling should be like the scaling 
@@ -241,13 +244,23 @@ class Scale():
         scaling[self._axis]   = self.unit
         scaling[self._axis^1] = self._frame.inner_camera.get_scaling()[self._axis^1]
 
+        #scaling = capture_size
         self._frame.inner_camera.set_scaling(scaling)
+        self._frame.inner_camera.set_screensize(capture_size)
         
+        if self._axis == 0:
+            self._frame.inner_camera.set_base_matrix(np.array([
+                1, 0, 0, 0,
+                0, -1, 0, 0,
+                0, 0, 1, 0,
+                0, 0, 0, 1,
+            ], dtype=np.float32))
         # update shader
         self.axis_program.use()
         self.axis_program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
+        self.axis_program.uniform('mat_outer_camera', self.camera.get_matrix())
         self.axis_program.unuse()
-
+        self.axis_program.uniform('border', 1.5*float(self.camera.screensize[self._axis])/capture_size[self._axis])
         # create vao
         if self.vao is None:
             self._init_capturing_vbo()
@@ -257,35 +270,22 @@ class Scale():
         self._last_screen_scaling = self._scale_camera.get_screen_scaling()
         
     def _init_capturing_vbo(self):
-        """
-        XXX
-        - wiggling of units?! maybe shader problem
-        - make this nice ...
-        """
-        data = numpy.zeros(self.subunits*10, dtype=numpy.float32)
+        data = numpy.zeros(self.subunits*2+2, dtype=numpy.float32)
         if self._axis == 0:
-            data[0] = .001
-            data[1] = 0
-            data[2] = .001
-            data[3] = 11
-
             subunit = float(self.unit)/self.subunits
-            for i in range(1, self.subunits+1):
-                data[4*i+0] = subunit*i
-                data[4*i+1] = 5
-                data[4*i+2] = subunit*i
-                data[4*i+3] = 9    
+            data[0] = subunit/2
+            data[1] = 10
+            for i in range(1, self.subunits):
+                data[2*i+2] = subunit*i+subunit/2
+                data[2*i+3] = 5   
         else:
-            data[0+0] = self.size[0]-11
-            data[1-0] = .999
-            data[2+0] = self.size[0]
-            data[3-0] = .999
             subunit = float(self.unit)/self.subunits
-            for i in range(1, self.subunits+1):
-                data[4*i+0] = self.size[0]-9
-                data[4*i+1] = subunit*i
-                data[4*i+2] = self.size[0]-5
-                data[4*i+3] = subunit*i   
+            data[0] = subunit/2
+            data[1] = 10
+            for i in range(1, self.subunits):
+                data[2*i+2] = subunit*i+subunit/2
+                data[2*i+3] = 5
+
         self.vao = glGenVertexArrays(1)
         vbo = glGenBuffers(1)
 
@@ -304,25 +304,25 @@ class Scale():
         """
         prepares axis fonts
         """
-        capture_size     = self._frame.capture_size[self._axis]
-        translation      = self._frame.screen_translation[self._axis]
-        size             = self._last_size[self._axis] + translation
-        self._unit_count = int(numpy.floor(size/capture_size))
-        start_unit       = numpy.floor(self._translation/capture_size)
+        capture_size = self._frame.capture_size[self._axis]
+        translation  = self._translation%self._frame.capture_size[self._axis]
+        size         = self._last_size[self._axis] + translation
+        unit_count   = int(numpy.floor(size/capture_size))
+        start_unit   = numpy.floor(self._translation/capture_size)
 
         axis_flayout = self._font_renderer.layouts['axis']
         axis_flayout.clear_texts()
         axis_flayout.modelview.set_position(*self._frame.modelview.position)
 
         if self._axis == 0:
-            position = [capture_size-translation,20]
-            for i in range(0, self._unit_count):
-                text = Text(self.format_number(self._unit_f*(i-start_unit+1), self.unit_symbol), self._font)
+            position = [translation,20]
+            for i in range(0, unit_count):
+                text = Text(self.format_number(self._unit_f*(i-start_unit), self.unit_symbol), self._font)
                 axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] += capture_size
         else:
             position = [self.size[0]-15,size-capture_size]
-            for i in range(0, self._unit_count):
+            for i in range(0, unit_count):
                 text = Text(self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol), self._font)
                 axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] -= capture_size
@@ -337,12 +337,6 @@ class Scale():
         if np.ceil(number) == number:
             return '{:d}'.format(int(number))+symbol
         return '{:.4g}'.format(number)+symbol
-        #if np.abs(number) < 1:
-        #    exponent = np.log10(np.abs(np.float32(number))).astype(int)
-        #    return '{:.3f}'.format(10**(-exponent+1)*number)+symbol
-        #if np.abs(number) > 1:
-        #    exponent = np.log10(np.abs(np.float32(number))).astype(int)
-        #    return '{:.f}'.format(10**(-exponent-1)*number)+symbol
 
     def update_camera(self, camera):
         """
@@ -354,7 +348,10 @@ class Scale():
         # no translation is done here. do translation (e.g. bottom fixed)
         # from outside.
         self._frame.update_camera(camera)
-
+        self.axis_program.use()
+        self.axis_program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
+        self.axis_program.uniform('mat_outer_camera', self._frame.camera.get_matrix())
+        self.axis_program.unuse()
         # if screen-scaling of the scale_camera has changed
         # we need to initialize capturing of the axis for this size. 
         # this happens for example when the zoom changed.
@@ -363,15 +360,19 @@ class Scale():
 
         # translate the axis texture so it follows the scale_camera position.
         position = self._scale_camera.get_position()
+        subunit = float(self.unit)/self.subunits
         if self._axis == 1:
+            fix_translation = 0.5*self._frame.capture_size[1]/self.subunits
             translation = self.size[1]*position[1]/self._last_screen_scaling[1]
             self._translation = translation
-            self._frame.screen_translation[1] = np.ceil(translation)%self._frame.capture_size[1]
+            self._frame.screen_translation[1] = self._translation%self._frame.capture_size[1] - fix_translation
+
             self.prepare_fonts()
         if self._axis == 0:
+            fix_translation = 0.5*self._frame.capture_size[0]/self.subunits
             translation = self.size[0]*position[0]/self._last_screen_scaling[0]
             self._translation = translation
-            self._frame.screen_translation[0] = -np.ceil(translation)%self._frame.capture_size[0]
+            self._frame.screen_translation[0] = -self._translation%self._frame.capture_size[0] + fix_translation
             self.prepare_fonts()
 
     def update_modelview(self):
@@ -409,6 +410,6 @@ class Scale():
         """
         self.axis_program.use()
         glBindVertexArray(self.vao)
-        glDrawArrays(GL_LINES, 0, self.subunits*2)
+        glDrawArrays(GL_POINTS, 0, 2*self.subunits)
         glBindVertexArray(0)
         self.axis_program.unuse()

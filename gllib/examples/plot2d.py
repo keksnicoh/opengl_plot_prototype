@@ -29,8 +29,9 @@ def plot_main(plotter):
 
     plotter.on_pre_cycle.append(PlotTicker())
 
-GlApplication.DEBUG = True    
+GlApplication.DEBUG = False    
 plot2d(
+
     plot_main, 
     axis              = [50, 50], 
     origin            = [25, -25], 

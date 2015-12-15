@@ -17,6 +17,7 @@ class ShapeRenderer(object):
         self.on_instances_changed = Event()
         self.on_instances_changed.append(ShapeRenderer.update_shape_vaos)
         self.camera = camera
+        self.shapes = {}
 
     def gl_init(self):
         program = Program()
@@ -41,15 +42,29 @@ class ShapeRenderer(object):
         creates a vao if the instance has a shape
         where we did not create an vao yet
         """
-        shape_object_id = id(instance.shape)
+        shape = self._shape(instance)
+
+        shape_object_id = id(shape)
         if not shape_object_id in self._shape_vaos:
             self._shape_vaos[shape_object_id] = VertexArray({
-                'vertex_position': VertexBuffer.from_numpy(instance.shape.verticies),
-                'texture_coords': VertexBuffer.from_numpy(instance.shape.texture_coords),
+                'vertex_position': VertexBuffer.from_numpy(shape.verticies),
+                'texture_coords': VertexBuffer.from_numpy(shape.texture_coords),
             }, self.program.attributes)
 
+    def _shape(self, instance):
+        shape = instance.shape
+        if type(shape) is str:
+            if not instance.shape in self.shapes:
+                raise NameError('invalid shape id "{}". Available ids are {}'.format(
+                    instance.shape,
+                    ', '.join(self.shapes.keys())
+                ))
+            shape = self.shapes[shape]
+        return shape 
+
     def draw_instance(self, instance):
-        shape_object_id = id(instance.shape)
+        shape = self._shape(instance)
+        shape_object_id = id(shape)
         if not shape_object_id in self._instances:
             self._instances[shape_object_id] = []
 
@@ -58,7 +73,8 @@ class ShapeRenderer(object):
             self.on_instances_changed(self, instance, True)
 
     def erase_instance(self, instance):
-        shape_object_id = id(instance.shape)
+        shape = self._shape(instance)
+        shape_object_id = id(shape)
         if shape_object_id in self._instances:
             self._instances[shape_object_id].remove(instance)
             self.on_instances_changed(self, instance, False)

@@ -16,7 +16,7 @@ class Graph():
 
 
 class Line2d(Graph):
-    GEOMETRY_SHADER_WIDTH = .25
+    GEOMETRY_SHADER_WIDTH = .5
     """
     line plotter
     """

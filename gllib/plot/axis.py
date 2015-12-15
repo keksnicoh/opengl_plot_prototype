@@ -4,6 +4,7 @@ from gllib.shader import *
 from gllib.helper import load_lib_file, resource_path
 from OpenGL.GL import * 
 from gllib.renderer.font import FontRenderer, AbsoluteLayout, Text
+from gllib.buffer import VertexArray, VertexBuffer
 
 from PIL import ImageFont
 import numpy
@@ -12,6 +13,112 @@ import numpy as np
 XAXIS = 0
 YAXIS = 1
 ZAXIS = 2
+
+class Fixed():
+    def __init__(self, 
+        camera, 
+        scale_camera,
+        measurements,
+        bgcolor,
+        size, 
+        modelview=None,
+        linecolor=[1,1,1,1]):
+
+        self.size = size
+        self.measurements = numpy.array(measurements, dtype=numpy.float32).reshape(len(measurements),1)
+        self.bgcolor = bgcolor
+        self.camera = camera
+        self.scale_camera = scale_camera
+        self.modelview = modelview
+        self.linecolor = linecolor
+
+
+
+    def init(self):
+        self._frame = window.Framebuffer(
+            camera       = self.camera,
+            screensize   = self.size,  
+            clear_color  = self.bgcolor,
+            multisampling= 4,
+            modelview    = self.modelview,
+        )
+         
+        scaling      = [0,0]
+        scaling[0]   = self.size[0]
+        scaling[1]   = self.scale_camera.get_scaling()[1]
+        self._frame.inner_camera.set_scaling(scaling)
+
+        self._frame.inner_camera.set_base_matrix(np.array([
+            1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], dtype=np.float32))
+
+        self._frame.init()
+        self.init_shader()
+
+    def init_shader(self):
+        self.program = Program()
+        self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/axis/marker.vert.glsl')))
+        self.program.shaders.append(Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker.geom.glsl')))
+        self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/axis/marker.frag.glsl')))
+        self.program.link()
+        
+        self.program.uniform('color', self.linecolor)
+
+        self.vao = VertexArray({
+            'vertex_position': VertexBuffer.from_numpy(self.measurements)
+        }, self.program.attributes)
+
+    def update_modelview(self):
+        self._frame.update_modelview()
+
+    def update_camera(self, camera):
+
+        scaling      = [0,0]
+        scaling[0]   = self.size[0]
+        scaling[1]   = self.scale_camera.get_scaling()[1]
+
+        self.size = (self.size[0], self.scale_camera.screensize[1])
+
+        self._frame.screensize = self.size
+        self._frame.capture_size = self.size
+
+        self._frame.inner_camera.set_position(y=self.scale_camera.position[1])
+        self._frame.inner_camera.set_screensize(self.size)
+        self._frame.inner_camera.set_scaling(scaling)
+
+        self._frame.update_camera(camera)
+
+        print(self.labels)
+
+    @property
+    def labels(self):
+        # TODO
+        return self.measurements
+
+    def render(self):
+        """
+        renders the axis.
+        also checks whether there is a change in screensize or whether the 
+        object was ininzialized.
+        """
+        self._frame.use()
+        self.program.use()
+
+        self.vao.bind()
+
+        self.program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
+        self.program.uniform('mat_outer_camera', self._frame.camera.get_matrix())
+        glDrawArrays(GL_POINTS, 0, len(self.measurements))
+        self.vao.unbind()
+
+        self.program.unuse()
+        self._frame.unuse()
+
+        self._frame.render()
+
 
 class Scale():
     def __init__(self, 
@@ -182,7 +289,6 @@ class Scale():
                 data[4*i+1] = subunit*i
                 data[4*i+2] = self.size[0]-5
                 data[4*i+3] = subunit*i   
-
         self.vao = glGenVertexArrays(1)
         vbo = glGenBuffers(1)
 

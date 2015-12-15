@@ -9,36 +9,49 @@ XXX
 """
 from OpenGL.GL import *
 class VertexBuffer():
+    """
+    representation of a buffer
+    """
     _FLT32 = 4
     def __init__(self, length, dimension=2):
         self.length = length 
         self.dimension = dimension 
-        self.gl_vbo_id = None
+        self._gl_vbo_id = None
         self.init_gl()
         self.gl_buffer_length = 0
 
     @classmethod
     def from_numpy(cls, np_data):
-
+        """
+        creates a corresponding vbo from 
+        a given numpy array
+        """
         if np_data.shape[1] is None:
             raise ValueError('numpy array must have 2d shape. given shape: {}'.format(np_data))
                 
-
         vertex_buffer = VertexBuffer(*np_data.shape)
         vertex_buffer.buffer_data(np_data)
         return vertex_buffer
 
+    @property
+    def gl_vbo_id(self):
+        #if not self.gl_initialized:
+        #    self.gl_init()
+        return self._gl_vbo_id
+
     def init_gl(self):
-        self.gl_vbo_id = glGenBuffers(1)
+        self._gl_vbo_id = glGenBuffers(1)
+
 
     def buffer_data(self, data=None):
-        glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
+        glBindBuffer(GL_ARRAY_BUFFER, self._gl_vbo_id)
         glBufferData(GL_ARRAY_BUFFER, self.dimension*self.length*self._FLT32, data.flatten(), GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.gl_buffer_length = self.length
 
     def bind(self):
-        glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
+        glBindBuffer(GL_ARRAY_BUFFER, self._gl_vbo_id)
+  
     def unbind(self):
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 

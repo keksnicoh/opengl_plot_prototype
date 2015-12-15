@@ -18,7 +18,7 @@ in              vec4 fragment_color[4];
 uniform         mat4 mat_camera;
 uniform         mat4 mat_outer_camera;
 
-uniform         float width = 1;
+uniform         float width = .25;
 
                 vec2 p[4]; // verticies
                 vec2 m[2];

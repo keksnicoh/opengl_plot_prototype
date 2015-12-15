@@ -4,6 +4,42 @@
 		"selected_items":
 		[
 			[
+				"plot",
+				"plotframe_size"
+			],
+			[
+				"Shape",
+				"ShapeInstance	class"
+			],
+			[
+				"_recor",
+				"_record_texture_id"
+			],
+			[
+				"reco",
+				"record_mode	statement"
+			],
+			[
+				"GL_UNS",
+				"GL_UNSIGNED_BYTE	statement"
+			],
+			[
+				"gl_text",
+				"gl_texture_id"
+			],
+			[
+				"Verte",
+				"VertexBuffer	class"
+			],
+			[
+				"Vertex",
+				"VertexArray	class"
+			],
+			[
+				"shape",
+				"shaperenderer	statement"
+			],
+			[
 				"ins",
 				"instance_object_id	statement"
 			],
@@ -54,10 +90,6 @@
 			[
 				"gl_",
 				"gl_texture_id	statement"
-			],
-			[
-				"Vertex",
-				"VertexBuffer	class"
 			],
 			[
 				"fragme",
@@ -482,72 +514,24 @@
 			[
 				"RES_NE",
 				"RES_NEO	statement"
-			],
-			[
-				"render",
-				"render_ns2	function"
-			],
-			[
-				"RES_NEO",
-				"RES_NO_NEO	statement"
-			],
-			[
-				"_tunnel",
-				"_tunnel_forward_str	function"
-			],
-			[
-				"_tunn",
-				"_tunnel_config	statement"
-			],
-			[
-				"TUNN",
-				"TUNNEL_DEFAULT_CONFIG	statement"
-			],
-			[
-				"fow",
-				"forward_port"
-			],
-			[
-				"forwa",
-				"forward_addr"
-			],
-			[
-				"ena",
-				"enable_tunnel	param"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "gllib/renderer/window.py",
+			"file": "gllib/plot/axis.py",
 			"settings":
 			{
-				"buffer_size": 21129,
+				"buffer_size": 11184,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "gllib/application.py",
+			"file": "gllib/examples/plot2d.py",
 			"settings":
 			{
-				"buffer_size": 8676,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/texture.py",
-			"settings":
-			{
-				"buffer_size": 1761,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "gllib/controller.py",
-			"settings":
-			{
-				"buffer_size": 1744,
+				"buffer_size": 1354,
 				"line_ending": "Unix"
 			}
 		},
@@ -555,36 +539,58 @@
 			"file": "gllib/plot/plotter2d.py",
 			"settings":
 			{
-				"buffer_size": 29307,
+				"buffer_size": 30179,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"file": "gllib/plot/field.py",
+			"file": "gllib/matrix.py",
 			"settings":
 			{
-				"buffer_size": 4437,
+				"buffer_size": 2236,
 				"line_ending": "Unix"
 			}
 		},
 		{
-			"contents": "class ShapeRenderer2d():\n\n    def __init__(self):\n        self._instances = {} \n        self._shape_vaos = {}\n\n    def gl_init(self):\n        pass\n\n    def update_shape_vaos(self, instance, )\n    def draw_instance(self, instance):\n        shape_object_id = id(instance.shape)\n        if not shape_object_id in self._instances:\n            self._instances[shape_object_id] = []\n\n        if not instance in self._instances[instance]:\n            self._instances.append(instance)\n            self.on_instances_changed(self, instance, True)\n\n    def erase_instance(self, instance):\n        shape_object_id = id(instance.shape)\n        if shape_object_id in self._instances:\n            self._instances[shape_object_id].remove(instance)\n            self.on_instances_changed(self, instance, False)\n\n\n\n\nclass ShapeInstance():\n    def __init__(self, shape, position=None, border=None):\n        self.shape\n\n\nclass Shape():\n    \n    def vertex_data(self):\n        pass\n\n",
-			"file": "gllib/renderer/shape.py",
-			"file_size": 917,
-			"file_write_time": 130945123950000000,
+			"file": "gllib/glsl/shaperenderer/vert.glsl",
 			"settings":
 			{
-				"buffer_size": 961,
+				"buffer_size": 276,
 				"line_ending": "Unix",
-				"name": "shape.py"
+				"name": "vert.glsl"
 			}
 		},
 		{
-			"file": "gllib/examples/plot2d.py",
+			"file": "gllib/shader.py",
 			"settings":
 			{
-				"buffer_size": 1377,
+				"buffer_size": 7996,
 				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "gllib/camera.py",
+			"settings":
+			{
+				"buffer_size": 3229,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "gllib/buffer.py",
+			"settings":
+			{
+				"buffer_size": 2280,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "gllib/glsl/shaperenderer/frag.glsl",
+			"settings":
+			{
+				"buffer_size": 260,
+				"line_ending": "Unix",
+				"name": "frag.glsl"
 			}
 		}
 	],
@@ -796,26 +802,33 @@
 		"/Users/keksnicoh/py/plt",
 		"/Users/keksnicoh/py/plt/demos",
 		"/Users/keksnicoh/py/plt/gllib",
-		"/Users/keksnicoh/py/plt/gllib/glsl/font",
-		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d",
-		"/Users/keksnicoh/py/plt/gllib/plot/color",
+		"/Users/keksnicoh/py/plt/gllib/examples",
+		"/Users/keksnicoh/py/plt/gllib/glsl",
+		"/Users/keksnicoh/py/plt/gllib/glsl/shaperenderer",
+		"/Users/keksnicoh/py/plt/gllib/plot",
 		"/Users/keksnicoh/py/plt/gllib/renderer",
 		"/Users/keksnicoh/py/plt/lib"
 	],
 	"file_history":
 	[
+		"/Users/keksnicoh/py/plt/gllib/glsl/shaperenderer/border.frag.glsl",
+		"/Users/keksnicoh/py/plt/gllib/texture.py",
+		"/Users/keksnicoh/py/plt/gllib/application.py",
+		"/Users/keksnicoh/py/plt/gllib/renderer/window.py",
+		"/Users/keksnicoh/py/plt/gllib/renderer/shape.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/plotter2d.py",
+		"/Users/keksnicoh/py/plt/gllib/controller.py",
+		"/Users/keksnicoh/py/plt/gllib/examples/plot2d.py",
+		"/Users/keksnicoh/py/plt/gllib/plot/field.py",
 		"/Users/keksnicoh/py/plt/gllib/examples/plot2d_pixeltest.py",
 		"/Users/keksnicoh/py/plt/demos/np_texture.py",
 		"/Users/keksnicoh/py/plt/gllib/plot/graph.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/line.geom.glsl",
-		"/Users/keksnicoh/py/plt/gllib/plot/field.py",
-		"/Users/keksnicoh/py/plt/gllib/texture.py",
 		"/Users/keksnicoh/py/plt/gllib/plot/domain.py",
 		"/Users/keksnicoh/py/plt/gllib/examples/fieldplot.py",
 		"/Users/keksnicoh/py/plt/gllib/buffer.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/field.vert.glsl",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/field.frag.glsl",
-		"/Users/keksnicoh/py/plt/gllib/examples/plot2d.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/texture.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow.vert.glsl",
 		"/Users/keksnicoh/py/plt/gllib/examples/fonttest.py",
@@ -825,13 +838,9 @@
 		"/Users/keksnicoh/py/plt/gllib/helper.py",
 		"/Users/keksnicoh/py/plt/gllib/plot/axis.py",
 		"/Users/keksnicoh/py/plt/gllib/plot/app.py",
-		"/Users/keksnicoh/py/plt/gllib/controller.py",
 		"/Users/keksnicoh/py/plt/gllib/plot/timedependency.py",
-		"/Users/keksnicoh/py/plt/gllib/plot/plotter2d.py",
-		"/Users/keksnicoh/py/plt/gllib/renderer/window.py",
 		"/Users/keksnicoh/py/plt/README.md",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/line.vert.glsl",
-		"/Users/keksnicoh/py/plt/gllib/application.py",
 		"/Users/keksnicoh/py/plt/gllib/glsl/framewindow_record.vert.glsl",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/dot.frag.glsl",
 		"/Users/keksnicoh/py/plt/gllib/glsl/plot2d/dot.geom.glsl",
@@ -929,9 +938,7 @@
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/api/test/test_util.py",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/rechner/calculator/optimization.py",
 		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_service.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_calculators.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_api.py",
-		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_util.py"
+		"/Users/keksnicoh/slice-dice/valuenet.life/services/vbm/pap/test/test_calculators.py"
 	],
 	"find":
 	{
@@ -954,6 +961,17 @@
 		"case_sensitive": true,
 		"find_history":
 		[
+			"self.gl_vbo_id",
+			"border",
+			"color",
+			"frag_tex_coord",
+			"self.",
+			"instance.border",
+			"program",
+			"1",
+			"2",
+			"gl_init",
+			"numpy",
 			"get_xaxis_size()",
 			"get_xaxis_size",
 			"get_plotframe_size()",
@@ -1070,18 +1088,7 @@
 			"_label_y",
 			"xlabel",
 			"GlApplication",
-			"\nclass AbsoluteLayout(Layout):\n    # XXX\n    # - implement missing transformations\n    LEFT_UPPER    = 1\n    LEFT_CENTER   = 2\n    LEFT_BOTTOM   = 3\n    CENTER_UPPER  = 4\n    CENTER_CENTER = 5\n    CENTER_BOTTOM = 6\n    RIGHT_UPPER   = 7\n    RIGHT_CENTER  = 8\n    RIGHT_BOTTOM  = 9\n    UPPER_CENTER  = 10\n    LEFT_CENTER   = 11\n    RIGHT_CENTER  = 12\n\n    def __init__(self, modelview=None, coord_system=LEFT_UPPER):\n        self.coord_system = coord_system\n        self._position = [0,0] \n        self._texts = [] \n        self.modelview = ModelView()\n    def clear_texts(self):\n        for text in self._texts:\n            text[0].in_use_layouts.remove(self)\n        self._texts = []\n\n    def add_text(self, text, pos):\n        self._texts.append((text, pos))\n        text.in_use_layouts.add(self)\n        self.has_changed = True\n\n    def get_render_protocol(self):\n        protocol = []\n        for i, (text, pos) in enumerate(self._texts):\n            modelview = deepcopy(self.modelview)\n            if self.coord_system == AbsoluteLayout.LEFT_UPPER:\n                translation = pos\n            elif self.coord_system == AbsoluteLayout.UPPER_CENTER:\n                translation = (pos[0]-float(text.boxsize[0])/2, pos[1])\n            elif self.coord_system == AbsoluteLayout.LEFT_CENTER:\n                translation = (pos[0], pos[1]+float(text.boxsize[1])/2)\n            elif self.coord_system == AbsoluteLayout.RIGHT_CENTER:\n                translation = (pos[0]-text.boxsize[0], pos[1]-float(text.boxsize[1])/2)\n            else:\n                raise ValueError('invalid coord system')\n            modelview.translate(*translation)\n            protocol.append((text, modelview))\n        return protocol",
-			"numpy",
-			"renderer",
-			"glfw",
-			"SimplePrimitivesRenderer",
-			"Controller",
-			"Camera2d",
-			"load_lib_file",
-			"position",
-			"_font_size",
-			"50",
-			"front_renderer"
+			"\nclass AbsoluteLayout(Layout):\n    # XXX\n    # - implement missing transformations\n    LEFT_UPPER    = 1\n    LEFT_CENTER   = 2\n    LEFT_BOTTOM   = 3\n    CENTER_UPPER  = 4\n    CENTER_CENTER = 5\n    CENTER_BOTTOM = 6\n    RIGHT_UPPER   = 7\n    RIGHT_CENTER  = 8\n    RIGHT_BOTTOM  = 9\n    UPPER_CENTER  = 10\n    LEFT_CENTER   = 11\n    RIGHT_CENTER  = 12\n\n    def __init__(self, modelview=None, coord_system=LEFT_UPPER):\n        self.coord_system = coord_system\n        self._position = [0,0] \n        self._texts = [] \n        self.modelview = ModelView()\n    def clear_texts(self):\n        for text in self._texts:\n            text[0].in_use_layouts.remove(self)\n        self._texts = []\n\n    def add_text(self, text, pos):\n        self._texts.append((text, pos))\n        text.in_use_layouts.add(self)\n        self.has_changed = True\n\n    def get_render_protocol(self):\n        protocol = []\n        for i, (text, pos) in enumerate(self._texts):\n            modelview = deepcopy(self.modelview)\n            if self.coord_system == AbsoluteLayout.LEFT_UPPER:\n                translation = pos\n            elif self.coord_system == AbsoluteLayout.UPPER_CENTER:\n                translation = (pos[0]-float(text.boxsize[0])/2, pos[1])\n            elif self.coord_system == AbsoluteLayout.LEFT_CENTER:\n                translation = (pos[0], pos[1]+float(text.boxsize[1])/2)\n            elif self.coord_system == AbsoluteLayout.RIGHT_CENTER:\n                translation = (pos[0]-text.boxsize[0], pos[1]-float(text.boxsize[1])/2)\n            else:\n                raise ValueError('invalid coord system')\n            modelview.translate(*translation)\n            protocol.append((text, modelview))\n        return protocol"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1118,19 +1125,19 @@
 			[
 				{
 					"buffer": 0,
-					"file": "gllib/renderer/window.py",
+					"file": "gllib/plot/axis.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 21129,
+						"buffer_size": 11184,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								18886,
-								18734
+								4117,
+								4117
 							]
 						],
 						"settings":
@@ -1142,27 +1149,27 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1188.0,
+						"translation.y": 1514.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 3,
 					"type": "text"
 				},
 				{
 					"buffer": 1,
-					"file": "gllib/application.py",
+					"file": "gllib/examples/plot2d.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 8676,
+						"buffer_size": 1354,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								8197,
-								8197
+								1134,
+								1134
 							]
 						],
 						"settings":
@@ -1170,11 +1177,11 @@
 							"glslvalidator_configured": true,
 							"glslvalidator_enabled": 1,
 							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
+							"tab_size": 2,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 1433.0,
+						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 4,
@@ -1182,11 +1189,138 @@
 				},
 				{
 					"buffer": 2,
-					"file": "gllib/texture.py",
+					"file": "gllib/plot/plotter2d.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 30179,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								23786,
+								23786
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 10118.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "gllib/matrix.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2236,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								291,
+								302
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "gllib/glsl/shaperenderer/vert.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 276,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								21,
+								20
+							]
+						],
+						"settings":
+						{
+							"auto_name": "vert.glsl",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "gllib/shader.py",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7996,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6348,
+								6348
+							]
+						],
+						"settings":
+						{
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 847.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "gllib/camera.py",
 					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 1761,
+						"buffer_size": 3229,
 						"regions":
 						{
 						},
@@ -1205,135 +1339,8 @@
 							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
-						"translation.x": 3.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "gllib/controller.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1744,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								628,
-								628
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
 						"translation.x": 0.0,
-						"translation.y": 102.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "gllib/plot/plotter2d.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 29307,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								7820,
-								7820
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "gllib/plot/field.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4437,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2999,
-								2999
-							]
-						],
-						"settings":
-						{
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 787.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "gllib/renderer/shape.py",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 961,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								537,
-								537
-							]
-						],
-						"settings":
-						{
-							"auto_name": "shape.py",
-							"glslvalidator_configured": true,
-							"glslvalidator_enabled": 1,
-							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 35.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 0,
@@ -1341,19 +1348,19 @@
 				},
 				{
 					"buffer": 7,
-					"file": "gllib/examples/plot2d.py",
+					"file": "gllib/buffer.py",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1377,
+						"buffer_size": 2280,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								1342,
-								1342
+								937,
+								937
 							]
 						],
 						"settings":
@@ -1361,14 +1368,45 @@
 							"glslvalidator_configured": true,
 							"glslvalidator_enabled": 1,
 							"syntax": "Packages/Python Improved/PythonImproved.tmLanguage",
-							"tab_size": 2,
+							"tab_size": 4,
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "gllib/glsl/shaperenderer/frag.glsl",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 260,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								207,
+								207
+							]
+						],
+						"settings":
+						{
+							"auto_name": "frag.glsl",
+							"glslvalidator_configured": true,
+							"glslvalidator_enabled": 1,
+							"syntax": "Packages/OpenGL Shading Language (GLSL)/GLSL.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
 					"type": "text"
 				}
 			]

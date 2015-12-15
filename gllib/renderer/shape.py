@@ -36,7 +36,6 @@ class ShapeRenderer(object):
         self._borderframe = Framebuffer(self.camera, self.camera.screensize, clear_color=[0,0,0,0])
         self._borderframe.init()
 
-        self._blank_texture = Texture.zeros()
     def update_shape_vaos(self, instance, show):
         """
         creates a vao if the instance has a shape

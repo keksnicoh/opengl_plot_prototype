@@ -17,7 +17,7 @@ from time import time
 def plot_main(plotter):
     plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=60*sin(x)*cos(x)/x;x=60*cos(x)/x")
-    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=2)
+    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=10000)
 
    # plotter.graphs['dots'] = Line2d(
    #     RealAxis(length=100),
@@ -35,7 +35,7 @@ plot2d(
     axis              = [50, 50], 
     origin            = [25, -25], 
     axis_units        = [np.pi,1],
-    #plotmode          = 'oszi9',
+    plotmode          = 'oszi3',
     axis_unit_symbols = ['$pi$', ''] ,
     title             = 'Hello plotting',
     xlabel            = 'to cool space of $xi$',

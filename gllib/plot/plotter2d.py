@@ -615,8 +615,8 @@ class Plotter(object, Controller):
             )
 
             graph.program.uniform('mat_camera', plot_camera.get_matrix())
+            graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
             graph.program.uniform('mat_domain', domain_matrix)
-            graph.program.uniform('zoom', plot_camera.get_zoom())
 
             if hasattr(graph, 'dot_program'):
                 graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())

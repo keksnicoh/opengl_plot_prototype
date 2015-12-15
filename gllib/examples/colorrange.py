@@ -10,7 +10,7 @@ import numpy as np
 
 
 w = 2
-h = 500
+h = 250
 color_channels = 1
 
 data = np.array([x/float(w*h) for x in range(w*h)]).reshape(w, h, color_channels)

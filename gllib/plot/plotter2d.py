@@ -119,7 +119,7 @@ class Plotter(object, Controller):
         self.on_state = Event()
 
         self._axis_translation     = (5, 5)
-        self._plotplane_margin     = (5, 5, 40, 45)
+        self._plotplane_margin     = (5, 50, 40, 45)
         self._plot_plane_min_size  = (100, 100)
         self._axis                 = axis 
         self._axis_units           = axis_units 
@@ -139,11 +139,11 @@ class Plotter(object, Controller):
         self._plotframe            = None
         self._xaxis                = None
         self._yaxis                = None
-        self._fooaxis              = None
+        self._maxis              = None
         self._debug                = False
         self._fontrenderer         = None
 
-        # states
+        # dstates
         self.render_graphs         = True
         self._graphs_initialized   = False
         self._has_rendered         = False
@@ -467,17 +467,18 @@ class Plotter(object, Controller):
             self._yaxis.init()
             self._update_yaxis()
 
-        self._axis_measures = [10,20,30,40]
+        self._axis_measures = [0, 250]
         if len(self._axis_measures) > 0:
-            self._fooaxis = axis.Fixed(
+            self._maxis = axis.Fixed(
                 camera       = self.camera,
                 measurements = self._axis_measures,
                 bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
-                size         = self.get_yaxis_size(),
+                size         = (self.get_yaxis_size()[0], self.get_yaxis_size()[1]),
                 scale_camera = self._plotframe.inner_camera,
+                linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
                 modelview    = ModelView()
             )
-            self._fooaxis.init()
+            self._maxis.init()
             self._update_measure_axis()
 
         self._select_area_renderer = RectangleRenderer()
@@ -561,13 +562,14 @@ class Plotter(object, Controller):
             self._yaxis.update_camera(self.camera)
 
     def _update_measure_axis(self):
-        if self._fooaxis:
-            #self._fooaxis.size = self.get_yaxis_size()
-            #self._fooaxis.capture_size = self.get_yaxis_size()
+        if self._maxis:
+            #self._maxis.size = self.get_yaxis_size()
+            #self._maxis.capture_size = self.get_yaxis_size()
 
-            self._fooaxis.modelview.set_position(self.plotframe_size[0], self._plotplane_margin[0])
-            self._fooaxis.update_modelview()       
-            self._fooaxis.update_camera(self.camera)
+            self._maxis.modelview.set_position(self._plotplane_margin[3] + self.plotframe_size[0]-10, self._plotplane_margin[0])
+            self._maxis.update_modelview()    
+
+            self._maxis.update_camera(self.camera)
 
     def _update_plotframe_camera(self):
         """
@@ -661,8 +663,8 @@ class Plotter(object, Controller):
         self.shaperenderer.render()
         self._yaxis.render()
         self._xaxis.render()
-        if self._fooaxis:
-            self._fooaxis.render()
+        if self._maxis:
+            self._maxis.render()
         self._fontrenderer.render()
         
         if self.state == self.STATE_SELECT_AREA:
@@ -828,7 +830,7 @@ DARK_COLORS.update({
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
 
-    'plotframe-border-size': 2,
+    'plotframe-border-size': 5,
     'plotframe-border-color': 'FF9900ff',
     'graph-colors': [
         'FF0000bb',

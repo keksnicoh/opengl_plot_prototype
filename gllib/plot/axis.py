@@ -4,6 +4,7 @@ from gllib.shader import *
 from gllib.helper import load_lib_file, resource_path
 from OpenGL.GL import * 
 from gllib.renderer.font import FontRenderer, AbsoluteLayout, Text
+from gllib.buffer import VertexArray, VertexBuffer
 
 from PIL import ImageFont
 import numpy
@@ -24,25 +25,14 @@ class Fixed():
         linecolor=[1,1,1,1]):
 
         self.size = size
-        self.measurements = np.array([[i, m] for i, m in enumerate(measurements)], dtype=np.float32).reshape(1, len(measurements)*2)[0]
+        self.measurements = numpy.array(measurements, dtype=numpy.float32).reshape(len(measurements),1)
         self.bgcolor = bgcolor
         self.camera = camera
         self.scale_camera = scale_camera
         self.modelview = modelview
-
-        self.borders = numpy.array([
-            0, 0,0,
-            1, 0.2,0
-        ], dtype=numpy.float32)
-
-        self.markers = numpy.array([
-            0, 0.5,
-            0, 0.7,
-            0,0
-        ], dtype=numpy.float32)
+        self.linecolor = linecolor
 
 
-        print("asd", self.size)
 
     def init(self):
         self._frame = window.Framebuffer(
@@ -52,65 +42,61 @@ class Fixed():
             multisampling= 4,
             modelview    = self.modelview,
         )
-        
-        self._frame.init()
- 
+         
         scaling      = [0,0]
-        scaling[1]   = 1
-        scaling[0]   = self.scale_camera.get_scaling()[0]
-
-
-        print(scaling)
-        print(self.camera.get_scaling(), self.scale_camera.get_scaling())
-
+        scaling[0]   = self.size[0]
+        scaling[1]   = self.scale_camera.get_scaling()[1]
         self._frame.inner_camera.set_scaling(scaling)
 
+        self._frame.inner_camera.set_base_matrix(np.array([
+            1, 0, 0, 0,
+            0, -1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1,
+        ], dtype=np.float32))
+
+        self._frame.init()
         self.init_shader()
 
     def init_shader(self):
         self.program = Program()
-        vertex_shader = Shader(GL_VERTEX_SHADER, load_lib_file('glsl/id.vert.glsl'))
-        fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/id.frag.glsl'))
-        geometry_shader = Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/id.geom.glsl'))
-        self.program.shaders.append(vertex_shader)
-        self.program.shaders.append(fragment_shader)
+        self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/axis/marker.vert.glsl')))
+        self.program.shaders.append(Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker.geom.glsl')))
+        self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/axis/marker.frag.glsl')))
         self.program.link()
+        
+        self.program.uniform('color', self.linecolor)
 
-        self.vao = glGenVertexArrays(2)
-        self.vbo = glGenBuffers(2)
-
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo[0])
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(self.borders), self.borders, GL_STATIC_DRAW)  
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-        glBindVertexArray(self.vao[0])
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo[0])
-        glVertexAttribPointer(self.program.attributes['vertex_position'], 3, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindVertexArray(0)
-
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo[1])
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(self.markers), self.markers, GL_STATIC_DRAW)  
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-
-        glBindVertexArray(self.vao[1])
-        glBindBuffer(GL_ARRAY_BUFFER, self.vbo[1])
-        glVertexAttribPointer(self.program.attributes['vertex_position'], 2, GL_FLOAT, GL_FALSE, 0, None)
-        glEnableVertexAttribArray(0)
-        glBindBuffer(GL_ARRAY_BUFFER, 0)
-        glBindVertexArray(0)
-
-    def update_camera(self, camera):
-        self._frame.update_camera(camera)
-        print(self._frame.camera.get_matrix())
-
+        self.vao = VertexArray({
+            'vertex_position': VertexBuffer.from_numpy(self.measurements)
+        }, self.program.attributes)
 
     def update_modelview(self):
-        self._frame.screensize[1] = self.scale_camera.screensize[1]
         self._frame.update_modelview()
 
+    def update_camera(self, camera):
 
+        scaling      = [0,0]
+        scaling[0]   = self.size[0]
+        scaling[1]   = self.scale_camera.get_scaling()[1]
+
+        self.size = (self.size[0], self.scale_camera.screensize[1])
+
+        self._frame.screensize = self.size
+        self._frame.capture_size = self.size
+
+        self._frame.inner_camera.set_position(y=self.scale_camera.position[1])
+        self._frame.inner_camera.set_screensize(self.size)
+        self._frame.inner_camera.set_scaling(scaling)
+
+        self._frame.update_camera(camera)
+
+        print(self.labels)
+
+    @property
+    def labels(self):
+        # TODO
+        return self.measurements
 
     def render(self):
         """
@@ -120,22 +106,17 @@ class Fixed():
         """
         self._frame.use()
         self.program.use()
-        glBindVertexArray(self.vao[0])
-        self.program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
-        self.program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
-        self.program.uniform('color', [0,0,0,1])
-        glDrawArrays(GL_LINES, 0, int(len(self.borders) / 2.0))
-        glBindVertexArray(0)
 
-        glBindVertexArray(self.vao[1])
-        self.program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
+        self.vao.bind()
+
         self.program.uniform('mat_camera', self._frame.inner_camera.get_matrix())
-        self.program.uniform('color', [0,0,0,1])
-        glDrawArrays(GL_POINTS, 0, int(len(self.markers) / 2.0))
-        glBindVertexArray(0)
+        self.program.uniform('mat_outer_camera', self._frame.camera.get_matrix())
+        glDrawArrays(GL_POINTS, 0, len(self.measurements))
+        self.vao.unbind()
 
         self.program.unuse()
         self._frame.unuse()
+
         self._frame.render()
 
 

@@ -32,8 +32,6 @@ class Fixed():
         self.modelview = modelview
         self.linecolor = linecolor
 
-
-
     def init(self):
         self._frame = window.Framebuffer(
             camera       = self.camera,
@@ -91,12 +89,11 @@ class Fixed():
 
         self._frame.update_camera(camera)
 
-        print(self.labels)
-
     @property
     def labels(self):
-        # TODO
-        return self.measurements
+        screen_scale = self._frame.inner_camera.screensize[1] / float(self._frame.inner_camera.initial_screensize[1])
+        y_range = (self._frame.inner_camera.position[1], self._frame.inner_camera.position[1] + screen_scale*self._frame.inner_camera.scaling[1])
+        return [(float(y), str(float(y))) for y in self.measurements if y > y_range[0] and y < y_range[1]]
 
     def render(self):
         """

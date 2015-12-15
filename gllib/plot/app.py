@@ -2,14 +2,15 @@ from gllib.application import GlApplication, GlWindow
 from gllib.controller import Controller
 from gllib.plot import plotter2d
 from gllib.framelayout import FramelayoutController
-
+from gllib.plot.plotter2d import DARK_COLORS, DEFAULT_COLORS
 import numpy 
 
-def plot2d(f, **kwargs):
-    window = GlWindow(600, 600, '2 cool quads 4 yolo')
+def plot2d(f, width=600, height=600, dark=False, **kwargs):
+    window = GlWindow(width, height, '2 cool quads 4 yolo')
     app = GlApplication()
     app.windows.append(window)
-    plotter = plotter2d.Plotter(**kwargs)
+    kwargs['color_scheme']=DEFAULT_COLORS if not dark else DARK_COLORS
+    plotter = plotter2d.Plotter( **kwargs)
     window.set_controller(plotter)
     app.init()
     f(plotter)

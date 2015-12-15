@@ -19,7 +19,18 @@ to the implementation.
 images
 ------
 first plots
-![firstplot](/firstplot.png)
+
+<img src="/firstplot.png"  width="300"/>
+
+
+some field plots
+
+
+<img src="assets/varf-deltan-kapitza-colors.png" width="300"/>
+<img src="assets/variance-cool2.png"  width="300"/>
+
 
 weird test plot with plotmode=oszi9
-![oszi](/weird-oszi.jpg)
+
+<img src="/weird-oszi.jpg"  width="300"/>
+

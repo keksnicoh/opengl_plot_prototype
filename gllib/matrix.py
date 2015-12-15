@@ -3,12 +3,19 @@ import numpy
 class ModelView():
     def __init__(self):
         self.position = [0,0,0]
+        self.scaling = (1,1,1)
         self.mat4 = numpy.array([
             1, 0, 0, 0,
             0, 1, 0, 0,
             0, 0, 1, 0,
             0, 0, 0, 1,
         ], dtype=numpy.float32)
+
+    def set_scaling(self, scaling_x=1, scaling_y=1, scaling_z=1):
+        self.scaling = (scaling_x, scaling_y, scaling_z)
+        self.mat4[0] = scaling_x
+        self.mat4[5] = scaling_y
+        self.mat4[10] = scaling_z
 
     def translate(self, x=0, y=0, z=0):
         translation_matrix = numpy.array([

@@ -81,8 +81,6 @@ class Shader():
             glShaderSource(self.gl_id, source)
             glCompileShader(self.gl_id)
 
-            print(source)
-
             error_log = glGetShaderInfoLog(self.gl_id)
             if error_log:
                 self.delete()
@@ -106,6 +104,7 @@ class Program():
         self.uniforms   = {}
         self._uniform_changes = {}
         self._uniform_values = {}
+
     def use(self, flush_uniforms=True):
         """
         tells opengl state to use this program 
@@ -208,6 +207,8 @@ class Program():
         elif type == 'vec4':
             glUniform4f(location, *value)
         elif type == 'sampler2D':
+            glUniform1i(location, value)
+        elif type == 'sampler2DMS':
             glUniform1i(location, value)
         elif type == 'bool':
             glUniform1i(location, value)

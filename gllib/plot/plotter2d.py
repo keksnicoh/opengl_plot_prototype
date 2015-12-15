@@ -11,9 +11,11 @@ from gllib.application import GlApplication
 from gllib.controller import Controller
 from gllib.matrix import ModelView
 from gllib.plot import axis 
+from gllib.util import Event
 from gllib.glfw import *
 from gllib.renderer.font import FontRenderer, RelativeLayout, Text
 from gllib.buffer import VertexBuffer, VertexArray
+from gllib.renderer.shape import ShapeInstance, ShapeRenderer, Rectangle 
 import numpy as np 
 from collections import OrderedDict
 
@@ -55,6 +57,8 @@ DEFAULT_COLORS = {
     'select-area-bgcolor'  : 'dddddd66',
     'select-area-pending-bgcolor'  : '6666ffbb',
 
+    'plotframe-border-size': 2,
+    'plotframe-border-color': '000000ff',
     'graph-colors': [
         '000000ff',
         'aa0000ff',
@@ -66,7 +70,7 @@ DEFAULT_COLORS = {
     ]
 }
 
-class Plotter(Controller):
+class Plotter(object, Controller):
     KEY_TRANSLATION_SPEED = 0.05
     KEY_ZOOM_SPEED        = 0.02
     FONT_ENCODING         = 'unic'
@@ -111,6 +115,8 @@ class Plotter(Controller):
             )
 
         self._axis_measures = axis_measures
+
+        self.on_state = Event()
 
         self._axis_translation     = (5, 5)
         self._plotplane_margin     = (5, 5, 40, 45)
@@ -161,6 +167,16 @@ class Plotter(Controller):
 
     # -- HELPER UTILITIES -----------------------------------------------------------
     
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, value):
+        self._state = value
+        self.on_state(self._state)
+    
+
     def coord_in_plotframe(self, pos):
         """
         checks whether a given 
@@ -235,11 +251,10 @@ class Plotter(Controller):
     def mouse_callback(self, win, button, action, mod):
         # STATE SELECT AREA 
         def area_selecting():
-            self._state = self.STATE_SELECT_AREA
+            self.state = self.STATE_SELECT_AREA
             self._select_area = list(self.cursor) + [0,0]
 
         def area_selected():
-            self._state = self.STATE_IDLE
             pos = self.cursor 
 
             # only if mouse is in the selected area with a 
@@ -251,8 +266,9 @@ class Plotter(Controller):
                 self.show_area(coord_a+coord_b)
                 self._select_area = [0,0,0,0]
 
+            self.state = self.STATE_IDLE
         def area_pending():
-            self._state = self.STATE_SELECT_AREA_PENDING
+            self.state = self.STATE_SELECT_AREA_PENDING
             self._select_area = self._select_area[0:2] + list(self.cursor)
 
             # if user opens the box in the wrong direction
@@ -270,16 +286,16 @@ class Plotter(Controller):
 
         if button == GLFW_MOUSE_BUTTON_2:
             if action == 1:
-                if self._state == self.STATE_IDLE:
+                if self.state == self.STATE_IDLE:
                     if self.coord_in_plotframe(self.cursor):
                         area_selecting()
-                elif self._state == self.STATE_SELECT_AREA:
+                elif self.state == self.STATE_SELECT_AREA:
                     area_pending()
                     area_selected()
         elif button == GLFW_MOUSE_BUTTON_1:
-            if self._state == self.STATE_SELECT_AREA and action == 0:
+            if self.state == self.STATE_SELECT_AREA and action == 0:
                 area_pending()
-            elif self._state == self.STATE_SELECT_AREA_PENDING and action == 0:
+            elif self.state == self.STATE_SELECT_AREA_PENDING and action == 0:
                 area_selected()
 
     # -- PLOTTER INTERACTION --------------------------------------------------------------
@@ -395,7 +411,7 @@ class Plotter(Controller):
             record_mode = self.plotmode.record_mode if self.plotmode is not None else window.Framebuffer.RECORD_CLEAR,
             clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
             multisampling = 8,
-            border      = window.PixelBorder(hex_to_rgba(self.color_scheme['plotplane-bordercolor']))
+            blit_texture=True,
         )
 
         if self.plotmode is not None:
@@ -468,7 +484,23 @@ class Plotter(Controller):
         self._select_area_renderer.gl_init()
         # parent controller initialization
         Controller.init(self)
-        self._state = self.STATE_IDLE
+        self.state = self.STATE_IDLE
+
+        self.shaperenderer = ShapeRenderer(self.camera)
+        self.shaperenderer.gl_init()
+
+        self._plotplane = ShapeInstance(Rectangle(), **{
+            'size': self.plotframe_size,
+            'position': self.plotframe_position,
+            'border': {
+                'size': self.color_scheme['plotframe-border-size'],
+                'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
+            },
+            'color': [0,0,0,0],
+            'texture': self._plotframe
+        })
+        self.shaperenderer.draw_instance(self._plotplane)
+
     def init_graphs(self):
         """
         initializes the graphs if neccessary and 
@@ -560,6 +592,8 @@ class Plotter(Controller):
 
         self.render_graphs = True
         self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
+        self.shaperenderer.update_camera()
+        self._plotplane.size = self.plotframe_size
         Controller.camera_updated(self, camera)
 
     def _update_graph_matricies(self):
@@ -604,6 +638,7 @@ class Plotter(Controller):
             self.init_graphs()  
 
     def render(self):
+        
         if self.render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
@@ -622,14 +657,15 @@ class Plotter(Controller):
 
             self.render_graphs = False
             
-        self._plotframe.render()
+        #self._plotframe.render()
+        self.shaperenderer.render()
         self._yaxis.render()
         self._xaxis.render()
         if self._fooaxis:
             self._fooaxis.render()
         self._fontrenderer.render()
-
-        if self._state == self.STATE_SELECT_AREA:
+        
+        if self.state == self.STATE_SELECT_AREA:
             cursor = list(self.cursor) 
             frame_pos = self.plotframe_position
             frame_size = self.plotframe_size
@@ -641,7 +677,7 @@ class Plotter(Controller):
             self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-bgcolor']))
             self._select_area_renderer.render()
 
-        if self._state == self.STATE_SELECT_AREA_PENDING:
+        if self.state == self.STATE_SELECT_AREA_PENDING:
             self._select_area_renderer.program.uniform('rectangle', self._select_area)
             self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
             self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-pending-bgcolor']))
@@ -791,6 +827,9 @@ DARK_COLORS.update({
     'yaxis-linecolor'      : '99D699ff',
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
+
+    'plotframe-border-size': 2,
+    'plotframe-border-color': 'FF9900ff',
     'graph-colors': [
         'FF0000bb',
         '00ff00bb',

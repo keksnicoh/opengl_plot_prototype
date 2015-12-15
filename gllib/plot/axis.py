@@ -248,7 +248,7 @@ class Scale():
             capture_size = capture_size,
             screen_mode  = window.Framebuffer.SCREEN_MODE_REPEAT, 
             clear_color  = self.bgcolor,
-            multisampling=4,
+            multisampling=1,
             modelview    = self.modelview,
         )
         
@@ -339,7 +339,7 @@ class Scale():
         if self._axis == 0:
             position = [capture_size-translation,20]
             for i in range(0, self._unit_count):
-                text = Text(self.format_number(self._unit_f*(i-start_unit), self.unit_symbol), self._font)
+                text = Text(self.format_number(self._unit_f*(i-start_unit+1), self.unit_symbol), self._font)
                 axis_flayout.add_text(text, (position[0], position[1]))
                 position[self._axis] += capture_size
         else:

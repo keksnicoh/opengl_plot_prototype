@@ -54,6 +54,10 @@ class FieldDomain():
             (GL_TEXTURE_MAG_FILTER, GL_NEAREST if discrete else GL_LINEAR),
             (GL_TEXTURE_MIN_FILTER, GL_NEAREST if discrete else GL_LINEAR),
         ]))
+        
+    @classmethod
+    def empty(cls, dimensions=(1,1)):
+        return EmptyFieldDomain(dimensions)
 
     # XXX
     # - spawn methods for image files (png, bmp, ...)
@@ -87,8 +91,15 @@ class FieldDomain():
         )])
         
         glBindTexture (GL_TEXTURE_2D, 0)
+
     def get_transformation_matrix(self, axis, origin):
         return numpy.identity(3).flatten()
+
+class EmptyFieldDomain():
+    def __init__(self, dimensions):
+        self.dimensions = dimensions
+
+
 
 class DynamicContinousDomain(Domain):
     """
@@ -217,6 +228,9 @@ class RealAxis(DynamicContinousDomain):
         return Domain.get_vbo(self)
 
 class Interval(RealAxis):
+    # XXX
+    # - remove me and create a small alias helper
+    #   function for this
     def __init__(self, interval=[0,1]):
         RealAxis.__init__(self, interval=interval, axis=0, dynamic=False, length=10000)
 

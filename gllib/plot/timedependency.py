@@ -7,8 +7,6 @@ from time import time
 
 from gllib.util import Event 
 
-
-
 class PlotTicker():
     TPS_COUNT = 20
     """

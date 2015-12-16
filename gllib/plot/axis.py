@@ -93,7 +93,7 @@ class Fixed():
     def labels(self):
         screen_scale = self._frame.inner_camera.screensize[1] / float(self._frame.inner_camera.initial_screensize[1])
         y_range = (self._frame.inner_camera.position[1], self._frame.inner_camera.position[1] + screen_scale*self._frame.inner_camera.scaling[1])
-        return [(float(y), str(float(y))) for y in self.measurements if y > y_range[0] and y < y_range[1]]
+        return [(float(y), '{:.3f}'.format(float(y))) for y,_ in self.measurements if y > y_range[0] and y < y_range[1]]
 
     def render(self):
         """
@@ -277,14 +277,14 @@ class Scale():
             data[1] = 10
             for i in range(1, self.subunits):
                 data[2*i+2] = subunit*i+subunit/2
-                data[2*i+3] = 5   
+                data[2*i+3] = 3   
         else:
             subunit = float(self.unit)/self.subunits
             data[0] = subunit/2
             data[1] = 10
             for i in range(1, self.subunits):
                 data[2*i+2] = subunit*i+subunit/2
-                data[2*i+3] = 5
+                data[2*i+3] = 3
 
         self.vao = glGenVertexArrays(1)
         vbo = glGenBuffers(1)

@@ -13,8 +13,9 @@ from gllib.matrix import ModelView
 from gllib.plot import axis 
 from gllib.util import Event
 from gllib.glfw import *
-from gllib.renderer.font import FontRenderer, RelativeLayout, Text
+from gllib.renderer.font import FontRenderer, RelativeLayout, Text, AbsoluteLayout
 from gllib.buffer import VertexBuffer, VertexArray
+from gllib.plot.field import Field
 from gllib.renderer.shape import ShapeInstance, ShapeRenderer, Rectangle 
 import numpy as np 
 from collections import OrderedDict
@@ -90,6 +91,7 @@ class Plotter(object, Controller):
         ylabel            = None,
         title             = None,
         plotmode          = None,
+        colorlegend      = None,
         axis_unit_symbols = [None,None],
         axis_subunits     = [4,4],
         color_scheme      = DEFAULT_COLORS,
@@ -105,6 +107,7 @@ class Plotter(object, Controller):
         self.plot_camera          = None
         self.color_scheme         = color_scheme
         self.plotmode = plotmode
+        self.colorlegend = colorlegend
 
         if type(plotmode) is str:
             if plotmode not in _PLOTMODE_ALIASES:
@@ -121,7 +124,7 @@ class Plotter(object, Controller):
         self.on_state = Event()
 
         self._axis_translation     = (10, 0)
-        self._plotplane_margin     = (5, 10, 40, 45)
+        self._plotplane_margin     = [5, 10, 40, 45]
         self._plot_plane_min_size  = (100, 100)
         self._axis                 = axis 
         self._axis_units           = axis_units 
@@ -133,7 +136,6 @@ class Plotter(object, Controller):
         self._xlabel_font          = None 
         self._ylabel_font          = None
 
-        
         self._axis_subunits        = axis_subunits
         self._axis_unit_symbols    = axis_unit_symbols
         self._origin               = origin
@@ -141,7 +143,7 @@ class Plotter(object, Controller):
         self._plotframe            = None
         self._xaxis                = None
         self._yaxis                = None
-        self._maxis              = None
+        self._colorlegend_axis              = None
         self._debug                = False
         self._fontrenderer         = None
 
@@ -151,8 +153,9 @@ class Plotter(object, Controller):
         self._has_rendered         = False
         self._state = 0 
         self._select_area          = [0,0,0,0]
-        self._select_area_renderer = None
-
+        self._select_area_rectangle = None
+        self._colorlegend_frame = None 
+        self._colorlegend_graph = None
         self._axis_font = ImageFont.truetype(
             resource_path(color_scheme['axis-font']), 
             color_scheme['axis-fontsize'], 
@@ -254,10 +257,10 @@ class Plotter(object, Controller):
         # STATE SELECT AREA 
         def area_selecting():
             self.state = self.STATE_SELECT_AREA
-            self._select_area_renderer.color = hex_to_rgba(self.color_scheme['select-area-bgcolor'])
+            self._select_area_rectangle.color = hex_to_rgba(self.color_scheme['select-area-bgcolor'])
 
             self._select_area = list(self.cursor) + [0,0]
-            self.shaperenderer.draw_instance(self._select_area_renderer)
+            self.shaperenderer.draw_instance(self._select_area_rectangle)
 
         def area_selected():
             pos = self.cursor 
@@ -272,10 +275,10 @@ class Plotter(object, Controller):
                 self._select_area = [0,0,0,0]
 
             self.state = self.STATE_IDLE
-            self.shaperenderer.erase_instance(self._select_area_renderer)
+            self.shaperenderer.erase_instance(self._select_area_rectangle)
         def area_pending():
             self.state = self.STATE_SELECT_AREA_PENDING
-            self._select_area_renderer.color = hex_to_rgba(self.color_scheme['select-area-pending-bgcolor'])
+            self._select_area_rectangle.color = hex_to_rgba(self.color_scheme['select-area-pending-bgcolor'])
             self._select_area = self._select_area[0:2] + list(self.cursor)
 
             # if user opens the box in the wrong direction
@@ -327,18 +330,42 @@ class Plotter(object, Controller):
     def plotframe_position(self): return self._plotplane_margin[3], self._plotplane_margin[0]
     @property
     def plotframe_size(self): return [
-        max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
+        max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3])-self.colorlegend_boxsize[0], 
         max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2])
     ]
+    @property 
+    def colorlegend_size(self):
+        if self.colorlegend is None:
+            return (0,0)
 
+        return (100-self.colorlegend_margin[1]-self.colorlegend_margin[3], self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
     
+    @property 
+    def colorlegend_boxsize(self):
+        if self.colorlegend is None:
+            return (0,0)
+        return (100, self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
+
+    @property 
+    def colorlegend_margin(self):
+        if self.colorlegend is None:
+            return (0,0,0,0)
+        return (self._plotplane_margin[0], 60, self._plotplane_margin[2], 10)
+
+    @property 
+    def colorlegend_position(self):
+        if self.colorlegend is None:
+            return (0,0)
+
+        return (self.plotframe_position[0]+self.plotframe_size[0]+self.colorlegend_margin[3], self.plotframe_position[1])
+
     def get_xaxis_size(self):
         """
         returns the absolute size of x axis
         DEPRECATED (need to implement multi axis stuff REMOVE THIS STATIC STUFF HERE)
         """
         return [
-            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3]), 
+            max(self._plot_plane_min_size[0], self.camera.screensize[0]-self._plotplane_margin[1]-self._plotplane_margin[3])-self.colorlegend_boxsize[0], 
             10
         ]
 
@@ -349,7 +376,7 @@ class Plotter(object, Controller):
         """
         return [
             10, 
-            max(self._plot_plane_min_size[1], self.camera.screensize[1]-self._plotplane_margin[0]-self._plotplane_margin[2]) 
+            self.plotframe_size[1]
         ]
 
     # -- BUSINESS -------------------------------------------------------------------
@@ -403,9 +430,15 @@ class Plotter(object, Controller):
         """
         initializes plot2d
         """
+        self.shaperenderer = ShapeRenderer(self.camera)
+        self.shaperenderer.shapes['default_rectangle'] = Rectangle()
+        self.shaperenderer.gl_init()
+
         # setup axis
         self._fontrenderer = FontRenderer(self.camera)
         self._fontrenderer.layouts['labels'] = RelativeLayout(boxsize=self.camera.screensize)
+        self._fontrenderer.layouts['axis'] = AbsoluteLayout()
+
         self._fontrenderer.init()
         self._fontrenderer.set_color(hex_to_rgba(self.color_scheme['font-color']))
         self.init_labels()
@@ -438,6 +471,8 @@ class Plotter(object, Controller):
         plotframe.inner_camera.set_scaling(self._axis)
         plotframe.inner_camera.set_position(*self._origin)
         self._plotframe = plotframe
+        self.init_colorlegend()
+
 
         # setup axis
         if self._plotplane_margin[0] > 0:
@@ -474,21 +509,12 @@ class Plotter(object, Controller):
             self._yaxis.init()
             self._update_yaxis()
 
-        self._axis_measures = [0, 250]
-        if len(self._axis_measures) > 0:
-            self._maxis = axis.Fixed(
-                camera       = self.camera,
-                measurements = self._axis_measures,
-                bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
-                size         = (self.get_yaxis_size()[0], self.get_yaxis_size()[1]),
-                scale_camera = self._plotframe.inner_camera,
-                linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
-                modelview    = ModelView()
-            )
-            self._maxis.init()
-            self._update_measure_axis()
 
-        self._select_area_renderer = ShapeInstance('default_rectangle', **{
+        # parent controller initialization
+        Controller.init(self)
+        self.state = self.STATE_IDLE
+
+        self._select_area_rectangle = ShapeInstance('default_rectangle', **{
             'size': (0,0),
             'position': (0,0),
             'border': {
@@ -497,14 +523,6 @@ class Plotter(object, Controller):
             },
             'color': hex_to_rgba(self.color_scheme['select-area-bgcolor']),
         })
-
-        # parent controller initialization
-        Controller.init(self)
-        self.state = self.STATE_IDLE
-
-        self.shaperenderer = ShapeRenderer(self.camera)
-        self.shaperenderer.shapes['default_rectangle'] = Rectangle()
-        self.shaperenderer.gl_init()
 
         self._plotplane = ShapeInstance('default_rectangle', **{
             'size': self.plotframe_size,
@@ -517,6 +535,80 @@ class Plotter(object, Controller):
             'texture': self._plotframe
         })
         self.shaperenderer.draw_instance(self._plotplane)
+
+    def init_colorlegend(self):
+        """
+        initializes color legend. 
+        XXX
+        - Refactor me as a kind of widget or so ...
+        """
+        if self.colorlegend is not None:
+            self._colorlegend_frame = window.Framebuffer(
+                self.camera, 
+                screensize = self.colorlegend_size,
+                blit_texture=True,
+                clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
+                multisampling=6
+            )  
+            self._colorlegend_frame.init()
+
+            colorrange = self.colorlegend.colorrange
+            colorrange_length = colorrange[1]-colorrange[0]
+
+            factor = 0.1
+            self._colorlegend_frame.inner_camera.set_scaling([1,colorrange_length*(1+2*factor)])
+            self._colorlegend_frame.inner_camera.set_position(0,-colorrange_length*factor+colorrange[0])
+            self._colorlegend = ShapeInstance('default_rectangle', **{
+                'size': self.colorlegend_size,
+                'position': self.colorlegend_position,
+                'border': {
+                    'size': self.color_scheme['plotframe-border-size'],
+                    'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
+                },
+                'color': [0,0,0,0],
+                'texture': self._colorlegend_frame
+            })
+            self.shaperenderer.draw_instance(self._colorlegend)
+            self._colorlegend_graph = Field(
+                top_left=(0,colorrange_length*(1+2*factor)+colorrange[0]),
+                bottom_right=(1,colorrange[0]-colorrange_length*factor),
+                color_scheme=self.colorlegend,
+                data_kernel='fragment_color = vec4({a}+{l}*(x.y-{f}),0,0,1)'.format(
+                    a=colorrange[0],
+                    l=colorrange_length*(1+2*factor),
+                    f=factor)
+            )
+            self._colorlegend_graph.init()
+            self._update_colorlegend()
+
+            self._colorlegend_axis = axis.Fixed(
+                camera       = self.camera,
+                measurements = self.colorlegend.range,
+                bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
+                size         = (self.get_yaxis_size()[0], self.get_yaxis_size()[1]),
+                scale_camera = self._colorlegend_frame.inner_camera,
+                linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
+                modelview    = ModelView()
+            )
+            self._colorlegend_axis.init()
+            self._update_measure_axis()
+            self._colorlegend_frame.use()
+            self._colorlegend_graph.render(self)
+            self._colorlegend_frame.unuse()
+            font = ImageFont.truetype(
+                resource_path(self.color_scheme['ylabel-font']), 
+                self.color_scheme['ylabel-fontsize'], 
+                encoding=Plotter.FONT_ENCODING
+            )
+            length = colorrange_length*(1+2*factor)
+            shift = colorrange_length*factor
+            y_viewspace = lambda y: (1-(float(y-colorrange[0]+shift)/length))*self.colorlegend_size[1]+self.colorlegend_margin[0]
+            x_viewspace = self.colorlegend_position[0]+self.colorlegend_size[0]+5
+            axis_labels = self._fontrenderer.layouts['axis']
+            axis_labels.clear_texts()
+            for yplot, label in self._colorlegend_axis.labels:
+                axis_labels.add_text(Text(label,font), (x_viewspace, y_viewspace(yplot)-10))
+
 
     def init_graphs(self):
         """
@@ -569,14 +661,14 @@ class Plotter(object, Controller):
             self._yaxis.update_camera(self.camera)
 
     def _update_measure_axis(self):
-        if self._maxis:
-            #self._maxis.size = self.get_yaxis_size()
-            #self._maxis.capture_size = self.get_yaxis_size()
+        if self._colorlegend_axis:
+            #self._colorlegend_axis.size = self.get_yaxis_size()
+            #self._colorlegend_axis.capture_size = self.get_yaxis_size()
 
-            self._maxis.modelview.set_position(self._plotplane_margin[3] + self.plotframe_size[0]-10, self._plotplane_margin[0])
-            self._maxis.update_modelview()    
+            self._colorlegend_axis.modelview.set_position(self._plotplane_margin[3] + self.plotframe_size[0] + self.colorlegend_size[0], self._plotplane_margin[0])
+            self._colorlegend_axis.update_modelview()    
 
-            self._maxis.update_camera(self.camera)
+            self._colorlegend_axis.update_camera(self.camera)
 
     def _update_plotframe_camera(self):
         """
@@ -586,6 +678,13 @@ class Plotter(object, Controller):
         self._plotframe.capture_size = self.plotframe_size
         self._plotframe.update_camera(self.camera)
         self._plotframe.inner_camera.set_screensize(self.plotframe_size)
+
+    def _update_colorlegend(self): 
+        if self.colorlegend is not None:
+            plot_camera = self._colorlegend_frame.inner_camera;
+            self._colorlegend_graph.program.uniform('mat_camera', plot_camera.get_matrix())
+            self._colorlegend_graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
+            self._colorlegend_graph.program.uniform('mat_domain', np.identity(3))
 
     def camera_updated(self, camera):
         """
@@ -614,12 +713,13 @@ class Plotter(object, Controller):
             axis        = plot_camera.get_screen_scaling()
             origin      = plot_camera.get_position()
 
-            domain_matrix = graph.domain.get_transformation_matrix(
-                #axis=(axis[0]*1.05, axis[1]*1.05),
-                #origin=(origin[0]+0.025*axis[0],origin[1]+0.025*axis[1]),
-                axis=(axis[0], axis[1]),
-                origin=(origin[0],origin[1]),
-            )
+            if hasattr(graph.domain, 'get_transformation_matrix'):
+                domain_matrix = graph.domain.get_transformation_matrix(
+                    axis=(axis[0], axis[1]),
+                    origin=(origin[0],origin[1]),
+                )
+            else :
+                domain_matrix = np.identity(3)
 
             graph.program.uniform('mat_camera', plot_camera.get_matrix())
             graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
@@ -672,84 +772,20 @@ class Plotter(object, Controller):
             cursor[0] = min(frame_pos[0]+frame_size[0], max(frame_pos[0], cursor[0]))
             cursor[1] = min(frame_pos[1]+frame_size[1], max(frame_pos[1], cursor[1]))
             
-            self._select_area_renderer.size = (
+            self._select_area_rectangle.size = (
                 cursor[0]-self._select_area[0],
                 cursor[1]-self._select_area[1],
             )
-            self._select_area_renderer.position = self._select_area[0:2]
+            self._select_area_rectangle.position = self._select_area[0:2]
 
-            #self._select_area_renderer.program.uniform('rectangle', self._select_area[0:2] + cursor)
-            #self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
-            #self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-bgcolor']))
-            #elf._select_area_renderer.render()
-            
-        if self.state == self.STATE_SELECT_AREA_PENDING:
-            a = 5
-            #self._select_area_renderer.program.uniform('rectangle', self._select_area)
-            #self._select_area_renderer.program.uniform('mat_camera', self.camera.get_matrix())
-            #self._select_area_renderer.program.uniform('bgcolor', hex_to_rgba(self.color_scheme['select-area-pending-bgcolor']))
-            #self._select_area_renderer.render()       
-        #self._plotframe.render()
         self.shaperenderer.render()
         self._yaxis.render()
         self._xaxis.render()
-        if self._maxis:
-            self._maxis.render()
+        if self._colorlegend_axis:
+            self._colorlegend_axis.render()
         self._fontrenderer.render()
         
-
-
-class RectangleRenderer():
-    def __init__(self):
-        self.vbo = None 
-        self.vao = None 
-    def gl_init(self):
-        self.vbo = VertexBuffer.from_numpy(np.array([
-            0, 0, 1, 0, 1, 1,
-            1, 1, 0, 1, 0, 0,
-        ], dtype=np.float32).reshape(6,2))
-        self.vao = VertexArray({'vertex_position': self.vbo})
-        self.program = Program()
-        self.program.shaders.append(Shader(GL_VERTEX_SHADER, """
-            #version /*{$VERSION$}*/
-            uniform mat4 mat_camera;
-            uniform vec4 rectangle;
-
-            //out vec2 frag_tex_coord;
-            in vec2 vertex_position;
-            void main() {
-                vec2 pos = vertex_position;
-                if (pos.x == 0) pos.x = rectangle.x;
-                else if (pos.x == 1) pos.x = rectangle.z; 
-                if (pos.y == 0) pos.y = rectangle.y;
-                else if (pos.y == 1) pos.y = rectangle.w;
-                gl_Position = mat_camera*vec4(pos, 0, 1);
-                //frag_tex_coord = vertex_position;
-            }
-        """))
-        self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, """
-            #version /*{$VERSION$}*/
-            out vec4 color;
-            in vec2 frag_tex_coord;
-            uniform vec4 rectangle;
-            uniform vec4 bgcolor;
-            void main() {
-                color = bgcolor;
-                if (abs(gl_FragCoord.x-rectangle.x) < 2)
-                    color = vec4(1,0,0,1);
-                if (abs(gl_FragCoord.x-rectangle.z) < 2)
-                    color = vec4(1,0,0,1);
-
-            }
-        """))
-        self.program.link()
-        self.vao.enable_attributes(self.program.attributes)
-    def render(self):
-        self.program.use()
-        self.vao.bind()
-        glDrawArrays(GL_TRIANGLES, 0, 6)
-        self.vao.unbind()
-        self.program.unuse()        
+    
 class Plotter2dMode_Blur():
     def __init__(self, w=0.8):
         self.record_mode = window.Framebuffer.RECORD_TRACK_COMPLEX

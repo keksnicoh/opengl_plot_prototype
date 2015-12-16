@@ -1,17 +1,21 @@
+/**
+ * field fragment shader. need to be precompiled by
+ * mustache template language.
+ * @author Jesse Hinrichsen
+ * @author Nicolas 'keksnicoh' Heimann    
+ */
 #version /*{$VERSION$}*/
 
-in vec2 fragment_position;
+in vec2 x;
 out vec4 fragment_color;
 uniform sampler2D tex[1];
-/*{{{START_UNIFORMS}}}
-{{{UNIFORMS}}}
-{{{END_UNIFORMS}}}*/
 
-/*{$FUNCTIONS$}*/
+{{{UNIFORMS}}}
+{{{FUNCTIONS}}}
 
 void main() {
-    if (fragment_position.x > 9) {}
-    fragment_color = texture(tex[0], fragment_position);
-    /*{$COLOR_KERNEL$}*/
+    if (x.x  > 9) {}
+    {{{DATA_KERNEL}}};
+    {{{COLOR_KERNEL}}};
 }
 

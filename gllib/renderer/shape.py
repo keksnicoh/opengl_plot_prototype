@@ -34,7 +34,7 @@ class ShapeRenderer(object):
         border_program.uniform('mat_camera', self.camera.get_matrix())
         self.border_program = border_program
 
-        self._borderframe = Framebuffer(self.camera, self.camera.screensize, clear_color=[0,0,0,0])
+        self._borderframe = Framebuffer(self.camera, self.camera.screensize, clear_color=[0,0,0,0], blit_texture=True)
         self._borderframe.init()
 
     def update_shape_vaos(self, instance, show):

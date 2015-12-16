@@ -10,6 +10,7 @@ from gllib.plot.app import plot2d
 from gllib.plot.plotter2d import DARK_COLORS, DEBUG_COLORS
 from gllib.application import GlApplication
 from gllib.plot.timedependency import PlotTicker
+from gllib.plot.color.schemes import ColorMap
 
 import numpy as np 
 from time import time
@@ -41,5 +42,5 @@ plot2d(
     title             = 'Hello plotting',
     xlabel            = 'to cool space of $xi$',
     ylabel            = 'fancy measurement f($xi$) [$omega$^2 kg/m^2]',
-    dark=True
+    dark=False
 )

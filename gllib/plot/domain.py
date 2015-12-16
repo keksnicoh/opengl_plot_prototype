@@ -20,7 +20,8 @@ class Domain():
         self._vbo_id = vbo_id
         self.dimension = dimension
         self.offset = offset
-        self._length = length
+        self.length = length
+
     def set_vbo(self, vbo_id):
         self._vbo_id = vbo_id
     def get_vbo(self):
@@ -30,12 +31,12 @@ class Domain():
     def get_offset(self):
         return self.offset*4*self.dimension
     def get_length(self):
-        if self._length is None:
+        if self.length is None:
             glBindBuffer(GL_ARRAY_BUFFER, self._vbo_id)
             size = glGetBufferParameteriv(GL_ARRAY_BUFFER, GL_BUFFER_SIZE)
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             return float(size)
-        return self._length*4*self.dimension
+        return self.length*4*self.dimension
 
 class FieldDomain():
     """
@@ -199,7 +200,7 @@ class RealAxis(DynamicContinousDomain):
         self._interval = interval
         self._dynamic = dynamic
         self._axis = axis 
-        self._length = length
+        self.length = length
         self.offset = 0
         self._vbo_id = None
         self.dimension = 2
@@ -208,9 +209,9 @@ class RealAxis(DynamicContinousDomain):
         self.mode = dynamic_matrix() if self._dynamic else DynamicContinousDomain.MODE_STATIC
 
     def _init_vbo(self):
-        data = numpy.zeros(self._length*2, dtype=numpy.float32)
-        for i in range(0, self._length):
-            data[2*i+self._axis]   = self._interval[0]+self._interval[1]*float(i)/self._length
+        data = numpy.zeros(self.length*2, dtype=numpy.float32)
+        for i in range(0, self.length):
+            data[2*i+self._axis]   = self._interval[0]+self._interval[1]*float(i)/self.length
             data[2*i+self._axis^1] = 0
 
         vbo = glGenBuffers(1)

@@ -16,9 +16,9 @@ import numpy as np
 from time import time
 
 def plot_main(plotter):
-    plotter.graphs['test1'] = Line2d(RealAxis(), "y=sin(x)")
+    plotter.graphs['test1'] = Line2d(RealAxis(length=100, ), "y=4*sin(0.5*x)", width=35)
     plotter.graphs['test2'] = Line2d(Interval([np.pi,10*np.pi]), "y=60*sin(x)*cos(x)/x;x=60*cos(x)/x")
-    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=sin(y);", width=10)
+    plotter.graphs['test3'] = Line2d(RealAxis(length=100, axis=1), "x=4*sin(0.5*y);", width=35)
 
    # plotter.graphs['dots'] = Line2d(
    #     RealAxis(length=100),
@@ -30,7 +30,7 @@ def plot_main(plotter):
 
     plotter.on_pre_cycle.append(PlotTicker())
 
-GlApplication.DEBUG = False    
+GlApplication.DEBUG = True    
 plot2d(
 
     plot_main, 

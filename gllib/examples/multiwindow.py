@@ -9,9 +9,7 @@ app = GlApplication()
 window1 = GlWindow(200, 200, x=0, y=0)
 window2 = GlWindow(200, 200, x=0, y=210)
 
-
 def plot_main(plotter):
-	
     domain = RealAxis(length=100)
     plotter.graphs['test'] = Line2d(domain, "y=sin(x)")
 

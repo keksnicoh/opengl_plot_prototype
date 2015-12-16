@@ -558,6 +558,9 @@ class Plotter(object, Controller):
             factor = 0.1
             self._colorlegend_frame.inner_camera.set_scaling([1,colorrange_length*(1+2*factor)])
             self._colorlegend_frame.inner_camera.set_position(0,-colorrange_length*factor+colorrange[0])
+            self._colorlegend_frame.update_camera(self.camera)
+
+
             self._colorlegend = ShapeInstance('default_rectangle', **{
                 'size': self.colorlegend_size,
                 'position': self.colorlegend_position,
@@ -568,14 +571,15 @@ class Plotter(object, Controller):
                 'color': [0,0,0,0],
                 'texture': self._colorlegend_frame
             })
+
             self.shaperenderer.draw_instance(self._colorlegend)
             self._colorlegend_graph = Field(
-                top_left=(0,colorrange_length*(1+2*factor)+colorrange[0]),
+                top_left=(0,colorrange_length*(1+factor)+colorrange[0]),
                 bottom_right=(1,colorrange[0]-colorrange_length*factor),
                 color_scheme=self.colorlegend,
-                data_kernel='fragment_color = vec4({a}+{l}*(x.y-{f}),0,0,1)'.format(
+                data_kernel='fragment_color = vec4({a}+{l}*(1+2*{f})*x.y-{l}*{f},0,0,1)'.format(
                     a=colorrange[0],
-                    l=colorrange_length*(1+2*factor),
+                    l=colorrange_length,
                     f=factor)
             )
             self._colorlegend_graph.init()

@@ -11,7 +11,7 @@ from gllib.plot.field import Field
 from gllib.plot.color.schemes import ColorMap
 import numpy as np 
 
-color_scheme = ColorMap('IDL_Blue-Red_2', colorrange=[-.3,1.32])
+color_scheme = ColorMap('IDL_Pastels', colorrange=[-0.6,2])
 
 def plot_main(plotter): 
     plotter.graphs['my_awesome_random_field'] = Field(

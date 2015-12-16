@@ -155,6 +155,7 @@ class Plotter(object, Controller):
         self._select_area          = [0,0,0,0]
         self._select_area_rectangle = None
         self._colorlegend_frame = None 
+        self._colorlegend = None
         self._colorlegend_graph = None
         self._axis_font = ImageFont.truetype(
             resource_path(color_scheme['axis-font']), 
@@ -560,19 +561,25 @@ class Plotter(object, Controller):
             self._colorlegend_frame.inner_camera.set_position(0,-colorrange_length*factor+colorrange[0])
             self._colorlegend_frame.update_camera(self.camera)
 
+            if self._colorlegend is None:
+                self._colorlegend = ShapeInstance('default_rectangle', **{
+                    'size': self.colorlegend_size,
+                    'position': self.colorlegend_position,
+                    'border': {
+                        'size': self.color_scheme['plotframe-border-size'],
+                        'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
+                    },
+                    'color': [0,0,0,0],
+                    'texture': self._colorlegend_frame
+                })
 
-            self._colorlegend = ShapeInstance('default_rectangle', **{
-                'size': self.colorlegend_size,
-                'position': self.colorlegend_position,
-                'border': {
-                    'size': self.color_scheme['plotframe-border-size'],
-                    'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
-                },
-                'color': [0,0,0,0],
-                'texture': self._colorlegend_frame
-            })
+                self.shaperenderer.draw_instance(self._colorlegend)
+            else:
+                self._colorlegend.position = self.colorlegend_position
+                self._colorlegend.size = self.colorlegend_size
+                
 
-            self.shaperenderer.draw_instance(self._colorlegend)
+
             self._colorlegend_graph = Field(
                 top_left=(0,colorrange_length*(1+factor)+colorrange[0]),
                 bottom_right=(1,colorrange[0]-colorrange_length*factor),
@@ -583,7 +590,10 @@ class Plotter(object, Controller):
                     f=factor)
             )
             self._colorlegend_graph.init()
-            self._update_colorlegend()
+            plot_camera = self._colorlegend_frame.inner_camera;
+            self._colorlegend_graph.program.uniform('mat_camera', plot_camera.get_matrix())
+            self._colorlegend_graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
+            self._colorlegend_graph.program.uniform('mat_domain', np.identity(3))
 
             self._colorlegend_axis = axis.Fixed(
                 camera       = self.camera,
@@ -612,6 +622,7 @@ class Plotter(object, Controller):
             axis_labels.clear_texts()
             for yplot, label in self._colorlegend_axis.labels:
                 axis_labels.add_text(Text(label,font), (x_viewspace, y_viewspace(yplot)-10))
+
 
 
     def init_graphs(self):
@@ -685,10 +696,7 @@ class Plotter(object, Controller):
 
     def _update_colorlegend(self): 
         if self.colorlegend is not None:
-            plot_camera = self._colorlegend_frame.inner_camera;
-            self._colorlegend_graph.program.uniform('mat_camera', plot_camera.get_matrix())
-            self._colorlegend_graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
-            self._colorlegend_graph.program.uniform('mat_domain', np.identity(3))
+            self.init_colorlegend()
 
     def camera_updated(self, camera):
         """
@@ -701,6 +709,7 @@ class Plotter(object, Controller):
 
         self._update_plotframe_camera()
         self._update_graph_matricies()
+        self._update_colorlegend()
 
         self.render_graphs = True
         self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize

@@ -13,13 +13,19 @@ class VertexBuffer():
     representation of a buffer
     """
     _FLT32 = 4
-    def __init__(self, length, dimension=2):
+    def __init__(self, length=None, dimension=None, gl_vbo_id=None):
         self.length = length 
         self.dimension = dimension 
-        self._gl_vbo_id = None
-        self.init_gl()
-        self.gl_buffer_length = 0
+        self.usage = GL_STATIC_DRAW
+        self.nbytes = None 
 
+        if gl_vbo_id is not None:
+            self._gl_vbo_id = gl_vbo_id
+        else:
+            self._gl_vbo_id = None
+
+        self.gl_buffer_length = 0
+        self.gl_initialized = False
     @classmethod
     def from_numpy(cls, np_data):
         """
@@ -29,28 +35,31 @@ class VertexBuffer():
         if np_data.shape[1] is None:
             raise ValueError('numpy array must have 2d shape. given shape: {}'.format(np_data))
                 
-        vertex_buffer = VertexBuffer(*np_data.shape)
+        vertex_buffer = VertexBuffer(*np_data.shape[0:2])
         vertex_buffer.buffer_data(np_data)
         return vertex_buffer
 
     @property
     def gl_vbo_id(self):
-        #if not self.gl_initialized:
-        #    self.gl_init()
+        if not self.gl_initialized:
+            self.gl_init()
+
         return self._gl_vbo_id
 
-    def init_gl(self):
-        self._gl_vbo_id = glGenBuffers(1)
-
+    def gl_init(self):
+        if self._gl_vbo_id is None:
+            self._gl_vbo_id = glGenBuffers(1)
+        self.gl_initialized = True
 
     def buffer_data(self, data=None):
-        glBindBuffer(GL_ARRAY_BUFFER, self._gl_vbo_id)
-        glBufferData(GL_ARRAY_BUFFER, self.dimension*self.length*self._FLT32, data.flatten(), GL_STATIC_DRAW)
+        self.data = data
+        glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
+        glBufferData(GL_ARRAY_BUFFER, self.dimension*self.length*self._FLT32, data.flatten(), self.usage)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
         self.gl_buffer_length = self.length
 
     def bind(self):
-        glBindBuffer(GL_ARRAY_BUFFER, self._gl_vbo_id)
+        glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
   
     def unbind(self):
         glBindBuffer(GL_ARRAY_BUFFER, 0)

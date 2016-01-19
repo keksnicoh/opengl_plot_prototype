@@ -85,7 +85,7 @@ class Plotter(object, Controller):
     def __init__(self, 
         camera            = None, 
         axis              = [2,2], 
-        origin            = [1,-1],
+        origin            = [0,0],
         axis_units        = [1,1],
         xlabel            = None,
         ylabel            = None,
@@ -719,30 +719,21 @@ class Plotter(object, Controller):
 
     def _update_graph_matricies(self):
         for graph in self.graphs.values():
-            # strech domain a little bit over plot plane boundaries
-            # XXX
-            # check this for static domains
-            plot_camera = self._plotframe.inner_camera;
-            axis        = plot_camera.get_screen_scaling()
-            origin      = plot_camera.get_position()
+            if hasattr(graph, 'update_plotmeta'):
+                # strech domain a little bit over plot plane boundaries
+                # XXX
+                # check this for static domains
+                plot_camera = self._plotframe.inner_camera;
+                axis        = plot_camera.get_screen_scaling()
+                origin      = plot_camera.get_position()
 
-            if hasattr(graph.domain, 'get_transformation_matrix'):
-                domain_matrix = graph.domain.get_transformation_matrix(
-                    axis=(axis[0], axis[1]),
-                    origin=(origin[0],origin[1]),
+                graph.update_plotmeta(
+                    plot_camera.get_matrix(), 
+                    self._plotframe.camera.get_matrix(), 
+                    axis, 
+                    origin
                 )
-            else :
-                domain_matrix = np.identity(3)
 
-            graph.program.uniform('mat_camera', plot_camera.get_matrix())
-            graph.program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
-            graph.program.uniform('mat_domain', domain_matrix)
-
-            if hasattr(graph, 'dot_program'):
-                graph.dot_program.uniform('mat_camera', plot_camera.get_matrix())
-                graph.dot_program.uniform('mat_outer_camera', self._plotframe.camera.get_matrix())
-                graph.dot_program.uniform('mat_domain', domain_matrix)
- 
 
 
     # controller action events
@@ -910,6 +901,41 @@ DARK_COLORS.update({
         '00ffffbb',
         'f0f0f0bb',
         'aaff66bb',
+    ]
+})
+
+BLA_COLORS = DEFAULT_COLORS.copy()
+BLA_COLORS.update({
+    'bgcolor'              : '142638ff',
+    'plotplane-bgcolor'    : '000000aa',
+    'plotplane-bordercolor': '9ABAD9ff',
+    'font-color'           : 'ffffffff',
+
+    'select-area-bgcolor'  : 'aaaaaa66',
+    'select-area-pending-bgcolor'  : 'FF990066',
+    'select-area-border-color': 'FF9900ff',
+    'select-area-border-size': 1,
+
+
+    'xaxis-bgcolor'        : '020609ff',
+    'yaxis-bgcolor'        : '020609ff',
+    'xaxis-linecolor'      : 'aaaaaaff',
+    'xaxis-bgcolor'        : '00333300',
+    'xaxis-fontcolor'      : 'ffffffff',
+    'yaxis-linecolor'      : 'aaaaaaff',
+    'yaxis-bgcolor'        : '00333300',
+    'yaxis-fontcolor'      : 'ffffffff',
+
+    'plotframe-border-size': 2,
+    'plotframe-border-color': '9ABAD9ff',
+    'graph-colors': [
+        'FC82C3ff',
+        '2FB5F3ff',
+        'E1C829ff',
+        '18DD00ff',
+        '00ffffff',
+        'f0f0f0ff',
+        'aaff66ff',
     ]
 })
 

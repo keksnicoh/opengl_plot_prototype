@@ -155,7 +155,7 @@ class Scale():
         self.vao = None
 
     def unit_density_factor(self, capture_size):
-        density = 120
+        density = 80
         size = capture_size
         f = 1.0 
         last_diff = density - size

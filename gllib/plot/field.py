@@ -139,6 +139,12 @@ class Field():
             for uniform in self.data_kernel.get_uniform_data().items():
                 self.program.uniform(*uniform)
 
+    def update_plotmeta(self, plot_cam, outer_cam, *args, **kwargs):
+        # not so nice ... but later refactoring ...
+        self.program.uniform('mat_domain', np.identity(3))
+        self.program.uniform('mat_camera', plot_cam)
+        self.program.uniform('mat_outer_camera', outer_cam)
+
     def render(self, plotter):
         # final rendering
         glActiveTexture(GL_TEXTURE0);

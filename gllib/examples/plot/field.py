@@ -10,7 +10,7 @@ import numpy as np
 
 #
 # numpy array describes the texture size and format. 
-# third component in shape is the length of a component
+# third component in shape is the length of a vertex
 # 1 => GL_RED
 # 2 => GL_RG
 # 3 => GL_RGB
@@ -22,6 +22,8 @@ import numpy as np
 #
 w = 1000
 h = 1000
+
+# lets define 3 color channels, so GL_RGB is used here.
 color_channels = 3
 data = np.random.random_sample(w*h*color_channels).reshape(w, h, color_channels)
 

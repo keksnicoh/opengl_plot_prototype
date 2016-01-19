@@ -3,6 +3,9 @@
 color schemes. integration of glsl-colomap
 vendor.
 
+XXX
+- Clean up, keep name distance short
+- move on directory up, color dir is not usefull here.
 :author: Jesse Hinrichsen
 """
 from gllib.shader import Shader
@@ -27,13 +30,14 @@ class ColorScheme():
 
 class ColorMap(ColorScheme):
     COLOR_KERNEL = """
-        float scaled = (-range.x + (fragment_color.r)) / abs(range.y - range.x);
+        float scaled = (-range.x + ({})) / abs(range.y - range.x);
         fragment_color = colormap(scaled);
     """
-    def __init__(self, filename, colorrange=[0,1], center=None):
+    def __init__(self, filename, colorrange=[0,1], center=None, source='fragment_color.r'):
         ColorScheme.__init__(self)
         self.filename = filename
         self.colorrange = colorrange
+        self.source = source
         self.center = center or 0.5*(colorrange[1]-colorrange[0])+colorrange[0]
         self.uniform_data = [
             ('range', colorrange),
@@ -53,7 +57,7 @@ class ColorMap(ColorScheme):
     @property
     def glsl_functions(self): return load_lib_file('../vendor/glsl-colormap/shaders/{}.frag'.format(self.filename))
 
-    def __str__(self): return ColorMap.COLOR_KERNEL
+    def __str__(self): return ColorMap.COLOR_KERNEL.format(self.source)
 
     @property
     def glsl_uniforms(self):

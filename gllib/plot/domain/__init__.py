@@ -34,11 +34,22 @@ from gllib import texture
 from gllib.buffer import VertexBuffer
 import numpy as np
 
+def interval(a, b, steps):
+    return NumpyDomain(np.arange(a, b, steps, dtype=np.float32))
+
+
 class Domain():
     # XXX
     # - REFACTOR OLD API METHODS 
     # - DELETE THIS BASE CLASS
-
+    @classmethod
+    def empty(cls, shape):
+        vbo = glGenBuffers(1)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, 4*shape[0]*shape[1], None, GL_STATIC_DRAW)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        return cls(vbo, length=shape[0], dimension=shape[1])
+        
     def __init__(self, vbo_id, dimension=2, offset=0, length=None):
         self._vbo_id = vbo_id
         self.dimension = dimension
@@ -49,7 +60,6 @@ class Domain():
     def gl_vbo_id(self):
         return self._vbo_id
     def __len__(self):
-        print(self.get_length())
         return self.get_length()
     def get_transformation_matrix(self, axis, origin):
         return numpy.identity(3).flatten()
@@ -62,6 +72,25 @@ class Domain():
             glBindBuffer(GL_ARRAY_BUFFER, 0)
             return int(float(size)/4/self.dimension)
         return self.length
+
+    def pull_data(self, offset=0, length=None):
+        # XXX
+        # - offset
+        bytes_per_vertex = self.dimension*4
+        max_length = len(self) - self.offset
+        if length is None:
+            length = max_length 
+        else:
+            length = min(length, max_length)
+
+        size = length*bytes_per_vertex
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+        glBindBuffer(GL_ARRAY_BUFFER, self.gl_vbo_id)
+        data = glGetBufferSubData(GL_ARRAY_BUFFER, 0, size)
+        glBindBuffer(GL_ARRAY_BUFFER, 0)
+
+        return data.view('<f4').reshape((length, self.dimension))
+
 
 class FieldDomain():
     """
@@ -120,10 +149,6 @@ class FieldDomain():
 
     def get_transformation_matrix(self, axis, origin):
         return numpy.identity(3).flatten()
-
-class EmptyFieldDomain():
-    def __init__(self, dimensions):
-        self.dimensions = dimensions
 
 class RealAxis(object):
     def __init__(self, axis='x', interval=(0,1)):
@@ -186,6 +211,9 @@ class RealAxis(object):
     def gl_vbo_id(self):
         return self._vbo.gl_vbo_id
 
+    def pull_data(self):
+        return Domain.pull_data(self)
+
 class NumpyDomain(Domain, object):
     """
     connect numpy array with opengl vbo
@@ -208,11 +236,13 @@ class NumpyDomain(Domain, object):
 
     """
     def __init__(self, data):
+        self._vbo = None
+        
         if len(data.shape) < 2:
             data = data.reshape((len(data),1))
 
-        self._data = data 
-        self._vbo = None
+        self.data = data 
+
         self.offset = 0
 
     @property
@@ -221,6 +251,12 @@ class NumpyDomain(Domain, object):
 
     @data.setter 
     def data(self, data):
+        if data.dtype != numpy.float32:
+            raise Exception(
+                'domain data has dtype={} but must have dtype=float32.'.format(
+                    data.dtype
+                )
+            )
         self._data = data
         if self._vbo is not None: 
             self._vbo.buffer_data(self._data)
@@ -242,7 +278,8 @@ class NumpyDomain(Domain, object):
         self._vbo = VertexBuffer.from_numpy(self._data)
          
 
-
+    def pull_data(self):
+        return Domain.pull_data(self)
 
 
 

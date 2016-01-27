@@ -19,6 +19,7 @@ from gllib.plot.field import Field
 from gllib.renderer.shape import ShapeInstance, ShapeRenderer, Rectangle 
 import numpy as np 
 from collections import OrderedDict
+from gllib.plot import plot_info, plot_warn
 
 from PIL import ImageFont
 from OpenGL.GL import *
@@ -98,6 +99,7 @@ class Plotter(object, Controller):
         graphs            = {},
         axis_measures     = [] 
     ):
+        plot_info('Yo bro', 'plotter cant wait to plot for you')
         Controller.__init__(self, camera)
 
         if GlApplication.DEBUG:
@@ -162,7 +164,6 @@ class Plotter(object, Controller):
             color_scheme['axis-fontsize'], 
             encoding=Plotter.FONT_ENCODING
         )
-
 
         self.on_keyboard.append(self.keyboard_callback)
         self.on_mouse.append(self.mouse_callback)
@@ -536,6 +537,8 @@ class Plotter(object, Controller):
             'texture': self._plotframe
         })
         self.shaperenderer.draw_instance(self._plotplane)
+
+        plot_info('Plotter2d', 'inizialized!')
 
     def init_colorlegend(self):
         """

@@ -23,7 +23,7 @@ import re
 #   - more abstract usage, not so easy in real life ...
 
 class Line2d():
-    GEOMETRY_SHADER_WIDTH = .5
+    GEOMETRY_SHADER_WIDTH = 1
     """
     line plotter
     """
@@ -53,7 +53,8 @@ class Line2d():
         self.initialized  = False 
         self._width       = width
         self.shift        = shift
-        
+        self.length = None
+        self.offset = None
         # plot from the max offset to min length of 
         # all defined domains. 
         self._max_offset  = 0
@@ -63,10 +64,14 @@ class Line2d():
         # not so nice ... but later refactoring ...
         for i, domain in enumerate(self.domains):
             if hasattr(domain, 'get_transformation_matrix'):
-                self.program.uniform('trans_d{}'.format(i), domain.get_transformation_matrix(
+                matrix = domain.get_transformation_matrix(
                     axis=(axis[0], axis[1]),
                     origin=(origin[0],origin[1]),
-                ))
+                )
+                self.program.uniform('trans_d{}'.format(i), matrix)
+
+                if hasattr(self, 'dot_program'):
+                    self.dot_program.uniform('trans_d{}'.format(i), matrix)
 
         self.program.uniform('mat_camera', plot_cam)
         self.program.uniform('mat_outer_camera', outer_cam)
@@ -75,7 +80,7 @@ class Line2d():
         if hasattr(self, 'dot_program'):
             self.dot_program.uniform('mat_camera', plot_cam)
             self.dot_program.uniform('mat_outer_camera', outer_cam)
-      #      dot_program.uniform('mat_domain', domain_matrix)
+            
 
 
     def set_time(self, time):
@@ -96,8 +101,6 @@ class Line2d():
         shader_pre_compile_uniforms = ''
         uniforms_transformation_matricies = {}
 
-        lengths = [] 
-
         # loop thru all domains to prepare vertex array buffers
         # and glsl pre compiled code
         for i, domain in enumerate(self.domains):
@@ -116,7 +119,7 @@ class Line2d():
             if hasattr(domain, 'get_transformation_matrix'):
                 shader_pre_compile_uniforms += 'uniform mat{} trans_d{};\n'.format(domain.dimension+1, i)
 
-                shader_pre_compile_transformations += '{vec} d{i} = (trans_d{i} * vec{d1}(in_d{i},1)).{coords};\n'.format(
+                shader_pre_compile_transformations += '{vec} d{i}; d{i} = (trans_d{i} * vec{d1}(in_d{i},1)).{coords};\n'.format(
                     coords = 'x' if domain.dimension == 1 else ('xy' if domain.dimension==2 else 'xyz'),
                     vec=vec_d,
                     i=i, 
@@ -124,12 +127,9 @@ class Line2d():
                 )
                 uniforms_transformation_matricies['trans_d{}'.format(i)] = 'mat{}'.format(domain.dimension+1)
             else:
-                shader_pre_compile_transformations = '{vec} d{i} = in_d{i};\n'.format(vec=vec_d, i=i)
+                shader_pre_compile_transformations += '{vec} d{i}; d{i} = in_d{i};\n'.format(vec=vec_d, i=i)
 
-            self._max_offset = max(self._max_offset, domain.offset)
-            lengths.append(len(domain))
-
-        self._min_length = min(lengths)
+        self._calc_length_offset()
 
         # get glsl_functions if there are some available.
         color_functions = ''
@@ -161,19 +161,26 @@ class Line2d():
         if GlApplication.DEBUG == True:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
-        self.vao.bind()
+        for domain in self.domains:
+            if hasattr(domain, 'transform'):
+                domain.transform(self.offset, self.length)
 
+        self._calc_length_offset()
+        length = self.length if self.length is not None else self._min_length
+        offset = self.offset if self.offset is not None else self._max_offset
+
+        self.vao.bind()
         if self.draw_lines:
             self.program.use()
             self.program.uniform('shift', self.shift)
-            glDrawArrays(GL_LINE_STRIP_ADJACENCY, self._max_offset, self._min_length)
+            glDrawArrays(GL_LINE_STRIP_ADJACENCY, offset, length)
             self.program.unuse()
 
 
         if self.draw_dots:
             self.dot_program.use()
             self.dot_program.uniform('shift', self.shift)
-            glDrawArrays(GL_POINTS, self._max_offset, self._min_length)
+            glDrawArrays(GL_POINTS, offset, length)
             self.dot_program.unuse()
 
         self.vao.unbind()
@@ -273,6 +280,14 @@ class Line2d():
 
         return pre_compiled_code
 
+    def _calc_length_offset(self):
+        lengths = []
+        for domain in self.domains:
+            self._max_offset = max(self._max_offset, domain.offset)
+            lengths.append(len(domain))
+
+        self._min_length = min(lengths)
+
     def _init_program_uniforms(self):
         """
         set program uniforms to its default values
@@ -298,7 +313,7 @@ class Line2d():
         })
         geometry_shader = Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/line.geom.glsl'))
         fragment_shader = Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/line.frag.glsl'))
-        
+
         try:
             vertex_shader.compile()
 
@@ -311,7 +326,7 @@ class Line2d():
                 raise Error('invalid syntax in user defined kernel "{}"'.format(self._kernel))
             except ShaderError as e2:
                 raise e
-
+       
         program = Program()
         program.shaders.append(vertex_shader)
         program.shaders.append(geometry_shader)

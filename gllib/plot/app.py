@@ -18,12 +18,12 @@ def plot2d(f, width=600, height=600, dark=False, **kwargs):
     app.run()
 
 
-def plot2dRows(f, n, **kwargs):
-    window = GlWindow(800, 500, '2 cool quads 4 yolo')
+def plot2dRows(f, plotters, width=600, height=600):
+    window = GlWindow(width, height, '2 cool quads 4 yolo')
     app = GlApplication()
     app.windows.append(window)
 
-    plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
+    plotters = [plotter2d.Plotter(**args) for args in plotters]
 
 
     window.set_controller(FramelayoutController([[c] for c in plotters]))

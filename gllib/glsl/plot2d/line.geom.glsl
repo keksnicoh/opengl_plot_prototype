@@ -25,7 +25,7 @@ uniform         float width = .25;
                 float l[2]; 
                 vec2 v[3];
                 vec2 n[3];
-
+vec4 tmp;
 void main(void)
 {
     // prepare  
@@ -45,28 +45,40 @@ void main(void)
     m[0] = vec2((n[0]+n[1]).x/length(n[0]+n[1]),(n[0]+n[1]).y/length(n[0]+n[1]));
     m[1] = vec2((n[1]+n[2]).x/length(n[1]+n[2]),(n[1]+n[2]).y/length(n[1]+n[2]));
 
-    l[0] = 1.0/(0.0001+dot(m[0], n[1]));
-    l[1] = 1.0/(0.0001+dot(m[1], n[1]));
+    l[0] = 1.0/(.05+dot(m[0], n[0]+n[1]));
+    l[1] = 1.0/(.05+dot(m[1], n[1]+n[2]));
     
     // emmit
     color = fragment_color[0];
     coord = vec2(0,1);
-    gl_Position = mat_camera*(gl_in[1].gl_Position) + width*mat_outer_camera*vec4(-m[0].x*l[0],+m[0].y*l[0], 0, 0) ;
+    tmp = mat_outer_camera*vec4(-m[0].x*l[0],+m[0].y*l[0], 0, 0);
+    tmp.x = width*tmp.x;
+    tmp.y = width*tmp.y;
+    gl_Position = mat_camera*(gl_in[1].gl_Position) + tmp;
     EmitVertex();
 
     color = fragment_color[1];
     coord = vec2(0,0);
-    gl_Position = mat_camera*(gl_in[1].gl_Position) + width*mat_outer_camera*vec4(m[0].x*l[0],-m[0].y*l[0], 0,0) ;
+    tmp = mat_outer_camera*vec4(m[0].x*l[0],-m[0].y*l[0], 0, 0);
+    tmp.x = width*tmp.x;
+    tmp.y = width*tmp.y;
+    gl_Position = mat_camera*(gl_in[1].gl_Position) + tmp;
     EmitVertex();
 
     color = fragment_color[2];
     coord = vec2(1,1);
-    gl_Position = mat_camera*(gl_in[2].gl_Position) + width*mat_outer_camera*vec4(-m[1].x*l[1],+m[1].y*l[1], 0,0) ;
+    tmp = mat_outer_camera*vec4(-m[1].x*l[1],+m[1].y*l[1], 0, 0);
+    tmp.x = width*tmp.x;
+    tmp.y = width*tmp.y;
+    gl_Position = mat_camera*(gl_in[2].gl_Position) + tmp;
     EmitVertex();
 
     color = fragment_color[3];
     coord = vec2(1,0);
-    gl_Position = mat_camera*(gl_in[2].gl_Position) + width*mat_outer_camera*vec4(m[1].x*l[1],-m[1].y*l[1], 0,0) ;
+    tmp = mat_outer_camera*vec4(m[1].x*l[1],-m[1].y*l[1], 0, 0);
+    tmp.x = width*tmp.x;
+    tmp.y = width*tmp.y;
+    gl_Position = mat_camera*(gl_in[2].gl_Position) + tmp;
     EmitVertex();
 
     EndPrimitive();

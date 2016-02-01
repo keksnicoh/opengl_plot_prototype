@@ -117,15 +117,15 @@ class Line2d():
             shader_pre_compile_vbo += 'in {} in_d{};\n'.format(vec_d, i)
 
             if hasattr(domain, 'get_transformation_matrix'):
-                shader_pre_compile_uniforms += 'uniform mat{} trans_d{};\n'.format(domain.dimension+1, i)
+                shader_pre_compile_uniforms += 'uniform mat{} trans_d{};\n'.format(min(4,domain.dimension+1), i)
 
-                shader_pre_compile_transformations += '{vec} d{i}; d{i} = (trans_d{i} * vec{d1}(in_d{i},1)).{coords};\n'.format(
-                    coords = 'x' if domain.dimension == 1 else ('xy' if domain.dimension==2 else 'xyz'),
+                shader_pre_compile_transformations += '{vec} d{i}; d{i} = (trans_d{i} * {vecext}).{coords};\n'.format(
+                    coords = 'x' if domain.dimension == 1 else ('xy' if domain.dimension==2 else ('xyz' if domain.dimension==3 else 'xyzw')),
                     vec=vec_d,
                     i=i, 
-                    d1=domain.dimension+1
+                    vecext='vec{d1}(in_d{i},1)'.format(d1=domain.dimension+1,i=i) if domain.dimension < 4 else 'in_d{i}'.format(i=i),
                 )
-                uniforms_transformation_matricies['trans_d{}'.format(i)] = 'mat{}'.format(domain.dimension+1)
+                uniforms_transformation_matricies['trans_d{}'.format(i)] = 'mat{}'.format(min(4,domain.dimension+1))
             else:
                 shader_pre_compile_transformations += '{vec} d{i}; d{i} = in_d{i};\n'.format(vec=vec_d, i=i)
 
@@ -308,6 +308,7 @@ class Line2d():
         """
         compiles glsl programs 
         """
+        print(vertex_source)
         vertex_shader = Shader(GL_VERTEX_SHADER, vertex_source, substitutions={
             'KERNEL' : self._kernel+';', #user friendly semicolon :)
         })

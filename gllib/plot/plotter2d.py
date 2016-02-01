@@ -168,7 +168,7 @@ class Plotter(object, Controller):
         self.on_keyboard.append(self.keyboard_callback)
         self.on_mouse.append(self.mouse_callback)
         self.on_pre_render.insert(0, self.pre_render)
-        self.on_pre_cycle.append(Plotter.check_graphs)
+        self.on_pre_render.insert(0, self.check_graphs)
         self.on_post_render.append(self.post_render)
         self.on_render.append(self.render)
 

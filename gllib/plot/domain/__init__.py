@@ -44,6 +44,9 @@ class Domain():
     # - DELETE THIS BASE CLASS
     @classmethod
     def empty(cls, shape):
+        if type(shape) is not tuple:
+            shape = (shape, 1)
+            
         vbo = glGenBuffers(1)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
         glBufferData(GL_ARRAY_BUFFER, 4*shape[0]*shape[1], None, GL_STATIC_DRAW)
@@ -242,12 +245,15 @@ class NumpyDomain(Domain, object):
             data = data.reshape((len(data),1))
 
         self.data = data 
-
+        self.length = None
         self.offset = 0
 
     @property
     def data(self):
         return self._data 
+
+    def __len__(self):
+        return self.length or self._data.shape[0]
 
     @data.setter 
     def data(self, data):
@@ -260,9 +266,6 @@ class NumpyDomain(Domain, object):
         self._data = data
         if self._vbo is not None: 
             self._vbo.buffer_data(self._data)
-
-    def __len__(self):
-        return self._data.shape[0] 
 
     @property
     def dimension(self):

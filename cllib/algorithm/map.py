@@ -7,16 +7,28 @@ algorithms to map data
 import pystache
 from copy import copy
 import pyopencl as cl
+import pyopencl.tools 
+
 from operator import mul
+import numpy as np 
 
 class Blockwise():
     """
-    mapper for matrix structures.    
+    Kernel maps structured chunks to structured chunks. 
+
+    XXX
+    - test me 
+    - fix redundancy, 
+    - examples.  
     """
     _SOURCE = """
+#pragma OPENCL EXTENSION cl_khr_fp64 : enable
 {{IN_LAYOUT}}
 #define IN_BLOCK_SIZE {{{IN_BLOCK_SIZE}}}
 #define OUT_BLOCK_SIZE {{{OUT_BLOCK_SIZE}}}
+
+{{STRUCTS}}
+
 {{{PROCEDURE_FUNCTIONS}}}
 
 __kernel 
@@ -36,7 +48,7 @@ void {{{KERNEL_NAME}}}(
         map_expr=None,
         arguments=None, 
         in_blocksize=1, 
-        out_blocksize=1,
+        out_blocksize=None,
         block_shape=None,
         libraries='',
         name='_map_kernel', 
@@ -45,14 +57,15 @@ void {{{KERNEL_NAME}}}(
         self.name = name
         self.ctx = ctx
         self.in_blocksize = in_blocksize
+        self.out_blocksize = out_blocksize or in_blocksize
         self.block_shape = block_shape
-        self.out_blocksize = out_blocksize
         self.arguments = arguments
+        self.libraries = libraries
+
         self._kernel_layout = None
-        self.libraries = ''
         self._arguments = []
         self._kernel_args = None
-        self._build = False
+        self._kernel = None
 
     def build(self, caardinality=1, dimension=1):
         if hasattr(self.map_expr, 'build'):
@@ -69,16 +82,6 @@ void {{{KERNEL_NAME}}}(
         else:
             raise ValueError('map expr is invalid')
 
-        arguments = self.arguments or []
-        if hasattr(self.map_expr, 'arguments'):
-            arguments += self.map_expr.arguments
-        elif (hasattr(self.map_expr, '__contains__')
-            and 'arguments' in self.map_expr 
-            and hasattr(self.map_expr, '__getitem__')):
-            arguments += map_expr['arguments']
-        
-        cl_args = [' '.join(a[1:]) for a in arguments]
-
         libraries = self.libraries or ''
         if hasattr(self.map_expr, 'libraries'):
             libraries += '\n'+self.map_expr.libraries
@@ -87,29 +90,54 @@ void {{{KERNEL_NAME}}}(
             and hasattr(self.map_expr, '__getitem__')):
             libraries += '\n'+map_expr['libraries']
 
+        arguments = self.arguments or []
+        if hasattr(self.map_expr, 'arguments'):
+            arguments += self.map_expr.arguments
+        elif (hasattr(self.map_expr, '__contains__')
+            and 'arguments' in self.map_expr 
+            and hasattr(self.map_expr, '__getitem__')):
+            arguments += map_expr['arguments']
+        
+        # find structures
+        strcts = [] 
+        for i, cl_arg in enumerate(arguments):
+            if type(cl_arg[2]) is np.dtype:
+                strct_name = 'strct_{}'.format(cl_arg[0])
+                _, c_decl = cl.tools.match_dtype_to_c_struct(
+                    self.ctx.devices[0], 
+                    strct_name, 
+                    cl_arg[2],
+                )
+                strcts.append(c_decl)
+                arguments[i] = (cl_arg[0], cl_arg[1], strct_name, cl_arg[3])
+        cl_args = [' '.join(a[1:]) for a in arguments]
 
-        shape_def = []
-        for a in enumerate(self.block_shape or [self.in_blocksize]):
-            shape_def.append('#define DIM{} {}'.format(*a))
+        shape = self.block_shape or [self.in_blocksize]
+        shape_def = ['#define DIM{} {}'.format(*a) for a in enumerate(shape)]
 
         src = pystache.render(Blockwise._SOURCE, {
+            'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  map_expr,
             'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_args),
             'PROCEDURE_FUNCTIONS': libraries,
             'KERNEL_NAME'        : self.name,
-            'IN_LAYOUT': '\n'.join(shape_def),
-
-            'IN_BLOCK_SIZE': self.in_blocksize,
-            'OUT_BLOCK_SIZE': self.out_blocksize,
+            'IN_LAYOUT'          : '\n'.join(shape_def),
+            'IN_BLOCK_SIZE'      : self.in_blocksize,
+            'OUT_BLOCK_SIZE'     : self.out_blocksize,
         })
-        print(src)
-        self._kernel = cl.Program(self.ctx, src).build()
+        self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
-        self._build = True
+
+        return src
 
     def __call__(self, queue, length, *args, **kwargs):
-        if not self._build:
+        """
+        invoke kernel
+        """
+        if self._kernel is None:
             self.build()
+
+        # collect arguments
         arguments = []
         available_args = copy(self._kernel_args)
 
@@ -133,9 +161,13 @@ void {{{KERNEL_NAME}}}(
                     )
             raise ArgumentError('unkown arguments: {}'.format(', '.join(kwargs.keys())))
 
+        # invoke kernel
         getattr(self._kernel, self.name)(queue, (length,), None, *arguments)
 
     def __str__(self):
+        """
+        readable representation of kernel delcaration 
+        """
         return '{}({})'.format(self.name, ', '.join(self._kernel_args))
 
 class MatrixElementWise():

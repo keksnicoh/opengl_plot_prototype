@@ -5,6 +5,10 @@ helpers for kernel building objects.
 :author: Nicolas 'keksnicoh' Heimann 
 """
 
+# XXX
+# - process_arguments_declaration: find possible numpy dtypes corresponding
+#   to floatn, intn, ... (e.g. dtype([np.float32, np.float32]))
+
 import pyopencl as cl 
 import pyopencl.tools
 
@@ -72,10 +76,13 @@ def process_arguments_declaration(device, arguments):
                 ensure_valid_cl_type(cl_type)
                 arg_declr[i] = arguments[i]
             except ValueError:
-                raise ValueError('argument #{} "{}" invalid cl_type "{}"'.format(i, cl_arg[0], cl_type))
+                raise ValueError((
+                    'argument #{} "{}" invalid cl_type "{}" '
+                    'checkout https://www.khronos.org/registry/cl/sdk/1.2/docs/man/xhtml/dataTypes.html for available types.'
+                ).format(i, cl_arg[0], cl_type))
 
         elif type(cl_type) is np.dtype:
-            strct_name = 'strct_{}'.format(cl_arg[0])
+            strct_name = 't_{}'.format(cl_arg[0])
             _, c_decl = cl.tools.match_dtype_to_c_struct(
                 device, 
                 strct_name, 
@@ -131,7 +138,7 @@ def create_knl_args_ordered(arg_declr, args, kwargs):
 
     for name in available_args:
         if name not in kwargs:
-            raise ValueError('argument "{}" missing for {}'.format(name, self))
+            raise ValueError('argument "{}" missing'.format(name))
         knl_args.append(kwargs[name])
         del kwargs[name]
         

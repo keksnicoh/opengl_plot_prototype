@@ -100,7 +100,7 @@ void {{{KERNEL_NAME}}}(
         arguments, strcts, cl_arg_declr, libs = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
 
         libraries += '\n'+libs
-        
+
         shape = self.block_shape or [self.in_blocksize]
         shape_def = ['#define DIM{} {}'.format(*a) for a in enumerate(shape)] # deprecated backward compatibility
         shape_def += ['#define SHAPE{} {}'.format(*a) for a in enumerate(shape)]
@@ -115,6 +115,7 @@ void {{{KERNEL_NAME}}}(
             'IN_BLOCK_SIZE'      : self.in_blocksize,
             'OUT_BLOCK_SIZE'     : self.out_blocksize,
         })
+        print(src)
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
 

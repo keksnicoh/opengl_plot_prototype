@@ -85,8 +85,11 @@ class Line2d():
 
     def set_time(self, time):
         # urgh ... we need a uniform manager :(
-        self.program.uniform('time', time)
-        self.dot_program.uniform('time', time)
+
+        if hasattr(self, 'program') and self.program is not None:
+            self.program.uniform('time', time)
+        if hasattr(self, 'dot_program') and self.dot_program is not None:
+            self.dot_program.uniform('time', time)
 
     def init(self):
         """
@@ -161,9 +164,14 @@ class Line2d():
         if GlApplication.DEBUG == True:
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
 
+        self._calc_length_offset()
+        length = self.length if self.length is not None else self._min_length
+        offset = self.offset if self.offset is not None else self._max_offset
+
         for domain in self.domains:
             if hasattr(domain, 'transform'):
-                domain.transform(self.offset, self.length)
+                print(offset, length)
+                domain.transform(offset, length)
 
         self._calc_length_offset()
         length = self.length if self.length is not None else self._min_length
@@ -308,7 +316,6 @@ class Line2d():
         """
         compiles glsl programs 
         """
-        print(vertex_source)
         vertex_shader = Shader(GL_VERTEX_SHADER, vertex_source, substitutions={
             'KERNEL' : self._kernel+';', #user friendly semicolon :)
         })

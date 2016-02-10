@@ -1,3 +1,6 @@
+# DEPRECATED
+# DONT USE
+
 import pyopencl as cl 
 import numpy as np
 import pyopencl.tools

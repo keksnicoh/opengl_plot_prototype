@@ -1,14 +1,30 @@
+#-*- coding: utf-8 -*-
+"""
+texture buffer algorithm
+
+:author: Nicolas 'keksnicoh' Heimann 
+"""
+
 import pystache
 import numpy as np
 import pyopencl as cl
 from copy import copy 
+
 class BufferToTexture():
-    def __init__(self, ctx, size, arguments, map_expr="1", shape=None, blocksize=1):
+    """
+    converts opencl buffer to a opengl texture 
+    by a given mapping expression
+
+    :arg ctx:
+    :arg size: texture size
+    :arg arguments: list of arguments
+    :arg map_expr: mapping expression for each pixel
+    """
+    def __init__(self, ctx, size, arguments, map_expr="1", shape=None):
         self.ctx = ctx
         self.size = size
         self.map_expr = map_expr
         self.shape = shape or size
-        self.blocksize = blocksize 
         self.arguments = arguments 
         self.kernel_name = 'foo'
 
@@ -50,7 +66,6 @@ class BufferToTexture():
     def __call__(self, queue, length, *args, **kwargs):
         self.run(queue, length, *args, **kwargs)
 
-
     def run_acquired(self, queue, length, *args, **kwargs):
         """
         run the kernel with acquired interop objects.
@@ -74,9 +89,6 @@ class BufferToTexture():
         getattr(self._kernel, self.kernel_name)(queue, self.size, None, *arguments)
 
     def _prepare_args(self, *args, **kwargs):
-        """
-        invoke kernel
-        """
         if self._kernel is None:
             self.build()
 

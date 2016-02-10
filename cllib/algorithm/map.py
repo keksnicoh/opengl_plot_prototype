@@ -4,6 +4,8 @@ algorithms to map data
 
 :author: Nicolas 'keksnicoh' Heimann 
 """
+from cllib.common import kernel_helpers
+
 import pystache
 from copy import copy
 import pyopencl as cl
@@ -53,6 +55,10 @@ void {{{KERNEL_NAME}}}(
         libraries='',
         name='_map_kernel', 
     ):
+        if type(map_expr) is not str \
+           and kernel_helpers.get_attribute_or_item(map_expr, 'map_expr') is None:
+           raise ValueError('arg map_expr must be either string or an object with map_expr attribute or and dict with map_expr key.')
+
         self.map_expr = map_expr
         self.name = name
         self.ctx = ctx
@@ -73,52 +79,36 @@ void {{{KERNEL_NAME}}}(
 
         if type(self.map_expr) is str:
             map_expr = self.map_expr
-        elif hasattr(self.map_expr, 'map_expr'):
-            map_expr = self.map_expr.map_expr
-        elif (hasattr(self.map_expr, '__contains__')
-            and 'map_expr' in self.map_expr 
-            and hasattr(self.map_expr, '__getitem__')):
-            map_expr = map_expr['map_expr']
         else:
-            raise ValueError('map expr is invalid')
+            map_expr = kernel_helpers.get_attribute_or_item(self.map_expr, 'map_expr')
+            if self.map_expr is None:
+                raise ValueError('invalid map_expr')
 
         libraries = self.libraries or ''
-        if hasattr(self.map_expr, 'libraries'):
-            libraries += '\n'+self.map_expr.libraries
-        elif (hasattr(self.map_expr, '__contains__')
-            and 'libraries' in self.map_expr 
-            and hasattr(self.map_expr, '__getitem__')):
-            libraries += '\n'+map_expr['libraries']
+        map_expr_libs = kernel_helpers.get_attribute_or_item(self.map_expr, 'libraries')
+        if map_expr_libs is not None:
+            libraries += '\n'+map_expr_libs
 
         arguments = self.arguments or []
-        if hasattr(self.map_expr, 'arguments'):
-            arguments += self.map_expr.arguments
-        elif (hasattr(self.map_expr, '__contains__')
-            and 'arguments' in self.map_expr 
-            and hasattr(self.map_expr, '__getitem__')):
-            arguments += map_expr['arguments']
-        
-        # find structures
-        strcts = [] 
-        for i, cl_arg in enumerate(arguments):
-            if type(cl_arg[2]) is np.dtype:
-                strct_name = 'strct_{}'.format(cl_arg[0])
-                _, c_decl = cl.tools.match_dtype_to_c_struct(
-                    self.ctx.devices[0], 
-                    strct_name, 
-                    cl_arg[2],
-                )
-                strcts.append(c_decl)
-                arguments[i] = (cl_arg[0], cl_arg[1], strct_name, cl_arg[3])
-        cl_args = [' '.join(a[1:]) for a in arguments]
+        map_expr_args = kernel_helpers.get_attribute_or_item(self.map_expr, 'arguments')
+        if map_expr_args is not None:
+            arguments += map_expr_args
 
+        # find structures.
+        # XXX
+        # - helper function
+        arguments, strcts, cl_arg_declr, libs = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+
+        libraries += '\n'+libs
+        
         shape = self.block_shape or [self.in_blocksize]
-        shape_def = ['#define DIM{} {}'.format(*a) for a in enumerate(shape)]
+        shape_def = ['#define DIM{} {}'.format(*a) for a in enumerate(shape)] # deprecated backward compatibility
+        shape_def += ['#define SHAPE{} {}'.format(*a) for a in enumerate(shape)]
 
         src = pystache.render(Blockwise._SOURCE, {
             'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  map_expr,
-            'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_args),
+            'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_arg_declr),
             'PROCEDURE_FUNCTIONS': libraries,
             'KERNEL_NAME'        : self.name,
             'IN_LAYOUT'          : '\n'.join(shape_def),
@@ -137,38 +127,32 @@ void {{{KERNEL_NAME}}}(
         if self._kernel is None:
             self.build()
 
-        # collect arguments
-        arguments = []
-        available_args = copy(self._kernel_args)
-
-        for arg in args:
-            arguments.append(arg)
-            del available_args[0]
-
-        for name in available_args:
-            if name not in kwargs:
-                raise ValueError('argument "{}" missing for {}'.format(name, self))
-            arguments.append(kwargs[name])
-            del kwargs[name]
-            
-        if len(kwargs):
-            for key in kwargs:
-                if key in self._kernel_args:
-                    raise ArgumentError((
-                        'cannot use {} as keyword argument'
-                        + ' since it is allready used as '
-                        + 'positional argument').format(key)
-                    )
-            raise ArgumentError('unkown arguments: {}'.format(', '.join(kwargs.keys())))
-
-        # invoke kernel
-        getattr(self._kernel, self.name)(queue, (length,), None, *arguments)
+        knl_args = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
+        getattr(self._kernel, self.name)(queue, (length,), None, *knl_args)
 
     def __str__(self):
         """
         readable representation of kernel delcaration 
         """
         return '{}({})'.format(self.name, ', '.join(self._kernel_args))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# DEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATED 
+
+
+
 
 class MatrixElementWise():
     """

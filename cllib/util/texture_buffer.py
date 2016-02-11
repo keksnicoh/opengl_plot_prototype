@@ -44,12 +44,12 @@ class BufferToTexture():
             write_imagef(_outtex, __FIELD, {{MAP_EXPR}});
         }
         """
-        arguments, strcts, cl_arg_declr, libs = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], self.arguments)
+        arguments, strcts, cl_arg_declr, includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], self.arguments)
         src = pystache.render(SOURCE, {
             'ARGS'    : ', '.join(cl_arg_declr),
             'NAME'    : self.kernel_name,
             'HEIGHT'  : self.size[1],
-            'LIBS'    : libs,
+            'LIBS': '\n'.join('#include <{}>'.format(i) for i in includes),
             'STRUCTS' : '\n'.join(strcts),
             'MAP_EXPR': self.map_expr,
         })

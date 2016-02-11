@@ -25,9 +25,9 @@ class Blockwise():
     """
     _SOURCE = """
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
-{{IN_LAYOUT}}
-#define IN_BLOCK_SIZE {{{IN_BLOCK_SIZE}}}
-#define OUT_BLOCK_SIZE {{{OUT_BLOCK_SIZE}}}
+{{{INCLUDES}}}
+{{{IN_LAYOUT}}}
+{{CONSTANTS}}
 
 {{STRUCTS}}
 
@@ -37,9 +37,7 @@ __kernel
 void {{{KERNEL_NAME}}}(
     {{{PROCEDURE_ARGUMENTS}}}) 
 {
-    int __id = get_global_id(0);
-    int __in_offset = __id*IN_BLOCK_SIZE;
-    int __out_offset = __id*OUT_BLOCK_SIZE;
+    {{IDS}}
     {{{PROCEDURE}}}
     {{{POSTPROCESS}}}
 }
@@ -53,25 +51,28 @@ void {{{KERNEL_NAME}}}(
         out_blocksize=None,
         block_shape=None,
         libraries='',
+        threads=None,
         name='_map_kernel', 
     ):
         if type(map_expr) is not str \
            and kernel_helpers.get_attribute_or_item(map_expr, 'map_expr') is None:
            raise ValueError('arg map_expr must be either string or an object with map_expr attribute or and dict with map_expr key.')
 
-        self.map_expr = map_expr
-        self.name = name
-        self.ctx = ctx
-        self.in_blocksize = in_blocksize
-        self.out_blocksize = out_blocksize or in_blocksize
-        self.block_shape = block_shape
-        self.arguments = arguments
-        self.libraries = libraries
-
+        self.map_expr       = map_expr
+        self.name           = name
+        self.ctx            = ctx
+        self.in_blocksize   = in_blocksize
+        self.out_blocksize  = out_blocksize or in_blocksize
+        self.block_shape    = block_shape
+        self.arguments      = arguments
+        self.libraries      = libraries
+        self.includes       = None 
+        self.threads        = threads
         self._kernel_layout = None
-        self._arguments = []
-        self._kernel_args = None
-        self._kernel = None
+        self._arguments     = []
+        self._kernel_args   = None
+        self._kernel        = None
+        self._kernel_local  = None 
 
     def build(self, caardinality=1, dimension=1):
         if hasattr(self.map_expr, 'build'):
@@ -94,28 +95,76 @@ void {{{KERNEL_NAME}}}(
         if map_expr_args is not None:
             arguments += map_expr_args
 
+        includes = self.includes or []
+        map_expr_args = kernel_helpers.get_attribute_or_item(self.map_expr, 'includes')
+        if map_expr_args is not None:
+            includes += map_expr_args
+
         # find structures.
         # XXX
         # - helper function
-        arguments, strcts, cl_arg_declr, libs = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+        arguments, strcts, cl_arg_declr, arg_includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+        includes += arg_includes
 
-        libraries += '\n'+libs
+        cl_includes = ['#include <{}>'.format(path) for path in set(includes)]
 
         shape = self.block_shape or [self.in_blocksize]
         shape_def = ['#define DIM{} {}'.format(*a) for a in enumerate(shape)] # deprecated backward compatibility
         shape_def += ['#define SHAPE{} {}'.format(*a) for a in enumerate(shape)]
 
+        cl_constants = [
+            ('IN_BLOCK_SIZE', self.in_blocksize),
+            ('OUT_BLOCK_SIZE', self.out_blocksize)
+        ]
+
+        cl_item_var = [
+            'int __id = get_{}_id(0);'.format('global' if self.threads is None else 'group'),
+            'int __in_offset = __id*IN_BLOCK_SIZE;',
+            'int __out_offset = __id*OUT_BLOCK_SIZE;',
+        ]
+
+        if self.threads is not None:
+            # XXX
+            # - check for bool (get shape)
+            # - and so on ...
+            self._kernel_local = self.threads
+            nthreads = len(self._kernel_local)
+            get_local_id = lambda i: 'get_local_id({})'.format(i)
+            cl_get_local_ids = ','.join([get_local_id(i) for i in range(0, nthreads)])
+            cl_item_var.append('int{n} __item_id = (int{n})({ids});'.format(n=nthreads, ids=cl_get_local_ids))
+
+            if nthreads == 1:
+                cl_item_var.append('int __item = __item_id.x;'.format(n=nthreads))
+                cl_item_var.append('int __itemT = __item_id.x;'.format(n=nthreads))
+                cl_constants.append(('THREAD_X', self._kernel_local[0]))
+            elif nthreads == 2:
+                cl_item_var.append('int __item = THREAD_X*__item_id.x+__item_id.y;'.format(n=nthreads))
+                cl_item_var.append('int __itemT = THREAD_X*__item_id.y+__item_id.x;'.format(n=nthreads))
+                cl_constants.append(('THREAD_X', self._kernel_local[0]))
+                cl_constants.append(('THREAD_Y', self._kernel_local[1]))
+            elif nthreads == 3:
+                cl_item_var.append('int __item = THREAD_X*THREAD_Y*__item_id.x + THREAD_X*__item_id.y + __item_id.z;'.format(n=nthreads))
+                cl_item_var.append('int __itemT = THREAD_X*THREAD_Y*__item_id.z + THREAD_X*__item_id.y + __item_id.x;'.format(n=nthreads))
+                cl_constants.append(('THREAD_X', self._kernel_local[0]))
+                cl_constants.append(('THREAD_Y', self._kernel_local[1]))
+                cl_constants.append(('THREAD_Z', self._kernel_local[2]))
+            else:   
+                # XXX
+                # - does a n>3 case make sense? check opencl specs...
+                raise NotImplemented('not implemented yet')
+            
         src = pystache.render(Blockwise._SOURCE, {
+            'INCLUDES'           : '\n'.join(cl_includes),
             'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  map_expr,
+            'IDS'                : '\n'.join(cl_item_var),           
+            'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,      
             'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_arg_declr),
             'PROCEDURE_FUNCTIONS': libraries,
             'KERNEL_NAME'        : self.name,
             'IN_LAYOUT'          : '\n'.join(shape_def),
-            'IN_BLOCK_SIZE'      : self.in_blocksize,
-            'OUT_BLOCK_SIZE'     : self.out_blocksize,
         })
-        print(src)
+
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
 
@@ -128,8 +177,17 @@ void {{{KERNEL_NAME}}}(
         if self._kernel is None:
             self.build()
 
+        if self._kernel_local is None:
+            length = (length, )
+        elif len(self._kernel_local) == 1:
+            length = (length*self._kernel_local[0], )
+        elif len(self._kernel_local) == 2:
+            length = (length*self._kernel_local[0], self._kernel_local[1])
+        elif len(self._kernel_local) == 3:
+            length = (length*self._kernel_local[0], self._kernel_local[1], self._kernel_local[2])
+
         knl_args = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
-        getattr(self._kernel, self.name)(queue, (length,), None, *knl_args)
+        return getattr(self._kernel, self.name)(queue, length, self._kernel_local, *knl_args)
 
     def __str__(self):
         """

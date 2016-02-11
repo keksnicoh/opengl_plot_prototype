@@ -74,12 +74,12 @@ class Related():
 
 	def build(self, descending=False):
 		arguments = [('r_{}'.format(i), 'global', x[0], '*r_{}'.format(i)) for i, x in enumerate(self._blocksizes)]
-		arguments, strcts, cl_arg_declr, libs = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+		arguments, strcts, cl_arg_declr, includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
 
 		related_buffer_blocks = [self._build_related_buffer_block(i, (arguments[i][2], x[1]))  for i, x in enumerate(self._blocksizes)]
 
 		src = pystache.render(self.SORT_KERNEL, {
-			'LIBS': libs,
+			'LIBS': '\n'.join('#include <{}>'.format(i) for i in includes),
 			'STRUCTS': '\n'.join(strcts), 
 		    'RELATED_BUFFERS': ', '.join(cl_arg_declr),
 		    'SHIFT_RELATED_BUFFERS': '\n'.join(related_buffer_blocks),

@@ -50,7 +50,7 @@ def get_attribute_or_item(value, attr):
     elif (hasattr(value, '__contains__')
         and attr in value 
         and hasattr(value, '__getitem__')):
-        return map_expr[attr]
+        return value[attr]
 
 def ensure_valid_cl_type(type):
     if type not in CL_TYPES:
@@ -118,11 +118,11 @@ def process_arguments_declaration(device, arguments):
 
     cl_args = [' '.join(a[1:]) for a in arg_declr]
 
-    libs = []
+    includes = []
     if require_complex_numbers:
-        libs.append('#include <pyopencl-complex.h>')
+        includes.append('pyopencl-complex.h')
 
-    return arg_declr, strcts, cl_args, '\n'.join(libs)
+    return arg_declr, strcts, cl_args, includes
 
 def create_knl_args_ordered(arg_declr, args, kwargs):
     """

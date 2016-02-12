@@ -32,8 +32,8 @@ class BufferToTexture():
     def build(self):
         SOURCE = """
         #define HEIGHT {{HEIGHT}}
-        {{LIBS}}
-        {{STRUCTS}}        
+        {{{LIBS}}}
+        {{{STRUCTS}}}        
         __kernel void {{NAME}}({{ARGS}}, __write_only image2d_t _outtex) {
             int _x = get_global_id(0);
             int _y = get_global_id(1);
@@ -53,6 +53,7 @@ class BufferToTexture():
             'STRUCTS' : '\n'.join(strcts),
             'MAP_EXPR': self.map_expr,
         })
+        print(src)
         self._kernel_args = [a[0] for a in arguments] + ['out_texture']
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
 

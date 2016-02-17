@@ -28,10 +28,13 @@ class BufferToTexture():
         self.shape = shape or size
         self.arguments = arguments 
         self.kernel_name = 'foo'
-
+        self._kernel = None 
+        self._kernel_args = None 
+        
     def build(self):
         SOURCE = """
         #define HEIGHT {{HEIGHT}}
+        #define WIDTH {{WIDTH}}
         {{{LIBS}}}
         {{{STRUCTS}}}        
         __kernel void {{NAME}}({{ARGS}}, __write_only image2d_t _outtex) {
@@ -48,12 +51,13 @@ class BufferToTexture():
         src = pystache.render(SOURCE, {
             'ARGS'    : ', '.join(cl_arg_declr),
             'NAME'    : self.kernel_name,
+            'WIDTH'  : self.size[0],
             'HEIGHT'  : self.size[1],
             'LIBS': '\n'.join('#include <{}>'.format(i) for i in includes),
             'STRUCTS' : '\n'.join(strcts),
             'MAP_EXPR': self.map_expr,
         })
-        print(src)
+
         self._kernel_args = [a[0] for a in arguments] + ['out_texture']
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
 
@@ -72,6 +76,9 @@ class BufferToTexture():
             kernel()
             cl.enqueue_release_gl_objects(...)
         """
+        if self._kernel is None:
+            self.build()
+
         arguments = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
         enq = [a for a in arguments if type(a) in [cl.GLTexture, cl.GLBuffer]]
 
@@ -83,5 +90,8 @@ class BufferToTexture():
         """
         run the kernel without acquiring interop objects.
         """
+        if self._kernel is None:
+            self.build()
+            
         arguments = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
         getattr(self._kernel, self.kernel_name)(queue, self.size, None, *arguments)

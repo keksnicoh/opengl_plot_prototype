@@ -123,6 +123,7 @@ void {{{KERNEL_NAME}}}(
             'int __out_offset = __id*OUT_BLOCK_SIZE;',
         ]
 
+
         if self.threads is not None:
             # XXX
             # - check for bool (get shape)
@@ -131,11 +132,11 @@ void {{{KERNEL_NAME}}}(
             nthreads = len(self._kernel_local)
             get_local_id = lambda i: 'get_local_id({})'.format(i)
             cl_get_local_ids = ','.join([get_local_id(i) for i in range(0, nthreads)])
-            cl_item_var.append('int{n} __item_id = (int{n})({ids});'.format(n=nthreads, ids=cl_get_local_ids))
+            cl_item_var.append('int{n} __item_id = (int{n})({ids});'.format(n='' if nthreads == 1 else nthreads, ids=cl_get_local_ids))
 
             if nthreads == 1:
-                cl_item_var.append('int __item = __item_id.x;'.format(n=nthreads))
-                cl_item_var.append('int __itemT = __item_id.x;'.format(n=nthreads))
+                cl_item_var.append('int __item = __item_id;'.format(n=nthreads))
+                cl_item_var.append('int __itemT = __item_id;'.format(n=nthreads))
                 cl_constants.append(('THREAD_X', self._kernel_local[0]))
             elif nthreads == 2:
                 cl_item_var.append('int __item = THREAD_X*__item_id.x+__item_id.y;'.format(n=nthreads))
@@ -164,7 +165,6 @@ void {{{KERNEL_NAME}}}(
             'KERNEL_NAME'        : self.name,
             'IN_LAYOUT'          : '\n'.join(shape_def),
         })
-
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
 

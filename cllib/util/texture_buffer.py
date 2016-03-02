@@ -9,7 +9,6 @@ from cllib.common import kernel_helpers
 import pystache
 import numpy as np
 import pyopencl as cl
-from copy import copy 
 
 class BufferToTexture():
     """

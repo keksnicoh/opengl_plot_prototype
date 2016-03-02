@@ -61,12 +61,12 @@ class ToTexture():
             if smoothing[0] == 'EXP':
                 if not relative:
                     self.arguments.append(('nrun', '', 'int', 'nrun'))
-                alpha = str(smoothing[1])
+
                 if relative:
                     self.code += """if (nrun == 0) smoothing[_ELEMENTID] = 0;"""
                 else:
                     self.code += """if (nrun == 0) smoothing[_ELEMENTID] = data;"""
-
+                alpha = str(smoothing[1])
                 self.code += """
                     else smoothing[_ELEMENTID] = """+alpha+"""*data+(1-"""+alpha+""")*smoothing[_ELEMENTID];
                     write_imagef(smoothing_texture, _FIELD, smoothing[_ELEMENTID]);

@@ -148,7 +148,7 @@ class Plotter(object, Controller):
         self._colorlegend_axis              = None
         self._debug                = False
         self._fontrenderer         = None
-
+        self._render_axis = (True,True)
         # dstates
         self.render_graphs         = True
         self._graphs_initialized   = False
@@ -477,7 +477,7 @@ class Plotter(object, Controller):
 
 
         # setup axis
-        if self._plotplane_margin[0] > 0:
+        if self._render_axis[0]:
             self._xaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
@@ -494,7 +494,7 @@ class Plotter(object, Controller):
             self._xaxis.init()
             self._update_xaxis()
 
-        if self._plotplane_margin[1] > 0:
+        if self._render_axis[1]:
             self._yaxis = axis.Scale(
                 camera       = self.camera,
                 scale_camera = self._plotframe.inner_camera,
@@ -658,7 +658,7 @@ class Plotter(object, Controller):
         """
         updates camera and modelview of the x axis
         """
-        if self._plotplane_margin[0] > 0:
+        if self._render_axis[0]:
             self._xaxis.size = self.get_xaxis_size()
             self._xaxis.update_camera(self.camera)
 
@@ -669,7 +669,7 @@ class Plotter(object, Controller):
         """
         updates camera and modelview of the y axis
         """
-        if self._plotplane_margin[1] > 0:
+        if self._render_axis[1]:
             #translation = self._plotframe.inner_camera.get_position()[1]
             self._yaxis.size = self.get_yaxis_size()
             self._yaxis.capture_size = self.get_yaxis_size()
@@ -786,8 +786,10 @@ class Plotter(object, Controller):
             self._select_area_rectangle.position = self._select_area[0:2]
 
         self.shaperenderer.render()
-        self._yaxis.render()
-        self._xaxis.render()
+        if self._render_axis[1]:
+            self._yaxis.render()
+        if self._render_axis[0]:
+            self._xaxis.render()
         if self._colorlegend_axis:
             self._colorlegend_axis.render()
         self._fontrenderer.render()

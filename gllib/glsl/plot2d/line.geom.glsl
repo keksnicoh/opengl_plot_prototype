@@ -34,19 +34,19 @@ void main(void)
     p[2] = (mat_camera*gl_in[2].gl_Position).xy;
     p[3] = (mat_camera*gl_in[3].gl_Position).xy;
 
-    v[0] = (p[1]-p[0])/length(p[1]-p[0]);
-    v[1] = (p[2]-p[1])/length(p[2]-p[1]);
-    v[2] = (p[3]-p[2])/length(p[3]-p[2]);
+    v[0] = normalize(p[1]-p[0]);
+    v[1] = normalize(p[2]-p[1]);
+    v[2] = normalize(p[3]-p[2]);
 
     n[0] = vec2(-v[0].y, v[0].x);
     n[1] = vec2(-v[1].y, v[1].x);
     n[2] = vec2(-v[2].y, v[2].x);
 
-    m[0] = vec2((n[0]+n[1]).x/length(n[0]+n[1]),(n[0]+n[1]).y/length(n[0]+n[1]));
-    m[1] = vec2((n[1]+n[2]).x/length(n[1]+n[2]),(n[1]+n[2]).y/length(n[1]+n[2]));
+    m[0] = normalize(n[0]+n[1]);
+    m[1] = normalize(n[1]+n[2]);
 
-    l[0] = 1.0/(.05+dot(m[0], n[0]+n[1]));
-    l[1] = 1.0/(.05+dot(m[1], n[1]+n[2]));
+    l[0] = 1.0/(.05+dot(m[0], normalize(n[0]+n[1])));
+    l[1] = 1.0/(.05+dot(m[1], normalize(n[1]+n[2])));
     
     // emmit
     color = fragment_color[0];

@@ -144,8 +144,8 @@ void {{{KERNEL_NAME}}}(
                 cl_constants.append(('THREAD_X', self._kernel_local[0]))
                 cl_constants.append(('THREAD_Y', self._kernel_local[1]))
             elif nthreads == 3:
-                cl_item_var.append('int __item = THREAD_X*THREAD_Y*__item_id.x + THREAD_X*__item_id.y + __item_id.z;'.format(n=nthreads))
-                cl_item_var.append('int __itemT = THREAD_X*THREAD_Y*__item_id.z + THREAD_X*__item_id.y + __item_id.x;'.format(n=nthreads))
+                cl_item_var.append('int __item = THREAD_X*__item_id.x+__item_id.y;'.format(n=nthreads))
+                cl_item_var.append('int __itemT = THREAD_X*__item_id.y+__item_id.x;'.format(n=nthreads))
                 cl_constants.append(('THREAD_X', self._kernel_local[0]))
                 cl_constants.append(('THREAD_Y', self._kernel_local[1]))
                 cl_constants.append(('THREAD_Z', self._kernel_local[2]))
@@ -165,9 +165,9 @@ void {{{KERNEL_NAME}}}(
             'KERNEL_NAME'        : self.name,
             'IN_LAYOUT'          : '\n'.join(shape_def),
         })
+
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
-
         return src
 
     def __call__(self, queue, length, *args, **kwargs):

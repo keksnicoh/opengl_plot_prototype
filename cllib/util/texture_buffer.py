@@ -82,7 +82,7 @@ class BufferToTexture():
         enq = [a for a in arguments if type(a) in [cl.GLTexture, cl.GLBuffer]]
 
         cl.enqueue_acquire_gl_objects(queue, enq)
-        getattr(self._kernel, self.kernel_name)(queue, self.size, None, *arguments)
+        getattr(self._kernel, self.kernel_name)(queue, tuple([int(a) for a in self.size]), None, *arguments)
         cl.enqueue_release_gl_objects(queue, enq) 
 
     def run(self, queue, length, *args, **kwargs):
@@ -93,4 +93,4 @@ class BufferToTexture():
             self.build()
             
         arguments = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
-        getattr(self._kernel, self.kernel_name)(queue, self.size, None, *arguments)
+        getattr(self._kernel, self.kernel_name)(queue, tuple([int(a) for a in self.size]), None, *arguments)

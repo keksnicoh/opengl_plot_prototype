@@ -141,12 +141,10 @@ class Dataset():
             # fill buffers
             get_buffer = lambda k: lambda d: d.buffers[k]
             data_source = {k: get_buffer(k) for k in task.keys() if k in self.buffers}
-            print(data_source)
             if 'data' in declr:
                 data_source.update(declr['data'])
 
             for buf_name, v in data_source.items():
-                print(buf_name, v if not hasattr(v, '__call__') else v(self))
                 task[buf_name] = v if not hasattr(v, '__call__') else v(self)
 
             if hasattr(task, 'prepare'):

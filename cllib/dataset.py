@@ -25,6 +25,7 @@ class Dataset():
         self.parameters        = None
         self._task_instances = {}
         self._read_parameters(parameters)
+        self.runners = {}
 
     @classmethod
     def create_argparse(cls):
@@ -153,7 +154,10 @@ class Dataset():
             self._task_instances[task_id] = task
 
         # go
-        result = self._task_instances[task_id].run()
+        if task_id not in self.runners:
+            result = self._task_instances[task_id].run()
+        else:
+            result = self.runners[task_id](self, task)
 
         buffers = dict(self._task_instances[task_id])
         if 'keep_buffer' in declr:

@@ -65,6 +65,7 @@ void {{{KERNEL_NAME}}}(
         self.out_blocksize  = out_blocksize or in_blocksize
         self.block_shape    = block_shape
         self.arguments      = arguments
+
         self.libraries      = libraries
         self.includes       = None 
         self.threads        = threads
@@ -117,38 +118,57 @@ void {{{KERNEL_NAME}}}(
             ('OUT_BLOCK_SIZE', self.out_blocksize)
         ]
 
-        cl_item_var = [
+        cl_item_var = '\n'.join([
             'int __id = get_{}_id(0);'.format('global' if self.threads is None else 'group'),
             'int __in_offset = __id*IN_BLOCK_SIZE;',
             'int __out_offset = __id*OUT_BLOCK_SIZE;',
-        ]
+        ])
 
 
         if self.threads is not None:
             # XXX
             # - check for bool (get shape)
             # - and so on ...
-            self._kernel_local = self.threads
-            nthreads = len(self._kernel_local)
-            get_local_id = lambda i: 'get_local_id({})'.format(i)
-            cl_get_local_ids = ','.join([get_local_id(i) for i in range(0, nthreads)])
-            cl_item_var.append('int{n} __item_id = (int{n})({ids});'.format(n='' if nthreads == 1 else nthreads, ids=cl_get_local_ids))
+            if hasattr(self.threads, '__call__'):
+                self._kernel_local, thread_constants, itemsrc = self.threads(self)
+                nthreads = len(thread_constants)
+                cl_item_var += itemsrc
+
+            else:
+                # default thread layout
+                self._kernel_local = self.threads
+                thread_constants = self._kernel_local
+                nthreads = len(self._kernel_local)
+
+                get_local_id = lambda i: 'get_local_id({})'.format(i)                
+                itemid = 'int{n} __item_id = (int{n})({ids});'.format(
+                    n='' if nthreads == 1 else nthreads, 
+                    ids=','.join([get_local_id(i) for i in range(0, len(thread_constants))]))
+                if nthreads == 1:
+                    cl_item_var += itemid+"""
+                        int __item = __item_id;
+                        int __itemT = __item_id;
+                    """
+                elif nthreads == 2:
+                    cl_item_var += itemid+"""
+                        int __item = THREAD_X*__item_id.x+__item_id.y;
+                        int __itemT = THREAD_X*__item_id.y+__item_id.x;
+                    """
+                elif nthreads == 3:
+                    cl_item_var += itemid+"""
+                        int __item = THREAD_X*__item_id.x+__item_id.y;;
+                        int __itemT = THREAD_X*__item_id.y+__item_id.x;
+                    """
 
             if nthreads == 1:
-                cl_item_var.append('int __item = __item_id;'.format(n=nthreads))
-                cl_item_var.append('int __itemT = __item_id;'.format(n=nthreads))
-                cl_constants.append(('THREAD_X', self._kernel_local[0]))
+                cl_constants.append(('THREAD_X', thread_constants[0]))
             elif nthreads == 2:
-                cl_item_var.append('int __item = THREAD_X*__item_id.x+__item_id.y;'.format(n=nthreads))
-                cl_item_var.append('int __itemT = THREAD_X*__item_id.y+__item_id.x;'.format(n=nthreads))
-                cl_constants.append(('THREAD_X', self._kernel_local[0]))
-                cl_constants.append(('THREAD_Y', self._kernel_local[1]))
+                cl_constants.append(('THREAD_X', thread_constants[0]))
+                cl_constants.append(('THREAD_Y', thread_constants[1]))
             elif nthreads == 3:
-                cl_item_var.append('int __item = THREAD_X*__item_id.x+__item_id.y;'.format(n=nthreads))
-                cl_item_var.append('int __itemT = THREAD_X*__item_id.y+__item_id.x;'.format(n=nthreads))
-                cl_constants.append(('THREAD_X', self._kernel_local[0]))
-                cl_constants.append(('THREAD_Y', self._kernel_local[1]))
-                cl_constants.append(('THREAD_Z', self._kernel_local[2]))
+                cl_constants.append(('THREAD_X', thread_constants[0]))
+                cl_constants.append(('THREAD_Y', thread_constants[1]))
+                cl_constants.append(('THREAD_Z', thread_constants[2]))
             else:   
                 # XXX
                 # - does a n>3 case make sense? check opencl specs...
@@ -158,7 +178,7 @@ void {{{KERNEL_NAME}}}(
             'INCLUDES'           : '\n'.join(cl_includes),
             'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  map_expr,
-            'IDS'                : '\n'.join(cl_item_var),           
+            'IDS'                : cl_item_var,           
             'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,      
             'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_arg_declr),
             'PROCEDURE_FUNCTIONS': libraries,

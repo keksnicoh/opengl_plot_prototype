@@ -189,7 +189,6 @@ void {{{KERNEL_NAME}}}(
             'KERNEL_NAME'        : self.name,
             'IN_LAYOUT'          : '\n'.join(shape_def),
         })
-
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
         return src

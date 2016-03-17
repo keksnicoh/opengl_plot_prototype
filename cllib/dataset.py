@@ -135,9 +135,21 @@ class Dataset():
             # run the task. decorate TypeError with some specific 
             # information about the task.
             try:
-                task = declr['cls'](*cls_args, **cls_kwargs)
+                if 'factory' in declr:
+                    if type(declr['factory']) is str:
+                        factory = getattr(self, declr['factory'])
+                    elif hasattr(declr['factory'], '__call__'):
+                        factory = declr['factory']
+                    else:
+                        raise ValueError('factory for {} must be either a string or a callable'.format(declr['cls']))
+                    task = factory(declr['cls'], cls_args, cls_kwargs)
+                else:
+                    task = declr['cls'](*cls_args, **cls_kwargs)
             except TypeError as e:
                 raise TypeError('task "{}" class {}: {}'.format(task_id, declr['cls'].__name__, e))
+
+            if not isinstance(task, declr['cls']):
+                raise RuntimeError('class factory failed.')
 
             # fill buffers
             get_buffer = lambda k: lambda d: d.buffers[k]

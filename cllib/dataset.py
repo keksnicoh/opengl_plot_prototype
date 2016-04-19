@@ -77,8 +77,10 @@ class Dataset():
 
         return tasks_dict
 
-    def run_queue(self):
+    def run_queue(self, run_until=None):
         for task_id, declr in self._tasks.items():
+            if task_id == run_until:
+                return
             self.run_task(task_id)
 
     def run_task(self, task_id):
@@ -99,13 +101,23 @@ class Dataset():
                 if not hasattr(self, declr):
                     raise ValueError('task "{}" invalid. string declaration must correspond to a class method')
                 lcl = getattr(self, declr)
+
+                if task_id not in self.runners:
+                    result = lcl()
+                else:
+                    result = self.runners[task_id](self, lcl)
+
                 result = lcl() if hasattr(lcl, '__call__') else lcl
                 self.buffers.update(result or {})
                 return result or {}
 
             # if declr is callabl we will call it.
             elif hasattr(declr, '__call__'):
-                result = declr(self)
+                if task_id not in self.runners:
+                    result = declr(self)
+                else:
+                    result = self.runners[task_id](self, declr)
+                    
                 self.buffers.update(result or {})
                 return result or {} 
 
@@ -134,19 +146,20 @@ class Dataset():
 
             # run the task. decorate TypeError with some specific 
             # information about the task.
-            try:
-                if 'factory' in declr:
-                    if type(declr['factory']) is str:
-                        factory = getattr(self, declr['factory'])
-                    elif hasattr(declr['factory'], '__call__'):
-                        factory = declr['factory']
-                    else:
-                        raise ValueError('factory for {} must be either a string or a callable'.format(declr['cls']))
-                    task = factory(declr['cls'], cls_args, cls_kwargs)
+            
+            if 'factory' in declr:
+                if type(declr['factory']) is str:
+                    factory = getattr(self, declr['factory'])
+                elif hasattr(declr['factory'], '__call__'):
+                    factory = declr['factory']
                 else:
+                    raise ValueError('factory for {} must be either a string or a callable'.format(declr['cls']))
+                task = factory(declr['cls'], cls_args, cls_kwargs)
+            else:
+                try:
                     task = declr['cls'](*cls_args, **cls_kwargs)
-            except TypeError as e:
-                raise TypeError('task "{}" class {}: {}'.format(task_id, declr['cls'].__name__, e))
+                except TypeError as e:
+                    raise TypeError('task "{}" class {}: {}.'.format(task_id, declr['cls'].__name__, e))
 
             if not isinstance(task, declr['cls']):
                 raise RuntimeError('class factory failed.')

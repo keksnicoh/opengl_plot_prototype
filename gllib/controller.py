@@ -2,7 +2,9 @@ from OpenGL.GL import *
 import numpy
 from camera import Camera2d
 from util import Event
-
+#
+# XXX
+# remove me asap
 class Controller():
     def __init__(self, camera=None):
         """

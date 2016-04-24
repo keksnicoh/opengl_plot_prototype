@@ -153,6 +153,7 @@ class Scale():
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
         self.vao = None
+        self._labels =  []
 
     def unit_density_factor(self, capture_size):
         density = 80
@@ -187,7 +188,6 @@ class Scale():
         self.init_shader()
         self.init_capturing()
         self.initialized = True
-
 
     def init_shader(self):
         """
@@ -268,7 +268,12 @@ class Scale():
         # set init state
         self._last_size = self.size[:]
         self._last_screen_scaling = self._scale_camera.get_screen_scaling()
-        
+    
+    @property
+    def labels(self):
+        return self._labels
+    
+
     def _init_capturing_vbo(self):
         data = numpy.zeros(self.subunits*2+2, dtype=numpy.float32)
         if self._axis == 0:
@@ -304,6 +309,7 @@ class Scale():
         """
         prepares axis fonts
         """
+        self._labels = []
         capture_size = self._frame.capture_size[self._axis]
         translation  = self._translation%self._frame.capture_size[self._axis]
         size         = self._last_size[self._axis] + translation
@@ -317,9 +323,11 @@ class Scale():
         if self._axis == 0:
             position = [translation,20]
             for i in range(0, unit_count):
-                text = Text(self.format_number(self._unit_f*(i-start_unit), self.unit_symbol), self._font)
-                axis_flayout.add_text(text, (position[0], position[1]))
+                label = self.format_number(self._unit_f*(i-start_unit), self.unit_symbol)
+                self._labels.append((position[0], label))
                 position[self._axis] += capture_size
+
+                
         else:
             position = [self.size[0]-15,size-capture_size]
             for i in range(0, unit_count):

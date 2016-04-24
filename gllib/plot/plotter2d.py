@@ -13,7 +13,8 @@ from gllib.matrix import ModelView
 from gllib.plot import axis 
 from gllib.util import Event
 from gllib.glfw import *
-from gllib.renderer.font import FontRenderer, RelativeLayout, Text, AbsoluteLayout
+from gllib.font import FontRenderer as FontRenderer2, AlignedLayout
+from gllib.renderer.font import FontRenderer, RelativeLayout, Text, AbsoluteLayout, SCALE
 from gllib.buffer import VertexBuffer, VertexArray
 from gllib.plot.field import Field
 from gllib.renderer.shape import ShapeInstance, ShapeRenderer, Rectangle 
@@ -29,20 +30,21 @@ DEFAULT_COLORS = {
     'plotplane-bgcolor'    : 'ffffffff',
     'plotplane-bordercolor': '000000ff',
 
-    'axis-fontsize'        : 15,
-    'axis-font'            : 'fonts/arialbd.ttf',
+    'axis-fontsize'        : 13,
+    'axis-font'            : 'fonts/arial.ttf',
+    'axis-fontcolor': '000000ff',
     
-    'title-fontsize'       : 25,
-    'title-boxheight'      : 40,
-    'title-font'           : 'fonts/arialbd.ttf',
+    'title-fontsize'       : 14,
+    'title-boxheight'      : 20,
+    'title-font'           : 'fonts/arial.ttf',
     
-    'xlabel-fontsize'      : 18,
-    'xlabel-boxheight'     : 35,
-    'xlabel-font'          : 'fonts/arialbd.ttf',
+    'xlabel-fontsize'      : 15,
+    'xlabel-boxheight'     : 10,
+    'xlabel-font'          : 'fonts/arial.ttf',
     
-    'ylabel-fontsize'      : 18,
-    'ylabel-boxheight'     : 35,
-    'ylabel-font'          : 'fonts/arialbd.ttf',
+    'ylabel-fontsize'      : 15,
+    'ylabel-boxheight'     : 23,
+    'ylabel-font'          : 'fonts/arial.ttf',
 
     'font-color': '000000ff',
 
@@ -61,7 +63,7 @@ DEFAULT_COLORS = {
     'select-area-border-color': '000000ff',
     'select-area-border-size': 1,
 
-    'plotframe-border-size': 2,
+    'plotframe-border-size': 1,
     'plotframe-border-color': '000000ff',
     'graph-colors': [
         '000000ff',
@@ -96,6 +98,7 @@ class Plotter(object, Controller):
         axis_unit_symbols = [None,None],
         axis_subunits     = [4,4],
         color_scheme      = DEFAULT_COLORS,
+        on_keyboard = (lambda s,a,p: None),
         graphs            = {},
         axis_measures     = [] 
     ):
@@ -110,7 +113,7 @@ class Plotter(object, Controller):
         self.color_scheme         = color_scheme
         self.plotmode = plotmode
         self.colorlegend = colorlegend
-
+        self._on_keyboard = on_keyboard
         if type(plotmode) is str:
             if plotmode not in _PLOTMODE_ALIASES:
                 raise ValueError('unkown plotmode "{}". Available aliases are: {}'.format(
@@ -130,7 +133,7 @@ class Plotter(object, Controller):
         self._plot_plane_min_size  = (100, 100)
         self._axis                 = axis 
         self._axis_units           = axis_units 
-        
+        self.colorlegend_speed = 0.01
         self._xlabel               = xlabel
         self._ylabel               = ylabel
         self._title                = title
@@ -149,6 +152,8 @@ class Plotter(object, Controller):
         self._debug                = False
         self._fontrenderer         = None
         self._render_axis = (True,True)
+        self._axis_texts = [[],[]]
+
         # dstates
         self.render_graphs         = True
         self._graphs_initialized   = False
@@ -164,7 +169,8 @@ class Plotter(object, Controller):
             color_scheme['axis-fontsize'], 
             encoding=Plotter.FONT_ENCODING
         )
-
+        self._fntrenderer = FontRenderer2()
+        self._fntlayout = AlignedLayout(self.camera)
         self.on_keyboard.append(self.keyboard_callback)
         self.on_mouse.append(self.mouse_callback)
         self.on_pre_render.insert(0, self.pre_render)
@@ -252,6 +258,62 @@ class Plotter(object, Controller):
             update_camera = True
         if GLFW_KEY_SPACE in active:
             self.zoom(1+(+1 if GLFW_KEY_LEFT_SHIFT in active else -1)*self.KEY_ZOOM_SPEED)
+
+        colorrange_step = self.colorlegend_speed
+
+        if GLFW_KEY_3 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                self.colorlegend.colorrange = [colorrange[0]-colorrange_step, colorrange[1]+colorrange_step]
+                update_camera = True
+
+        if GLFW_KEY_4 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                self.colorlegend.colorrange = [colorrange[0]+colorrange_step, colorrange[1]-colorrange_step]
+                update_camera = True
+
+        if GLFW_KEY_5 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                if colorrange[0]-colorrange_step < colorrange[1]:
+                    self.colorlegend.colorrange = [colorrange[0]-colorrange_step, colorrange[1]]
+                    update_camera = True
+
+        if GLFW_KEY_6 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                if colorrange[0]+colorrange_step < colorrange[1]:
+                    self.colorlegend.colorrange = [colorrange[0]+colorrange_step, colorrange[1]]
+                    update_camera = True
+
+        if GLFW_KEY_7 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                if colorrange[1]-colorrange_step > colorrange[0]:
+                    self.colorlegend.colorrange = [colorrange[0], colorrange[1]-colorrange_step]
+                    update_camera = True
+
+        if GLFW_KEY_8 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                if colorrange[1]+colorrange_step > colorrange[0]:
+                    self.colorlegend.colorrange = [colorrange[0], colorrange[1]+colorrange_step]
+                    update_camera = True
+
+        if GLFW_KEY_9 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                self.colorlegend.colorrange = [colorrange[0]-colorrange_step, colorrange[1]-colorrange_step]
+                update_camera = True
+
+        if GLFW_KEY_0 in active:
+            if self.colorlegend is not None:
+                colorrange = self.colorlegend.colorrange
+                self.colorlegend.colorrange = [colorrange[0]+colorrange_step, colorrange[1]+colorrange_step]
+                update_camera = True
+
+        self._on_keyboard(self, active, pressed)
         if update_camera:
             self.camera_updated(self._plotframe.inner_camera)
 
@@ -278,6 +340,7 @@ class Plotter(object, Controller):
 
             self.state = self.STATE_IDLE
             self.shaperenderer.erase_instance(self._select_area_rectangle)
+
         def area_pending():
             self.state = self.STATE_SELECT_AREA_PENDING
             self._select_area_rectangle.color = hex_to_rgba(self.color_scheme['select-area-pending-bgcolor'])
@@ -391,42 +454,33 @@ class Plotter(object, Controller):
 
         if self._xlabel is not None:
             axis_space[2] += self.color_scheme['xlabel-boxheight']
-            self._fontrenderer.layouts['labels'].add_text(
-                Text(self._xlabel, ImageFont.truetype(
-                    resource_path(self.color_scheme['xlabel-font']), 
-                    self.color_scheme['xlabel-fontsize'], 
-                    encoding=Plotter.FONT_ENCODING
-                )), 
-                alignment=RelativeLayout.HCENTER|RelativeLayout.VTOP,
-                boxalignment=RelativeLayout.VBOTTOM,
-                boxsize=(None, self.color_scheme['xlabel-boxheight'])
-            )
+            text = self._fntrenderer.create_text(self._xlabel, 
+                position=(0,0), 
+                size=self.color_scheme['xlabel-fontsize'],
+                color=hex_to_rgba(self.color_scheme['font-color']))
+            self._fntlayout.add_text(text, 'x-center', ('bottom', 5))
+        
         if self._ylabel is not None:
+            text = self._fntrenderer.create_text(self._ylabel, 
+                position=(5,0), 
+                size=self.color_scheme['ylabel-fontsize'], 
+                rotation=np.pi/2,
+                color=hex_to_rgba(self.color_scheme['font-color']))
             axis_space[3] += self.color_scheme['ylabel-boxheight']
-            self._fontrenderer.layouts['labels'].add_text(
-                Text(self._ylabel, ImageFont.truetype(
-                    resource_path(self.color_scheme['ylabel-font']), 
-                    self.color_scheme['ylabel-fontsize'], 
-                    encoding=Plotter.FONT_ENCODING
-                )), 
-                alignment=RelativeLayout.HCENTER|RelativeLayout.VCENTER,
-                boxalignment=RelativeLayout.HLEFT,
-                boxsize=(self.color_scheme['ylabel-boxheight'], None),
-                rotation=90
-            )
+            self._fntlayout.add_text(text, 'y-center')
+
         if self._title is not None:
+            text = self._fntrenderer.create_text(self._title, 
+                position=(0,5), 
+                size=self.color_scheme['title-fontsize'],
+                color=hex_to_rgba(self.color_scheme['font-color']))
             axis_space[0] += self.color_scheme['title-boxheight']
-            self._fontrenderer.layouts['labels'].add_text(
-                Text(self._title, ImageFont.truetype(
-                    resource_path(self.color_scheme['title-font']), 
-                    self.color_scheme['title-fontsize'], 
-                    encoding=Plotter.FONT_ENCODING
-                )), 
-                alignment=RelativeLayout.HCENTER|RelativeLayout.VCENTER,
-                boxalignment=RelativeLayout.VTOP,
-                boxsize=(None, self.color_scheme['title-boxheight'])
-            )
+            self._fntlayout.add_text(text, 'x-center')
+
         self._plotplane_margin = axis_space
+        self._fntlayout.min_screensize = (
+            self._plot_plane_min_size[0] + axis_space[1] + axis_space[3],
+            self._plot_plane_min_size[1] + axis_space[0] + axis_space[2])
 
     def init(self):
         """
@@ -455,7 +509,10 @@ class Plotter(object, Controller):
             multisampling = 8,
             blit_texture=True,
         )
+        self._fntrenderer.set_camera(self.camera)
+        self._fntrenderer.init()
 
+        self._fntlayout.camera = self.camera
         if self.plotmode is not None:
             plotframe.record_program = self.plotmode.get_shader()
 
@@ -538,7 +595,14 @@ class Plotter(object, Controller):
         })
         self.shaperenderer.draw_instance(self._plotplane)
 
+
+        glfwWindowHint(GLFW_SAMPLES, 4);
+        glEnable(GL_MULTISAMPLE)
+
         plot_info('Plotter2d', 'inizialized!')
+
+
+
 
     def init_colorlegend(self):
         """
@@ -552,7 +616,7 @@ class Plotter(object, Controller):
                 screensize = self.colorlegend_size,
                 blit_texture=True,
                 clear_color = hex_to_rgba(self.color_scheme['plotplane-bgcolor']),
-                multisampling=6
+                multisampling=2
             )  
             self._colorlegend_frame.init()
 
@@ -587,7 +651,7 @@ class Plotter(object, Controller):
                 top_left=(0,colorrange_length*(1+factor)+colorrange[0]),
                 bottom_right=(1,colorrange[0]-colorrange_length*factor),
                 color_scheme=self.colorlegend,
-                data_kernel='fragment_color = vec4({a}+{l}*(1+2*{f})*x.y-{l}*{f},0,0,1)'.format(
+                data_kernel='fragment_color = vec4({a}+({l})*(1+2*({f}))*x.y-({l})*({f}),0,0,1)'.format(
                     a=colorrange[0],
                     l=colorrange_length,
                     f=factor)
@@ -614,7 +678,7 @@ class Plotter(object, Controller):
             self._colorlegend_frame.unuse()
             font = ImageFont.truetype(
                 resource_path(self.color_scheme['ylabel-font']), 
-                self.color_scheme['ylabel-fontsize'], 
+                self.color_scheme['axis-fontsize'], 
                 encoding=Plotter.FONT_ENCODING
             )
             length = colorrange_length*(1+2*factor)
@@ -623,6 +687,7 @@ class Plotter(object, Controller):
             x_viewspace = self.colorlegend_position[0]+self.colorlegend_size[0]+5
             axis_labels = self._fontrenderer.layouts['axis']
             axis_labels.clear_texts()
+
             for yplot, label in self._colorlegend_axis.labels:
                 axis_labels.add_text(Text(label,font), (x_viewspace, y_viewspace(yplot)-10))
 
@@ -664,6 +729,38 @@ class Plotter(object, Controller):
 
             self._xaxis.modelview.set_position(self._plotplane_margin[3], self.plotframe_size[1]-self._axis_translation[0]+self._plotplane_margin[0])
             self._xaxis.update_modelview()
+
+            labels = self._xaxis.labels 
+            curr_length = len(self._axis_texts[0])
+            margin = self._plotplane_margin[3]
+
+            for i in range(0, len(labels)-curr_length):
+                x, label = labels[i+curr_length]
+
+                text = self._fntrenderer.create_text(label, 
+                    size=self.color_scheme['axis-fontsize'], 
+                    position=(x+margin,0), 
+                    color=hex_to_rgba(self.color_scheme['axis-fontcolor']))
+
+                self._axis_texts[0].append(text)
+                self._fntlayout.add_text(text, ('bottom', self._plotplane_margin[2]-text.size-10))
+                # XXX how to do this better?
+                text.position = (text.position[0]-text.get_boxsize()[0]/2.0, text.position[1])
+
+            for i in range(0, min(len(labels), curr_length)):
+                text = self._axis_texts[0][i]
+                x, label = labels[i]
+
+                if label != text.chars:
+                    text.chars = label
+
+                text.position = (x+margin-text.get_boxsize()[0]/2.0, text.position[1])
+                text.color = hex_to_rgba(self.color_scheme['axis-fontcolor'])
+
+            # hide unwanted texts
+            for i in range(len(labels), curr_length):
+                self._axis_texts[0][i].color = [0,0,0,0]
+
 
     def _update_yaxis(self):
         """
@@ -713,6 +810,7 @@ class Plotter(object, Controller):
         self._update_plotframe_camera()
         self._update_graph_matricies()
         self._update_colorlegend()
+        self._fntrenderer.set_camera(self.camera)
 
         self.render_graphs = True
         self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
@@ -754,7 +852,6 @@ class Plotter(object, Controller):
             self.init_graphs()  
 
     def render(self):
-        
         if self.render_graphs:
             # only render graphs if neccessary
             self._plotframe.use()
@@ -793,7 +890,9 @@ class Plotter(object, Controller):
         if self._colorlegend_axis:
             self._colorlegend_axis.render()
         self._fontrenderer.render()
-        
+
+        self._fntlayout.update_layout()
+        self._fntrenderer.render()
     
 class Plotter2dMode_Blur():
     def __init__(self, w=0.8):
@@ -909,12 +1008,15 @@ DARK_COLORS.update({
     ]
 })
 
-BLA_COLORS = DEFAULT_COLORS.copy()
+from copy import deepcopy
+BLA_COLORS = deepcopy(DEFAULT_COLORS)
+BLA_COLORS['graph-colors'] = []
 BLA_COLORS.update({
     'bgcolor'              : '142638ff',
     'plotplane-bgcolor'    : '000000aa',
     'plotplane-bordercolor': '9ABAD9ff',
     'font-color'           : 'ffffffff',
+    'axis-fontcolor'           : 'aaaaaaff',
 
     'select-area-bgcolor'  : 'aaaaaa66',
     'select-area-pending-bgcolor'  : 'FF990066',
@@ -931,13 +1033,13 @@ BLA_COLORS.update({
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
 
-    'plotframe-border-size': 2,
+    'plotframe-border-size': 1,
     'plotframe-border-color': '9ABAD9ff',
     'graph-colors': [
         'FC82C3ff',
         '2FB5F3ff',
         'E1C829ff',
-        '18DD00ff',
+        '3ADD00ff',
         '00ffffff',
         'f0f0f0ff',
         'aaff66ff',

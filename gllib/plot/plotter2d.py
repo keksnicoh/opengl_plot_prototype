@@ -164,6 +164,7 @@ class Plotter(object, Controller):
         self._colorlegend_frame     = None 
         self._colorlegend           = None
         self._colorlegend_graph     = None
+        self._colorlegend_texts = []
 
         self._fntrenderer = FontRenderer2()
         self._fntlayout = AlignedLayout(self.camera)
@@ -520,7 +521,6 @@ class Plotter(object, Controller):
         plotframe.inner_camera.set_scaling(self._axis)
         plotframe.inner_camera.set_position(*self._origin)
         self._plotframe = plotframe
-        self.init_colorlegend()
 
 
 
@@ -585,13 +585,14 @@ class Plotter(object, Controller):
             )
             self._yaxis.init()
             self._update_yaxis()
-
+        self.init_colorlegend()
+        self._plotplane.size = self.plotframe_size
+        self._update_plotframe_camera()
+        self._update_graph_matricies()
         glfwWindowHint(GLFW_SAMPLES, 4);
         glEnable(GL_MULTISAMPLE)
 
         plot_info('Plotter2d', 'inizialized!')
-
-
 
 
     def init_colorlegend(self):
@@ -622,10 +623,7 @@ class Plotter(object, Controller):
                 self._colorlegend = ShapeInstance('default_rectangle', **{
                     'size': self.colorlegend_size,
                     'position': self.colorlegend_position,
-                    'border': {
-                        'size': self.color_scheme['plotframe-border-size'],
-                        'color': hex_to_rgba(self.color_scheme['plotframe-border-color']),
-                    },
+                    'border': {'size': self.color_scheme['plotframe-border-size'],'color': hex_to_rgba(self.color_scheme['plotframe-border-color'])},
                     'color': [0,0,0,0],
                     'texture': self._colorlegend_frame
                 })
@@ -635,16 +633,11 @@ class Plotter(object, Controller):
                 self._colorlegend.position = self.colorlegend_position
                 self._colorlegend.size = self.colorlegend_size
                 
-
-
             self._colorlegend_graph = Field(
                 top_left=(0,colorrange_length*(1+factor)+colorrange[0]),
                 bottom_right=(1,colorrange[0]-colorrange_length*factor),
                 color_scheme=self.colorlegend,
-                data_kernel='fragment_color = vec4({a}+({l})*(1+2*({f}))*x.y-({l})*({f}),0,0,1)'.format(
-                    a=colorrange[0],
-                    l=colorrange_length,
-                    f=factor)
+                data_kernel='fragment_color = vec4({a}+({l})*(1+2*({f}))*x.y-({l})*({f}),0,0,1)'.format(a=colorrange[0],l=colorrange_length,f=factor)
             )
             self._colorlegend_graph.init()
             plot_camera = self._colorlegend_frame.inner_camera;
@@ -666,22 +659,29 @@ class Plotter(object, Controller):
             self._colorlegend_frame.use()
             self._colorlegend_graph.render(self)
             self._colorlegend_frame.unuse()
-            font = ImageFont.truetype(
-                resource_path(self.color_scheme['ylabel-font']), 
-                self.color_scheme['axis-fontsize'], 
-                encoding=Plotter.FONT_ENCODING
-            )
             length = colorrange_length*(1+2*factor)
             shift = colorrange_length*factor
             y_viewspace = lambda y: (1-(float(y-colorrange[0]+shift)/length))*self.colorlegend_size[1]+self.colorlegend_margin[0]
             x_viewspace = self.colorlegend_position[0]+self.colorlegend_size[0]+5
-            axis_labels = self._fontrenderer.layouts['axis']
-            axis_labels.clear_texts()
+            curr_length = len(self._colorlegend_texts)
+            labels = self._colorlegend_axis.labels
+            for i in range(len(labels) - curr_length):
+                yplot, label = labels[i+curr_length]
+                text = self._fntrenderer.create_text(label, 
+                    size=self.color_scheme['axis-fontsize'], 
+                    position=(x_viewspace,y_viewspace(yplot)-10), 
+                    color=hex_to_rgba(self.color_scheme['axis-fontcolor']))
+                self._colorlegend_texts.append(text)
 
-            for yplot, label in self._colorlegend_axis.labels:
-                axis_labels.add_text(Text(label,font), (x_viewspace, y_viewspace(yplot)-10))
+            for i in range(0, min(len(labels), curr_length)):
+                text = self._colorlegend_texts[i]
+                yplot, label = labels[i]
+                if label != text.chars:
+                    text.chars = label
+                text.position = (x_viewspace,y_viewspace(yplot)-10)
+                text.color = hex_to_rgba(self.color_scheme['axis-fontcolor'])
 
-
+            
 
     def init_graphs(self):
         """
@@ -1043,9 +1043,9 @@ BLA_COLORS['graph-colors'] = []
 BLA_COLORS.update({
     'bgcolor'              : '142638ff',
     'plotplane-bgcolor'    : '000000aa',
-    'plotplane-bordercolor': '9ABAD9ff',
+    'plotplane-bordercolor': 'ffffffff',
     'font-color'           : 'ffffffff',
-    'axis-fontcolor'           : 'aaaaaaff',
+    'axis-fontcolor'           : 'ffffffff',
 
     'select-area-bgcolor'  : 'aaaaaa66',
     'select-area-pending-bgcolor'  : 'FF990066',
@@ -1055,15 +1055,15 @@ BLA_COLORS.update({
 
     'xaxis-bgcolor'        : '020609ff',
     'yaxis-bgcolor'        : '020609ff',
-    'xaxis-linecolor'      : 'aaaaaaff',
+    'xaxis-linecolor'      : 'ffffffff',
     'xaxis-bgcolor'        : '00333300',
     'xaxis-fontcolor'      : 'ffffffff',
-    'yaxis-linecolor'      : 'aaaaaaff',
+    'yaxis-linecolor'      : 'ffffffff',
     'yaxis-bgcolor'        : '00333300',
     'yaxis-fontcolor'      : 'ffffffff',
 
     'plotframe-border-size': 1,
-    'plotframe-border-color': '9ABAD9ff',
+    'plotframe-border-color': 'ffffffff',
     'graph-colors': [
         'FC82C3ff',
         '2FB5F3ff',

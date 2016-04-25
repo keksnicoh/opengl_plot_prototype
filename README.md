@@ -20,17 +20,18 @@ images
 ------
 line plots
 
-<img src="/assets/demolines.png"  width="500"/>
+<img src="/assets/demolines.png"  width="700"/>
 
 
 
 field plots
 
 
-<img src="/assets/demofield.png"  width="500"/>
+<img src="/assets/demofield.png"  width="700"/>
 
 
-
+old images
+------
 first plots
 
 

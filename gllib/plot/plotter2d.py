@@ -128,47 +128,43 @@ class Plotter(object, Controller):
 
         self.on_state = Event()
 
-        self._axis_translation     = (10, 0)
-        self._plotplane_margin     = [5, 10, 40, 45]
-        self._plot_plane_min_size  = (100, 100)
-        self._axis                 = axis 
-        self._axis_units           = axis_units 
-        self.colorlegend_speed = 0.01
-        self._xlabel               = xlabel
-        self._ylabel               = ylabel
-        self._title                = title
-        self._title_font           = None
-        self._xlabel_font          = None 
-        self._ylabel_font          = None
-
-        self._axis_subunits        = axis_subunits
-        self._axis_unit_symbols    = axis_unit_symbols
-        self._origin               = origin
+        self._axis_translation      = (10, 0)
+        self._plotplane_margin      = [5, 10, 40, 5]
+        self._plot_plane_min_size   = (100, 100)
+        self._axis                  = axis 
+        self._axis_units            = axis_units 
+        self.colorlegend_speed      = 0.01
+        self._xlabel                = xlabel
+        self._ylabel                = ylabel
+        self._title                 = title
+        self._title_font            = None
+        self._xlabel_font           = None 
+        self._ylabel_font           = None
         
-        self._plotframe            = None
-        self._xaxis                = None
-        self._yaxis                = None
-        self._colorlegend_axis              = None
-        self._debug                = False
-        self._fontrenderer         = None
-        self._render_axis = (True,True)
-        self._axis_texts = [[],[]]
-
+        self._axis_subunits         = axis_subunits
+        self._axis_unit_symbols     = axis_unit_symbols
+        self._origin                = origin
+        self._margin_changed        = False
+        self._plotframe             = None
+        self._xaxis                 = None
+        self._yaxis                 = None
+        self._colorlegend_axis      = None
+        self._debug                 = False
+        self._fontrenderer          = None
+        self._render_axis           = (True,True)
+        self._axis_texts            = [[],[]]
+        self._yboxwidths            = []
         # dstates
-        self.render_graphs         = True
-        self._graphs_initialized   = False
-        self._has_rendered         = False
-        self._state = 0 
-        self._select_area          = [0,0,0,0]
+        self.render_graphs          = True
+        self._graphs_initialized    = False
+        self._has_rendered          = False
+        self._state                 = 0 
+        self._select_area           = [0,0,0,0]
         self._select_area_rectangle = None
-        self._colorlegend_frame = None 
-        self._colorlegend = None
-        self._colorlegend_graph = None
-        self._axis_font = ImageFont.truetype(
-            resource_path(color_scheme['axis-font']), 
-            color_scheme['axis-fontsize'], 
-            encoding=Plotter.FONT_ENCODING
-        )
+        self._colorlegend_frame     = None 
+        self._colorlegend           = None
+        self._colorlegend_graph     = None
+
         self._fntrenderer = FontRenderer2()
         self._fntlayout = AlignedLayout(self.camera)
         self.on_keyboard.append(self.keyboard_callback)
@@ -491,12 +487,6 @@ class Plotter(object, Controller):
         self.shaperenderer.gl_init()
 
         # setup axis
-        self._fontrenderer = FontRenderer(self.camera)
-        self._fontrenderer.layouts['labels'] = RelativeLayout(boxsize=self.camera.screensize)
-        self._fontrenderer.layouts['axis'] = AbsoluteLayout()
-
-        self._fontrenderer.init()
-        self._fontrenderer.set_color(hex_to_rgba(self.color_scheme['font-color']))
         self.init_labels()
 
         # setup plotplane
@@ -533,40 +523,6 @@ class Plotter(object, Controller):
         self.init_colorlegend()
 
 
-        # setup axis
-        if self._render_axis[0]:
-            self._xaxis = axis.Scale(
-                camera       = self.camera,
-                scale_camera = self._plotframe.inner_camera,
-                size         = self.get_xaxis_size(),
-                unit         = self._axis_units[0],
-                subunits     = self._axis_subunits[0],
-                font         = self._axis_font,
-                axis         = axis.XAXIS,
-                unit_symbol  = self._axis_unit_symbols[0],
-                bgcolor      = hex_to_rgba(self.color_scheme['xaxis-bgcolor']),
-                linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
-                fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
-            )
-            self._xaxis.init()
-            self._update_xaxis()
-
-        if self._render_axis[1]:
-            self._yaxis = axis.Scale(
-                camera       = self.camera,
-                scale_camera = self._plotframe.inner_camera,
-                size         = self.get_yaxis_size(),
-                unit         = self._axis_units[1],
-                subunits     = self._axis_subunits[1],
-                font         = self._axis_font,
-                axis         = axis.YAXIS,
-                unit_symbol  = self._axis_unit_symbols[1],
-                bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
-                linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
-                fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),
-            )
-            self._yaxis.init()
-            self._update_yaxis()
 
 
         # parent controller initialization
@@ -595,6 +551,40 @@ class Plotter(object, Controller):
         })
         self.shaperenderer.draw_instance(self._plotplane)
 
+        # setup axis
+        if self._render_axis[0]:
+            self._xaxis = axis.Scale(
+                camera       = self.camera,
+                scale_camera = self._plotframe.inner_camera,
+                size         = self.get_xaxis_size(),
+                unit         = self._axis_units[0],
+                subunits     = self._axis_subunits[0],
+                font         = None,
+                axis         = axis.XAXIS,
+                unit_symbol  = self._axis_unit_symbols[0],
+                bgcolor      = hex_to_rgba(self.color_scheme['xaxis-bgcolor']),
+                linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
+                fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
+            )
+            self._xaxis.init()
+            self._update_xaxis()
+
+        if self._render_axis[1]:
+            self._yaxis = axis.Scale(
+                camera       = self.camera,
+                scale_camera = self._plotframe.inner_camera,
+                size         = self.get_yaxis_size(),
+                unit         = self._axis_units[1],
+                subunits     = self._axis_subunits[1],
+                font         = None,
+                axis         = axis.YAXIS,
+                unit_symbol  = self._axis_unit_symbols[1],
+                bgcolor      = hex_to_rgba(self.color_scheme['yaxis-bgcolor']),
+                linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
+                fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),
+            )
+            self._yaxis.init()
+            self._update_yaxis()
 
         glfwWindowHint(GLFW_SAMPLES, 4);
         glEnable(GL_MULTISAMPLE)
@@ -726,37 +716,29 @@ class Plotter(object, Controller):
         if self._render_axis[0]:
             self._xaxis.size = self.get_xaxis_size()
             self._xaxis.update_camera(self.camera)
-
             self._xaxis.modelview.set_position(self._plotplane_margin[3], self.plotframe_size[1]-self._axis_translation[0]+self._plotplane_margin[0])
             self._xaxis.update_modelview()
-
-            labels = self._xaxis.labels 
+            labels      = self._xaxis.labels 
             curr_length = len(self._axis_texts[0])
-            margin = self._plotplane_margin[3]
+            margin      = self._plotplane_margin[3]
 
             for i in range(0, len(labels)-curr_length):
                 x, label = labels[i+curr_length]
-
                 text = self._fntrenderer.create_text(label, 
                     size=self.color_scheme['axis-fontsize'], 
                     position=(x+margin,0), 
                     color=hex_to_rgba(self.color_scheme['axis-fontcolor']))
-
                 self._axis_texts[0].append(text)
                 self._fntlayout.add_text(text, ('bottom', self._plotplane_margin[2]-text.size-10))
-                # XXX how to do this better?
                 text.position = (text.position[0]-text.get_boxsize()[0]/2.0, text.position[1])
 
             for i in range(0, min(len(labels), curr_length)):
                 text = self._axis_texts[0][i]
                 x, label = labels[i]
-
                 if label != text.chars:
                     text.chars = label
-
                 text.position = (x+margin-text.get_boxsize()[0]/2.0, text.position[1])
                 text.color = hex_to_rgba(self.color_scheme['axis-fontcolor'])
-
             # hide unwanted texts
             for i in range(len(labels), curr_length):
                 self._axis_texts[0][i].color = [0,0,0,0]
@@ -774,6 +756,58 @@ class Plotter(object, Controller):
             self._yaxis.modelview.set_position(self._plotplane_margin[3]-self._axis_translation[1],self._plotplane_margin[0])
             self._yaxis.update_modelview()       
             self._yaxis.update_camera(self.camera)
+            labels      = self._yaxis.labels 
+            curr_length = len(self._axis_texts[1])
+            margin      = self._plotplane_margin[0]
+            active_length = 0
+            for i in range(0, len(labels)-curr_length):
+                y, label = labels[i+curr_length]
+                text = self._fntrenderer.create_text(label, 
+                    size=self.color_scheme['axis-fontsize'], 
+                    position=(0,margin+y), 
+                    color=hex_to_rgba(self.color_scheme['axis-fontcolor']))
+                self._axis_texts[1].append(text)
+                # XXX how to do this better?
+                boxsize = text.get_boxsize()
+                self._yboxwidths.append(boxsize[0])
+                text.position = (text.position[0], text.position[1]-boxsize[1]/2.0)
+                active_length += 1
+            for i in range(0, min(len(labels), curr_length)):
+                text = self._axis_texts[1][i]
+                y, label = labels[i]
+                if label != text.chars:
+                    text.chars = label
+                boxsize = text.get_boxsize()
+                self._yboxwidths[i] = boxsize[0]
+                text.position = (text.position[0]-text.get_boxsize()[0]/2.0, y+margin-text.get_boxsize()[1]/2.0)
+                text.color = hex_to_rgba(self.color_scheme['axis-fontcolor'])
+                active_length += 1
+            # hide unwanted texts
+            for i in range(len(labels), curr_length):
+                self._axis_texts[1][i].color = [0,0,0,0]
+                active_length -= 1
+                self._yboxwidths[i] = 0
+
+            maxboxwidth = np.max(self._yboxwidths)
+            old =  self._plotplane_margin[3]
+            if self._ylabel is not None:
+                maxboxwidth += self.color_scheme['ylabel-fontsize']+10
+
+            self._plotplane_margin[3] = int(maxboxwidth)+5
+            if  self._plotplane_margin[3] != old:
+                self._margin_changed = True
+
+            for i in range(len(self._yboxwidths)):
+                self._axis_texts[1][i].position = (
+                    maxboxwidth - self._axis_texts[1][i].get_boxsize()[0]+5,
+                    self._axis_texts[1][i].position[1]
+                )
+            if self._margin_changed:
+                self._yaxis.modelview.set_position(self._plotplane_margin[3]-self._axis_translation[1],self._plotplane_margin[0])
+                self._yaxis.update_modelview()       
+                self._yaxis.update_camera(self.camera)
+                self._update_xaxis()
+                self._plotplane.position = self.plotframe_position
 
     def _update_measure_axis(self):
         if self._colorlegend_axis:
@@ -804,16 +838,12 @@ class Plotter(object, Controller):
         """
         self._update_xaxis()
         self._update_yaxis()
-
         self._update_measure_axis()
-
         self._update_plotframe_camera()
         self._update_graph_matricies()
         self._update_colorlegend()
         self._fntrenderer.set_camera(self.camera)
-
         self.render_graphs = True
-        self._fontrenderer.layouts['labels'].boxsize = self.camera.screensize
         self.shaperenderer.update_camera()
         self._plotplane.size = self.plotframe_size
         Controller.camera_updated(self, camera)
@@ -889,7 +919,6 @@ class Plotter(object, Controller):
             self._xaxis.render()
         if self._colorlegend_axis:
             self._colorlegend_axis.render()
-        self._fontrenderer.render()
 
         self._fntlayout.update_layout()
         self._fntrenderer.render()

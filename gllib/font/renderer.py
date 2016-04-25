@@ -139,7 +139,7 @@ class TextObject(object):
         positions = chardata['position']
         self._buffer = chardata
         self._boxsize = (
-            chardata['position'][-1][0]-chardata['position'][0][0], 
+            chardata['position'][-1][0]-chardata['position'][0][0]+self._size, 
             chardata['position'][0][1]-chardata['position'][-1][1]+self._size)
         self._has_changes = False 
 

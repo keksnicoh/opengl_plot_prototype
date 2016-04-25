@@ -325,14 +325,14 @@ class Scale():
             for i in range(0, unit_count):
                 label = self.format_number(self._unit_f*(i-start_unit), self.unit_symbol)
                 self._labels.append((position[0], label))
-                position[self._axis] += capture_size
-
-                
+                position[self._axis] += capture_size   
         else:
             position = [self.size[0]-15,size-capture_size]
             for i in range(0, unit_count):
-                text = Text(self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol), self._font)
-                axis_flayout.add_text(text, (position[0], position[1]))
+                label = self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol)
+              #  text = Text(label, self._font)
+              #  axis_flayout.add_text(text, (position[0], position[1]))
+                self._labels.append((position[1], label))
                 position[self._axis] -= capture_size
 
     def format_number(self, number, symbol):

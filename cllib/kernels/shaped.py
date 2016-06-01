@@ -2,33 +2,34 @@
 """
 algorithms to map data
 
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
 from cllib.common import kernel_helpers
 
 import pystache
 from copy import copy
 import pyopencl as cl
-import pyopencl.tools 
+import pyopencl.tools
 
 from operator import mul
-import numpy as np 
+import numpy as np
 
 thread_layouts = {
-    
+
 
 }
 class ShapedKernel():
     """
-    Kernel maps structured chunks to structured chunks. 
+    Kernel maps structured chunks to structured chunks.
 
     XXX
-    - test me 
-    - fix redundancy, 
-    - examples.  
+    - test me
+    - fix redundancy,
+    - examples.
     """
     _SOURCE = """
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
+{{{DEFINES}}}
 {{{INCLUDES}}}
 {{{IN_LAYOUT}}}
 {{CONSTANTS}}
@@ -37,9 +38,9 @@ class ShapedKernel():
 
 {{{PROCEDURE_FUNCTIONS}}}
 
-__kernel 
+__kernel
 void {{{KERNEL_NAME}}}(
-    {{{PROCEDURE_ARGUMENTS}}}) 
+    {{{PROCEDURE_ARGUMENTS}}})
 {
     {{{IDS}}}
     {{{PROCEDURE}}}
@@ -47,16 +48,16 @@ void {{{KERNEL_NAME}}}(
 }
     """
 
-    def __init__(self, 
-        ctx, 
+    def __init__(self,
+        ctx,
         kernel_code=None,
-        arguments=None, 
-        in_blocksize=1, 
+        arguments=None,
+        in_blocksize=1,
         out_blocksize=None,
         shape=None,
         libraries='',
         threads=None,
-        name='_map_kernel', 
+        name='_map_kernel',
     ):
         if type(kernel_code) is not str \
            and kernel_helpers.get_attribute_or_item(kernel_code, 'kernel_code') is None:
@@ -71,13 +72,13 @@ void {{{KERNEL_NAME}}}(
         self.arguments      = arguments
 
         self.libraries      = libraries
-        self.includes       = None 
+        self.includes       = None
         self.threads        = threads
         self._kernel_layout = None
         self._arguments     = []
         self._kernel_args   = None
         self._kernel        = None
-        self._kernel_local  = None 
+        self._kernel_local  = None
 
     def build(self, caardinality=1, dimension=1):
         if hasattr(self.kernel_code, 'build'):
@@ -108,9 +109,11 @@ void {{{KERNEL_NAME}}}(
         # find structures.
         # XXX
         # - helper function
-        arguments, strcts, cl_arg_declr, arg_includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+        arguments, strcts, cl_arg_declr, arg_includes, arg_defines = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
         includes += arg_includes
+        defines = arg_defines
 
+        cl_defines = ['#define {}'.format(d) for d in defines]
         cl_includes = ['#include <{}>'.format(path) for path in set(includes)]
 
         shape = self.shape or [self.in_blocksize]
@@ -144,9 +147,9 @@ void {{{KERNEL_NAME}}}(
                 thread_constants = self._kernel_local
                 nthreads = len(self._kernel_local)
 
-                get_local_id = lambda i: 'get_local_id({})'.format(i)                
+                get_local_id = lambda i: 'get_local_id({})'.format(i)
                 itemid = 'int{n} __item_id = (int{n})({ids});'.format(
-                    n='' if nthreads == 1 else nthreads, 
+                    n='' if nthreads == 1 else nthreads,
                     ids=','.join([get_local_id(i) for i in range(0, len(thread_constants))]))
                 if nthreads == 1:
                     cl_item_var += itemid+"""
@@ -163,7 +166,7 @@ void {{{KERNEL_NAME}}}(
                         int __item = THREAD_X*__item_id.x+__item_id.y;;
                         int __itemT = THREAD_X*__item_id.y+__item_id.x;
                     """
-  
+
             if nthreads == 1:
                 cl_constants.append(('THREAD_X', thread_constants[0]))
             elif nthreads == 2:
@@ -173,17 +176,18 @@ void {{{KERNEL_NAME}}}(
                 cl_constants.append(('THREAD_X', thread_constants[0]))
                 cl_constants.append(('THREAD_Y', thread_constants[1]))
                 cl_constants.append(('THREAD_Z', thread_constants[2]))
-            else:   
+            else:
                 # XXX
                 # - does a n>3 case make sense? check opencl specs...
                 raise NotImplemented('not implemented yet')
-            
+
         src = pystache.render(ShapedKernel._SOURCE, {
             'INCLUDES'           : '\n'.join(cl_includes),
+            'DEFINES'            : '\n'.join(cl_defines),
             'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  kernel_code,
-            'IDS'                : cl_item_var,           
-            'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,      
+            'IDS'                : cl_item_var,
+            'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,
             'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_arg_declr),
             'PROCEDURE_FUNCTIONS': libraries,
             'KERNEL_NAME'        : self.name,
@@ -214,7 +218,7 @@ void {{{KERNEL_NAME}}}(
 
     def __str__(self):
         """
-        readable representation of kernel delcaration 
+        readable representation of kernel delcaration
         """
         return '{}({})'.format(self.name, ', '.join(self._kernel_args))
 

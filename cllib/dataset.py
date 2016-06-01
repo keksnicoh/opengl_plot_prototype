@@ -122,6 +122,13 @@ class Dataset():
                 self.buffers.update(result or {})
                 return result or {}
 
+            elif type(declr) is dict and 'function' in declr:
+                args = declr.get('args', [])
+                kwargs = declr.get('kwargs', {})
+                result = getattr(self, declr['function'])(*args, **kwargs) or {}
+                self.buffers.update(result)
+                return result
+
             # create task instance.
             # arguments can be assigned as tuples (key, value)
             # or as plain values. if value is a string and there
@@ -140,7 +147,7 @@ class Dataset():
                         val = val(self)
 
                     if type(arg) is tuple:
-                        cls_kwargs[v[0]] = val
+                        cls_kwargs[arg[0]] = val
                     else:
                         cls_args.append(val)
 
@@ -180,7 +187,13 @@ class Dataset():
 
         # go
         if task_id not in self.runners:
-            result = self._task_instances[task_id].run()
+            task = self._task_instances[task_id]
+            if hasattr(task, 'run'):
+                result = task.run()
+            elif hasattr(task, '__call__'):
+                result = task()
+            else:
+                raise RuntimeError('task "{}" must have a run() or __call__() attribute'.format(task_id))
         else:
             result = self.runners[task_id](self, task)
 

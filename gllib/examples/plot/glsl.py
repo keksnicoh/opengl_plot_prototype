@@ -9,7 +9,7 @@ from gllib.plot.domain import NumpyDomain
 from gllib.plot.graph import Line2d
 from gllib.plot.app import plot2d
 
-import numpy as np 
+import numpy as np
 
 def plot_main(plotter):
     xf = np.array([0.01*x for x in np.arange(1000)], dtype=np.float32)

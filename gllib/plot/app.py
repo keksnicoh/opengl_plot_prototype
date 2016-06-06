@@ -3,7 +3,7 @@ from gllib.controller import Controller
 from gllib.plot import plotter2d
 from gllib.framelayout import FramelayoutController
 from gllib.plot.plotter2d import DARK_COLORS, DEFAULT_COLORS, BLA_COLORS
-import numpy 
+import numpy
 
 def plot2d(f, width=600, height=600, dark=False, **kwargs):
     window = GlWindow(width, height, 'plot')
@@ -18,11 +18,13 @@ def plot2d(f, width=600, height=600, dark=False, **kwargs):
     app.run()
 
 
-def plot2dRows(f, plotters, width=600, height=600):
+def plot2dRows(f, plotters, width=600, height=600, dark=False):
     window = GlWindow(width, height, '2 cool quads 4 yolo')
     app = GlApplication()
     app.windows.append(window)
-
+    if dark:
+        for plotterargs in plotters:
+            plotterargs['color_scheme']=BLA_COLORS
     plotters = [plotter2d.Plotter(**args) for args in plotters]
 
 
@@ -32,12 +34,14 @@ def plot2dRows(f, plotters, width=600, height=600):
 
     app.run()
 
-def plot2dColumns(f, n, **kwargs):
-    window = GlWindow(1000, 700, '2 cool quads 4 yolo')
+def plot2dColumns(f, plotters, width=600, height=600, dark=False):
+    window = GlWindow(width, height, '2 cool quads 4 yolo')
     app = GlApplication()
     app.windows.append(window)
-
-    plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
+    if dark:
+        for plotterargs in plotters:
+            plotterargs['color_scheme']=BLA_COLORS
+    plotters = [plotter2d.Plotter(**args) for args in plotters]
 
     def bla():
         print('CYCLE')

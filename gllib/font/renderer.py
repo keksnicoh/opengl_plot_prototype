@@ -11,7 +11,7 @@ XXX
    * square roots
    * integrals
    * uppers
-   * lowers 
+   * lowers
    * left and right () with correct size
 
 @author Nicolas 'keksnicoh' Heimann <nicolas.heimann@gmail.com>
@@ -19,15 +19,152 @@ XXX
 from gllib.shader import Shader, Program
 from gllib.helper import load_lib_file, resource_path
 from gllib.vertex import BufferObject
-import os 
+import os
 import re
 
-from OpenGL.GL import * 
-import numpy as np 
+from OpenGL.GL import *
+import numpy as np
 from ctypes import c_void_p, c_int
 from scipy.ndimage.io import imread
 
 FONT_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'resources', 'fnt')
+import re
+
+class SimpleLatexLexer():
+    T_CHARS = 'T_CHARS'
+    T_COMMAND = 'T_COMMAND'
+    T_COMMAND_ARG = 'T_COMMAND_ARG'
+    T_COMMAND_END = 'T_COMMAND_END'
+    T_LOWER = 'T_LOWER'
+    T_LOWER_END = 'T_LOWER_END'
+    T_UPPER = 'T_UPPER'
+    T_UPPER_END = 'T_UPPER_END'
+
+    def __init__(self):
+        self.opcode = []
+        self.ptr = 0
+
+    def lex(self, chars):
+        self.opcode = []
+        self.ptr = 0
+        self.chars = chars
+
+        self._lex_chrs()
+
+        return self.opcode
+
+    def _lex_chrs(self):
+        buf = ''
+        while self.ptr < len(self.chars):
+            if self.chars[self.ptr] == '$':
+                if buf != '':
+                    self.opcode.append((self.T_CHARS, buf))
+                    buf = ''
+
+                self.ptr += 1
+                self._lex_tex()
+
+                if self.ptr >= len(self.chars) or self.chars[self.ptr] != '$':
+                    raise Exception('expected closing $')
+
+                self.ptr += 1
+            else:
+                buf += self.chars[self.ptr]
+                self.ptr += 1
+
+        if buf != '':
+            self.opcode.append((self.T_CHARS, buf))
+
+    def _lex_tex(self, end_chars=['$']):
+        buf = ''
+        while self.ptr < len(self.chars):
+            if self.chars[self.ptr] in end_chars:
+                if buf != '':
+                    self.opcode.append((self.T_CHARS, buf))
+                return
+
+            if self.chars[self.ptr] == '\\':
+                if len(buf):
+                    self.opcode.append((self.T_CHARS, buf))
+                    buf = ''
+
+                self.ptr += 1
+                self._lex_cmd()
+
+            elif self.chars[self.ptr] == '_':
+                if len(buf):
+                    self.opcode.append((self.T_CHARS, buf))
+                    buf = ''
+                self.ptr += 1
+                self._lex_uplow(self.T_LOWER, self.T_LOWER_END)
+            elif self.chars[self.ptr] == '^':
+                if len(buf):
+                    self.opcode.append((self.T_CHARS, buf))
+                    buf = ''
+                self.ptr += 1
+                self._lex_uplow(self.T_UPPER, self.T_UPPER_END)
+            else:
+                buf += self.chars[self.ptr]
+                self.ptr += 1
+
+    def _lex_cmd(self):
+        if self.chars[self.ptr] == '\\':
+            self.opcode.append((self.T_CHARS, '\\'))
+            self.ptr += 1
+            return
+
+        buf = ''
+        while self.ptr < len(self.chars) and re.match(u'[a-zA-Z]$', self.chars[self.ptr]):
+            buf += self.chars[self.ptr]
+            self.ptr += 1
+
+        if buf == '':
+            raise Exception('unexpected char after command begin "{}"'.format(self.chars[self.ptr]))
+
+        self.opcode.append((self.T_COMMAND, buf, self.chars[self.ptr]))
+
+        if self.ptr >= len(self.chars):
+            self.opcode.append((self.T_COMMAND_END,))
+
+        if self.chars[self.ptr] != '{':
+            self.opcode.append((self.T_COMMAND_END,))
+
+        if self.chars[self.ptr] == '_':
+            self.ptr += 1
+            self._lex_uplow(self.T_LOWER, self.T_LOWER_END)
+
+        if self.chars[self.ptr] == '^':
+            self.ptr += 1
+            self._lex_uplow(self.T_UPPER, self.T_UPPER_END)
+
+
+    def _lex_uplow(self, opcode_begin, opcode_end):
+        assert self.ptr < len(self.chars)
+
+        self.opcode.append((opcode_begin, ))
+        if self.chars[self.ptr] == '{':
+            self.ptr += 1
+            self._lex_tex(['}', '$'])
+
+            assert self.ptr < len(self.chars)
+            assert self.chars[self.ptr] == '}'
+
+            self.ptr += 1
+
+        elif self.chars[self.ptr] == '\\':
+            self.ptr += 1
+            self._lex_cmd()
+
+        elif not re.match(u'\b', self.chars[self.ptr]):
+            self.opcode.append((self.T_CHARS, self.chars[self.ptr]))
+            self.ptr += 1
+
+        else:
+            raise Exception('unepected char in T_LOWER "{}"'.format(self.chars[self.ptr]))
+
+        self.opcode.append((opcode_end, ))
+
+LEXER = SimpleLatexLexer()
 
 class TextObject(object):
     _LATEX_CHARACTER_MAPPING = {
@@ -74,15 +211,16 @@ class TextObject(object):
     represents one chunk of related chars
     within a string
     """
-    def __init__(self, renderer, chars, size, position, color=[0,0,0,1], rotation=0):
-        self._chars = chars 
+    def __init__(self, renderer, chars, size, position, color=[0,0,0,1], rotation=0, enable_simple_tex=False):
+        self._chars = chars
         self.renderer = renderer
         self._rotation = rotation
         self._color = color
-        self._size = size 
-        self._position = position 
-        self._boxsize = None 
-        self._buffer = None 
+        self._size = size
+        self._position = position
+        self._enable_simple_tex = enable_simple_tex
+        self._boxsize = None
+        self._buffer = None
         self._has_changes = True
 
     def get_boxsize(self):
@@ -91,9 +229,11 @@ class TextObject(object):
 
     def _create_buffer(self):
         if not self._has_changes:
-            pass 
+            pass
 
-        font = self.renderer.font 
+
+
+        font = self.renderer.font
         index = 0
         position = self.position
 
@@ -115,18 +255,124 @@ class TextObject(object):
         chars = re.sub(r'\$([a-zA-Z0-9]+)\$', _map_latex_placeholder, chars)
         chardata = np.empty(len(chars), dtype=FontRenderer.CHAR_DTYPE)
 
-        for char in chars:
-            if not char in font.char_glyph:
-                # XXX
-                # - define me
-                print('WARNING UNKOWN CHAR renderer.py')
-                continue
-            fntobj = font.glyphs[font.char_glyph[char]]
+        char_list = []
+        position = [self.position[0], self.position[1]]
 
-            chardata[index] = ((position[0], position[1]), colors[index], self.size, self.rotation, font.char_glyph[char])
-            sizefactor = float(self.size)/60
-            position = (position[0]+sizefactor*float(fntobj.xadvance-16), position[1])
-            index += 1
+        class OpcodeToCharacters():
+            def __init__(self):
+                pass
+
+            def to_characters(self, opcode, font, position, size, rotation, color):
+                self.font = font
+                self.color = color
+                self.rotation = rotation
+                self.position = position
+                self.size = [size]
+                self.ptr = 0
+                self.offset = [[0,0]]
+                self.position_stack = []
+                self.max_position_stack = []
+                self.opcode = opcode
+                self.char_list = []
+                self._main()
+                return self.char_list
+
+            def _main(self):
+                while self.ptr < len(self.opcode):
+                    if self.opcode[self.ptr][0] == LEXER.T_CHARS:
+                        self._chars()
+                        self.ptr += 1
+
+                    elif self.opcode[self.ptr][0] == LEXER.T_COMMAND:
+                        self._cmd()
+
+                    elif self.opcode[self.ptr][0] == LEXER.T_LOWER:
+                        self.position_stack.append((self.position[0], self.position[1]))
+                        self.offset.append([self.offset[-1][0] - self.size[-1]*0.05, self.offset[-1][1] + self.size[-1]*0.45])
+                        self.size.append(self.size[-1]*0.7)
+                        self.ptr += 1
+
+                    elif self.opcode[self.ptr][0] == LEXER.T_LOWER_END:
+                        self.size.pop()
+                        self.offset.pop()
+                        self.ptr += 1
+                        self.max_position_stack.append(self.position)
+
+                        #self.position = self.position_stack.pop()
+
+                    elif self.opcode[self.ptr][0] == LEXER.T_UPPER:
+                        if self.opcode[self.ptr-1][0] == LEXER.T_LOWER_END:
+                            self.position_stack.append((self.position[0], self.position[1]))
+                        else:
+                            self.max_position_stack.append(self.position)
+
+                        self.offset.append([0, self.offset[-1][1] + -self.size[-1]*0.05])
+                        self.size.append(self.size[-1]*0.6)
+
+                        self.ptr += 1
+
+                    elif self.opcode[self.ptr][0] == LEXER.T_UPPER_END:
+                        self.size.pop()
+                        self.offset.pop()
+                        self.ptr += 1
+
+                        p1 = self.max_position_stack.pop()
+                        if p1[0] > self.position[0]:
+                            self.position = p1
+
+
+                    else:
+                        raise Exception('could not work with opcode {}'.format(self.opcode[self.ptr]))
+
+            def _cmd(self):
+                cmd = self.opcode[self.ptr][1]
+                if not cmd in TextObject._LATEX_CHARACTER_MAPPING:
+                    raise Exception('cannot handle latex command \\{}'.format(cmd))
+
+                self._write_char(TextObject._LATEX_CHARACTER_MAPPING[cmd])
+
+                self.ptr += 1
+
+                if not self.opcode[self.ptr][0] == LEXER.T_COMMAND_END:
+                    raise Exception('latex error runaway. Intrnal error? ')
+
+                self.ptr += 1
+
+            def _chars(self):
+                for c in self.opcode[self.ptr][1]:
+                    self._write_char(c)
+
+            def _write_char(self, c):
+                self.char_list.append((
+                    (self.position[0] + self.offset[-1][0], self.position[1] + self.offset[-1][1]),
+                    self.color,
+                    self.size[-1],
+                    self.rotation,
+                    self.font.char_glyph[c]))
+
+                sizefactor = float(self.size[-1])/60
+
+                fntobj = self.font.glyphs[font.char_glyph[c]]
+                self.position = (self.position[0] + sizefactor*float(fntobj.xadvance-16), self.position[1])
+
+        if self._enable_simple_tex:
+            opcode = LEXER.lex(chars)
+            charser = OpcodeToCharacters()
+            char_list = charser.to_characters(opcode, font, (position[0], position[1]), self.size, self.rotation, colors[0])
+            chardata = np.array(char_list, dtype=FontRenderer.CHAR_DTYPE)
+        else:
+            for char in chars:
+                if not char in font.char_glyph:
+                    # XXX
+                    # - define me
+                    print('WARNING UNKOWN CHAR renderer.py')
+                    continue
+                fntobj = font.glyphs[font.char_glyph[char]]
+
+                chardata[index] = ((position[0], position[1]), colors[index], self.size, self.rotation, font.char_glyph[char])
+                sizefactor = float(self.size)/60
+                position = (position[0]+sizefactor*float(fntobj.xadvance-16), position[1])
+                index += 1
 
         coords = chardata['position'] - self.position
         transformation = np.array([
@@ -139,9 +385,9 @@ class TextObject(object):
         positions = chardata['position']
         self._buffer = chardata
         self._boxsize = (
-            chardata['position'][-1][0]-chardata['position'][0][0]+self._size, 
+            chardata['position'][-1][0]-chardata['position'][0][0]+self._size,
             chardata['position'][0][1]-chardata['position'][-1][1]+self._size)
-        self._has_changes = False 
+        self._has_changes = False
 
     def get_data(self):
         self._create_buffer()
@@ -150,17 +396,17 @@ class TextObject(object):
     @property
     def rotation(self):
         return self._rotation
-    
+
     @rotation.setter
     def rotation(self, value):
-        self._rotation = rotation 
+        self._rotation = rotation
         self.renderer._has_changes = True
         self._has_changes = True
 
     @property
     def chars(self):
         return self._chars
-    
+
     @chars.setter
     def chars(self, chars):
         self._chars = chars
@@ -170,7 +416,7 @@ class TextObject(object):
     @property
     def size(self):
         return self._size
-    
+
     @size.setter
     def size(self, size):
         self._size = size
@@ -180,7 +426,7 @@ class TextObject(object):
     @property
     def position(self):
         return self._position
-    
+
     @position.setter
     def position(self, position):
         self._position = position
@@ -193,7 +439,7 @@ class TextObject(object):
 
     @color.setter
     def color(self, color):
-        self._color = color 
+        self._color = color
         self.renderer._has_changes = True
         self._has_changes = True
 
@@ -204,7 +450,7 @@ class TextObject(object):
 
 class FNTFile():
     """
-    *.fnt representation. 
+    *.fnt representation.
     todo: persist
     """
 
@@ -244,7 +490,7 @@ class FNTFile():
                     pid, pfile = match.groups()
                     page_path = os.path.join(os.path.dirname(file_path), pfile)
                     fnt.page_paths.append(page_path)
-                    continue 
+                    continue
 
                 if expected_chars is None:
                     if line[0:11] == 'chars count':
@@ -269,7 +515,7 @@ class FNTFile():
                     +' characterd to be defined but found {} in file "{}"').format(
                     expected_chars, len(fnt.glyphs), file_path))
 
-            return fnt 
+            return fnt
 
 class FontRenderer():
     CHAR_DTYPE = np.dtype([
@@ -297,12 +543,12 @@ class FontRenderer():
         self.font_path = font
         self.texts = []
         self._has_changes = True
-        self._fnt = None 
+        self._fnt = None
 
     @property
     def font(self):
         return self._fnt
-    
+
 
     def init(self):
         # load font file
@@ -318,8 +564,8 @@ class FontRenderer():
                 raise Exception((
                     'font "{}" corrupt: font page id={} file="{}" image size {}x{}'
                     + ' differs from the first page id=0 file="{}" {}x{}').format(
-                        self.font, i, self._fnt.page_paths[i], glyphdata.shape[0], 
-                        glyphdata.shape[1], self._fnt.page_paths[0], 
+                        self.font, i, self._fnt.page_paths[i], glyphdata.shape[0],
+                        glyphdata.shape[1], self._fnt.page_paths[0],
                         page_data[0].shape[0], page_data[0].shape[1]))
 
             glyphatlas[i] = glyphdata
@@ -333,7 +579,7 @@ class FontRenderer():
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);
 
         # create shader
-        self.shader_program = Program() 
+        self.shader_program = Program()
         self.shader_program.shaders.append(Shader(GL_VERTEX_SHADER, VERTEX_SHADER))
         self.shader_program.shaders.append(Shader(GL_GEOMETRY_SHADER, GEOMETRY_SHADER.replace('$n$', str(len(self._fnt.glyphs)))))
         self.shader_program.shaders.append(Shader(GL_FRAGMENT_SHADER, FRAGMENT_SHADER.replace('$n$', str(len(self._fnt.glyphs)))))
@@ -343,7 +589,7 @@ class FontRenderer():
         self.buffer = BufferObject.empty(1, dtype=self.CHAR_DTYPE)
         self.vao = glGenVertexArrays(1)
 
-        # bind vao 
+        # bind vao
         glBindVertexArray(self.vao)
         self.buffer.bind()
 
@@ -381,7 +627,7 @@ class FontRenderer():
 
         if self.camera:
             self.shader_program.uniform('mat_camera', self.camera.get_matrix())
-            self.camera_changed = False 
+            self.camera_changed = False
 
         for text in self.texts:
             text.font = self._fnt
@@ -390,24 +636,28 @@ class FontRenderer():
         self.camera = camera
         self.camera_changed = True
 
-    def create_text(self, text, size=10, position=(0,0), color=[0,0,0,1], rotation=0):
+    def create_text(self, text, size=10, position=(0,0), color=[0,0,0,1], rotation=0, **kwargs):
         """
         creates a text with certain size, position and rotation.
         :text: the text to be rendered
         :size: size of the text
         :position: position on xy plane
         :rotation: angle to rotate aroung (position.x, position.y)
-           in mathematical way (anti clockwise). 
+           in mathematical way (anti clockwise).
            np.pi/2   = 90°
            np.pi     = 180°
            np.pi*3/2 = 270°
            2*pi      = 360°
         returns a TextObject instance.
         """
-        textobj = TextObject(self, text, size, position, color=color, rotation=rotation)
+        textobj = TextObject(self, text, size, position, color=color, rotation=rotation, **kwargs)
         self.texts.append(textobj)
-        self._has_changes = True 
+        self._has_changes = True
         return textobj
+
+    def clear_texts(self):
+        self.texts = []
+        self._has_changes = True
 
     def render(self):
         self._dummybufferstuff()
@@ -445,7 +695,7 @@ class FontRenderer():
                 index += len(data)
 
             self.buffer.set(chardata)
-            self._has_changes = False 
+            self._has_changes = False
 
 VERTEX_SHADER = """
 #version /*{$VERSION$}*/
@@ -486,11 +736,11 @@ struct glyph {
   vec4 offset;
   float page;
   float xadvance;
-  
+
   float c;
 };
 layout (std140) uniform ubo_font_objects
-{ 
+{
     glyph glyphs[$n$];
 };
 

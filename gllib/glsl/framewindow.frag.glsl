@@ -17,8 +17,8 @@ void main() {
     coord = ivec2(tex_size*(mat_texture*vec3(frag_tex_coord.x,frag_tex_coord.y, 1)).xy);
     coord.x = coord.x%int(tex_size.x);
     coord.y = coord.y%int(tex_size.y);
-    color = vec4(0.0);
-    
+    color = vec4(0,0,0,0);
+
     for (int i = 0; i < u_samples; i++) {
         color += texelFetch(tex[0], coord, i);
     }

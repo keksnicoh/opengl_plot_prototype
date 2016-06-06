@@ -4,13 +4,15 @@ graph plotting module
 
 :author: Nicolas 'keksnicoh' Heimann
 """
-from gllib.shader import * 
+from gllib.shader import *
 from gllib.helper import load_lib_file
-from gllib.buffer import * 
+from gllib.buffer import *
 from gllib.application import GlApplication
+from gllib.plot.domain import NumpyDomain
 
-from OpenGL.GL import * 
+from OpenGL.GL import *
 
+import numpy as np
 
 import pystache
 import re
@@ -18,7 +20,7 @@ import re
 # XXX
 # - print out a warning if domains have different lengths?
 # - print out a warning if domains have different offsets?
-# - should we extract draw_dots out of here? 
+# - should we extract draw_dots out of here?
 #   + cleaner api
 #   - more abstract usage, not so easy in real life ...
 
@@ -27,19 +29,20 @@ class Line2d():
     """
     line plotter
     """
-    def __init__(self, domains, kernel='', 
-        draw_dots=False, 
-        draw_lines=True, 
-        color=None, 
-        dotcolor=None, 
+    def __init__(self, domains, kernel='',
+        draw_dots=False,
+        draw_lines=True,
+        color=None,
+        dotcolor=None,
         data_layout=None,
-        width=1, 
-        dotsize=None, 
+        width=1,
+        dotsize=None,
         shift=(0.0,0.0),
-        color_scheme='fragment_color=point_color;'):
+        color_scheme='fragment_color=point_color;',
+        label=None):
 
-        self.domains = domains 
-        self.program = None 
+        self.domains = domains
+        self.program = None
         self.dot_program = None
         self.color        = color
         self._kernel      = kernel
@@ -47,16 +50,17 @@ class Line2d():
         self.dotcolor     = dotcolor or color
         self.draw_lines   = draw_lines
         self._data_layout = data_layout
-        self.draw_dots    = draw_dots 
+        self.draw_dots    = draw_dots
+        self.label = label
         self.color_scheme = color_scheme
         self.dotsize      = dotsize or width*5
-        self.initialized  = False 
+        self.initialized  = False
         self._width       = width
         self.shift        = shift
         self.length = None
         self.offset = None
-        # plot from the max offset to min length of 
-        # all defined domains. 
+        # plot from the max offset to min length of
+        # all defined domains.
         self._max_offset  = 0
         self._min_length  = 0
 
@@ -75,13 +79,42 @@ class Line2d():
 
         self.program.uniform('mat_camera', plot_cam)
         self.program.uniform('mat_outer_camera', outer_cam)
-        
+
 
         if hasattr(self, 'dot_program'):
             self.dot_program.uniform('mat_camera', plot_cam)
             self.dot_program.uniform('mat_outer_camera', outer_cam)
-            
 
+
+    def render_legend_graph(self, plotter, plot_cam, inner_cam, tl, br):
+        if self.draw_dots == True:
+            domain = NumpyDomain(np.array([
+                float(br[0] - tl[0]) / 2.0 , tl[1] + float(br[1] - tl[1]) / 2.0,
+
+
+            ], dtype=np.float32).reshape(1,2))
+            cls = self.__class__
+            graph = cls(domain, draw_lines=False, draw_dots=True, dotcolor=self.dotcolor, dotsize=8*self.dotsize)
+            graph.init()
+            axis        = inner_cam.screensize
+            origin      = plot_cam.get_position()
+            graph.update_plotmeta(inner_cam.get_matrix(), plot_cam.get_matrix(), inner_cam.screensize, origin)
+            graph.render(plotter)
+
+        if self.draw_lines == True:
+            domain = NumpyDomain(np.array([
+                -25 + float(br[0] - tl[0]) / 2.0 , 1.000*tl[1] + 1.000*float(br[1] - tl[1]) / 2.0,
+                -24 + float(br[0] - tl[0]) / 2.0 , 1.000*tl[1] + 1.000*float(br[1] - tl[1]) / 2.0,
+                float(br[0] - tl[0]) / 2.0 , 1.000*tl[1] + 1.000*float(br[1] - tl[1]) / 2.0,
+                +24 + float(br[0] - tl[0]) / 2.0 , 1.000*tl[1] + 1.000*float(br[1] - tl[1]) / 2.0,
+                +25 + float(br[0] - tl[0]) / 2.0 , 1.000*tl[1] + 1.000*float(br[1] - tl[1]) / 2.0,
+
+            ], dtype=np.float32).reshape(5,2))
+            cls = self.__class__
+            graph = cls(domain, draw_lines=True, draw_dots=False, color=self.color, width=4*self._width)
+            graph.init()
+            graph.update_plotmeta(inner_cam.get_matrix(), plot_cam.get_matrix(), inner_cam.scaling, (0, 0))
+            graph.render(plotter)
 
     def set_time(self, time):
         # urgh ... we need a uniform manager :(
@@ -93,7 +126,7 @@ class Line2d():
 
     def init(self):
         """
-        creates shader and vao 
+        creates shader and vao
         """
         if not type(self.domains) is list:
             self.domains = [self.domains]
@@ -125,7 +158,7 @@ class Line2d():
                 shader_pre_compile_transformations += '{vec} d{i}; d{i} = (trans_d{i} * {vecext}).{coords};\n'.format(
                     coords = 'x' if domain.dimension == 1 else ('xy' if domain.dimension==2 else ('xyz' if domain.dimension==3 else 'xyzw')),
                     vec=vec_d,
-                    i=i, 
+                    i=i,
                     vecext='vec{d1}(in_d{i},1)'.format(d1=domain.dimension+1,i=i) if domain.dimension < 4 else 'in_d{i}'.format(i=i),
                 )
                 uniforms_transformation_matricies['trans_d{}'.format(i)] = 'mat{}'.format(min(4,domain.dimension+1))
@@ -156,7 +189,7 @@ class Line2d():
 
     def render(self, plotter):
         """
-        renders line plot 
+        renders line plot
         """
         if not self.initialized:
             self.init()
@@ -170,7 +203,6 @@ class Line2d():
 
         for domain in self.domains:
             if hasattr(domain, 'transform'):
-                print(offset, length)
                 domain.transform(offset, length)
 
         self._calc_length_offset()
@@ -203,8 +235,8 @@ class Line2d():
         glsl code snippet
         """
 
-        # try to find a good configuration if no specific 
-        # layout was set by user 
+        # try to find a good configuration if no specific
+        # layout was set by user
         if self._data_layout is None:
 
             # XXX
@@ -217,7 +249,7 @@ class Line2d():
             #     x_data = RealAxis()
             #     y_data = NumpyDomain(...)
             #   --> here d0.x and d0.y would be used for plot.
-            #       user could expext that x_data is an interval 
+            #       user could expext that x_data is an interval
             #       and y_data is corresponding y_data ... who knowz??
             #
             self._data_layout = ('d0.x', 'd0.y')
@@ -225,7 +257,7 @@ class Line2d():
             if len(self.domains) == 1:
                 if self.domains[0].dimension == 1:
                     self._data_layout = ('d0.x', )
-                else: 
+                else:
                     self._data_layout = ('d0.x', 'd0.y')
             else:
                 if self.domains[0].dimension == 1:
@@ -253,9 +285,9 @@ class Line2d():
                 raise ValueError(
                     ('Line2d.data_layout {}-component "{}" reffer to unkown domain d{}.'
                     + ' available domains: {}').format(
-                    ['x','y'][i], 
-                    source, 
-                    domain_id, 
+                    ['x','y'][i],
+                    source,
+                    domain_id,
                     ', '.join('d'+str(i) for i in range(0, len(self.domains)))
                 ))
 
@@ -266,21 +298,21 @@ class Line2d():
 
             component_dim = {'x':1,'y':2,'w':3,'z':4}
             source_component = component_dim[glsl_component]
-            
+
             if source_component > domain_dim:
                 raise ValueError(
                     ('Line2d.data_layout {}-component "{}": cannot use d{}.{} '
                     + 'since domain d{} with dimension {} has only "{}" available.').format(
-                    ['x','y'][i], 
-                    source, 
-                    domain_id, 
+                    ['x','y'][i],
+                    source,
+                    domain_id,
                     glsl_component,
                     domain_id,
-                    domain_dim, 
+                    domain_dim,
                     ''.join(['x','y','z','w'][0:domain_dim])
                 ))
 
-            # float back mapping 
+            # float back mapping
             if domain_dim == 1:
                 source = 'd{}'.format(domain_id)
 
@@ -314,7 +346,7 @@ class Line2d():
 
     def _compile_glsl_programs(self, vertex_source):
         """
-        compiles glsl programs 
+        compiles glsl programs
         """
         vertex_shader = Shader(GL_VERTEX_SHADER, vertex_source, substitutions={
             'KERNEL' : self._kernel+';', #user friendly semicolon :)
@@ -334,7 +366,7 @@ class Line2d():
                 raise Error('invalid syntax in user defined kernel "{}"'.format(self._kernel))
             except ShaderError as e2:
                 raise e
-       
+
         program = Program()
         program.shaders.append(vertex_shader)
         program.shaders.append(geometry_shader)

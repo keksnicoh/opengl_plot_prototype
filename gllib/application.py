@@ -8,21 +8,21 @@ from .camera import Camera2d
 from OpenGL.GL import *
 from glfw import *
 from termcolor import colored
-import logging 
+import logging
 import sys
 
 class GlApplication():
 
     WINDOW_CURRENT = None
 
-    DEBUG = False 
-    
+    DEBUG = False
+
     """
-    allows to register a framebuffer on binding. 
+    allows to register a framebuffer on binding.
     this enabled to reactivate last active framebuffers.
     """
     GL__ACTIVE_FRAMEBUFFER = []
-    
+
     """
     initializes opengl & glfw. handles glfw windows
     and route events to windows
@@ -36,7 +36,7 @@ class GlApplication():
         self.initGlfw()
         GlApplication._dbg("load {}".format(colored('OPENGL_CORE_PROFILE 4.10', 'red')), '...')
         self.initGlCoreProfile()
-        self._initialized = False 
+        self._initialized = False
         root = logging.getLogger()
         root.setLevel(logging.DEBUG)
         ch = logging.StreamHandler(sys.stdout)
@@ -44,7 +44,7 @@ class GlApplication():
         formatter = logging.Formatter('%(levelname)s - %(message)s')
         ch.setFormatter(formatter)
         root.addHandler(ch)
-    
+
     @classmethod
     def run_controller(cls, controller, *args, **kwargs):
         app = GlApplication()
@@ -88,7 +88,7 @@ class GlApplication():
 
     def run(self):
         """
-        runs the application 
+        runs the application
         """
         if not self._initialized:
             self.init()
@@ -111,7 +111,7 @@ class GlApplication():
 
     def initGlfw(self):
         """initialize glfw"""
-        if not glfwInit(): 
+        if not glfwInit():
             raise RuntimeError('glfw.Init() error')
 
     def active(self):
@@ -120,7 +120,7 @@ class GlApplication():
         if not len(self.windows):
             return False
         if not self.windows[0].active():
-            return False 
+            return False
         return True
 
     def terminate(self):
@@ -141,11 +141,11 @@ class GlApplication():
 
 class GlWindow():
     """
-    glfw window wrapper. 
+    glfw window wrapper.
 
     a window must have a controller, all events will be redirected
     into the given controller. a GlWindow does not render something,
-    it is the adapter between a Controller and Glfw. 
+    it is the adapter between a Controller and Glfw.
     """
     def __init__(self, width, height, title='no title', x=None, y=None):
         """
@@ -153,7 +153,7 @@ class GlWindow():
         """
         self.width = width
         self.height = height
-        self.title = title 
+        self.title = title
         self.x = x
         self.y = y
 
@@ -166,7 +166,7 @@ class GlWindow():
 
         self._keyboard_active = set()
         self._keyboard_pressed = set()
-        
+
     def init_glfw(self):
         """
         glfw initialization.
@@ -180,7 +180,7 @@ class GlWindow():
         }
     def init(self):
         """
-        initializes controller and events 
+        initializes controller and events
         """
         self.controller.init()
         self.make_context()
@@ -207,7 +207,7 @@ class GlWindow():
     def set_controller(self, controller):
         """
         sets a controller. if controller has no camera
-        this method will configure the camera of the last 
+        this method will configure the camera of the last
         controller
         """
         # inizialize camera if not camera is configured yet
@@ -222,7 +222,7 @@ class GlWindow():
         self.event_queue.queue(self.resize_callback)
         self.make_context()
         self.controller.camera.set_screensize((width, height))
-    
+
     def swap(self):
         glfwSwapBuffers(self._glfw_window)
 
@@ -238,9 +238,9 @@ class GlWindow():
     def make_context(self):
         glfwMakeContextCurrent(self._glfw_window)
         GlApplication.WINDOW_CURRENT = self
-        
+
     def cycle(self):
-        
+
         self.controller.cycle(**{
             'keyboard_active': self._keyboard_active,
             'keyboard_pressed': self._keyboard_pressed,

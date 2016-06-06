@@ -52,6 +52,44 @@ def plot2dColumns(f, n, **kwargs):
     app.run()
 
 
+def plot2dColumns_extended(f, n, fake=None, width=600, height=600, **kwargs):
+    window = GlWindow(width, height, 'Column plot')
+    app = GlApplication()
+    app.windows.append(window)
+
+    def merge(a,b):
+        c = a.copy()
+        c.update(b)
+        return c
+
+    plotters = None
+    if isinstance(n, list):
+        plotters = [plotter2d.Plotter(**merge(kwargs, args)) for args in n]
+    else:
+        plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
+
+    def bla():
+        print('CYCLE')
+
+    views = [[c for c in plotters]]
+    if fake and isinstance(fake, list):
+        plotters.extend(fake)
+        views.append(fake)
+    elif fake:
+        plotters.append(fake)
+        views.append([fake])
+
+    controller = FramelayoutController(views)
+    if hasattr(f, 'pre_cycle'):
+        controller.on_pre_cycle.append(f.pre_cycle)
+    window.set_controller(controller)
+
+    app.init()
+    f(plotters)
+
+    app.run()
+
+
 
 
 def plot2dMulti(fs, **kwargs):

@@ -18,7 +18,22 @@ to the implementation.
 
 images
 ------
+line plots
+
+<img src="/assets/demolines.png"  width="700"/>
+
+
+
+field plots
+
+
+<img src="/assets/demofield.png"  width="700"/>
+
+
+old images
+------
 first plots
+
 
 <img src="/firstplot.png"  width="300"/>
 

@@ -16,6 +16,10 @@ shader library
 programs find out which attributes and uniforms are present in 
 given shaders.
 
+XXX
+- interface blocks
+- register dtypes in some way?
+
 :author: Nicolas 'keksnicoh' Heimann 
 """
 from gllib.errors import GlError
@@ -50,7 +54,7 @@ class Shader():
         self.type = type
         self.gl_id = None
         
-        matches = re.findall(r'uniform\s+(\w+)\s+([\w]+)\s*=?\s*(.*?);', source, flags=re.MULTILINE)
+        matches = re.findall(r'uniform\s+(\w+)\s+([\w]+)\s*=?\s*(.*?)(?:\[\d+\])?;', source, flags=re.MULTILINE)
         self.uniforms = {k: (t, d) for t, k, d in matches}
         
         matches = re.findall(r'(in|out)\s+(\w+)\s+([\w]+).*?;', source, flags=re.MULTILINE)
@@ -210,6 +214,8 @@ class Program():
             glUniform1i(location, value)
         elif type == 'sampler2DMS':
             glUniform1i(location, value)
+        elif type == 'sampler2DArray':
+            glUniform1i(location, value)
         elif type == 'bool':
             glUniform1i(location, value)
         else:
@@ -223,15 +229,30 @@ class Program():
         for shader in self.shaders:
             if shader.type == GL_VERTEX_SHADER:
                 return shader
+
+    def get_geometry_shader(self):
+        """
+        returns geometry shader shader if appended
+        """
+        for shader in self.shaders:
+            if shader.type == GL_GEOMETRY_SHADER:
+                return shader
                       
     def _configure_attributes(self):
         """
         configures attributes cache
         """
+        self.attributes = {}
+
         vertex_shader = self.get_vertex_shader()
         if vertex_shader is not None:
             input_attributes = {k: d for k, d in vertex_shader.attributes.items() if d[0] == 'in'}
-            self.attributes = {k: glGetAttribLocation(self.gl_id, k) for k in input_attributes}
+            self.attributes.update({k: glGetAttribLocation(self.gl_id, k) for k in input_attributes})
+
+       # geom_shader = self.get_geometry_shader()
+       # if geom_shader is not None:
+       #     input_attributes = {k: d for k, d in geom_shader.attributes.items() if d[0] == 'in'}
+       #     self.attributes.update({k: glGetAttribLocation(self.gl_id, k) for k in input_attributes})
 
     def _configure_uniforms(self):
         """

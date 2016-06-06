@@ -2,13 +2,15 @@ from OpenGL.GL import *
 import numpy
 from camera import Camera2d
 from util import Event
-
+#
+# XXX
+# remove me asap
 class Controller():
     def __init__(self, camera=None):
         """
         initializes basic controller events
         """
-        self.camera = camera 
+        self.camera = camera
 
         self.on_init          = Event()
         self.on_pre_cycle     = Event()
@@ -27,7 +29,7 @@ class Controller():
         self.cursor = (0,0)
         self.on_pre_render.append(self.clear_gl)
 
-    def init(self): 
+    def init(self):
         self.on_init(self)
         self.camera.on_change_matrix.append(self.camera_updated)
         self.initialized = True
@@ -42,7 +44,7 @@ class Controller():
         self.on_cycle()
         self.on_render()
 
-    def cycle(self, 
+    def cycle(self,
         keyboard_active=set(),
         keyboard_pressed=set(),
         cursor=(0,0)):
@@ -53,7 +55,7 @@ class Controller():
 
         if self.cursor != cursor:
             self.on_cursor(cursor)
-            self.cursor = cursor 
+            self.cursor = cursor
 
 
         self.on_pre_render()

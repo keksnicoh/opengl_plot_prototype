@@ -18,6 +18,7 @@ DEFAULT_FONT = os.path.dirname(os.path.abspath(__file__))+'/../resources/fonts/a
 from copy import deepcopy
 import re
 
+SCALE = 1
 
 class Text():
     """
@@ -108,6 +109,19 @@ class Text():
             glyph                          = self.font.getmask(char)
             glyph_width, glyph_height      = glyph.size
             glyph_offset_x, glyph_offset_y = self.font.getoffset(char)
+            #print(dir(self.font))
+
+
+            glyph_offset_y = float(glyph_offset_y)/SCALE
+            #nit__', '__module__', 'font', 'getmask', 'getmask2', 'getmetrics', 'getname', 'getoffset', 'getsize']
+            #dd()
+            glyph_width /= SCALE
+            glyph_height /= SCALE
+            glyph_offset_x /= SCALE
+           #s glyph_offset_y /= SCALE
+            glyph_width = int(glyph_width)
+            glyph_height = int(glyph_height)
+            glyph_offset_x = int(glyph_offset_x)
 
             # special characters
             if char == FontRenderer.NEWLINE:
@@ -127,6 +141,7 @@ class Text():
             #    |   |
             #   (offset_x + size_x)
             vert_size = (glyph_width, glyph_height)
+
             vert_offset = (-glyph_offset_x, glyph_offset_y)
             self.vertex_data[n*12:(n+1)*12] = numpy.array([
                 relpos[0]+vert_offset[0],              relpos[1]+vert_offset[1],              #1 #left triangle
@@ -149,7 +164,8 @@ class Text():
             ], dtype=numpy.float32)
 
             # create final render data
-            ID = self._create_texture(char, glyph, glyph_width, glyph_height)
+            width, height = glyph.size
+            ID = self._create_texture(char, glyph, int(width), int(height))
             self.render_data[n] = [ID, None]
             max_line_height = max(max_line_height, vert_size[1])
 
@@ -166,13 +182,15 @@ class Text():
             glBindTexture (GL_TEXTURE_2D, ID)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
             glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-            tex2d = []
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+            tex2d = numpy.zeros(height*width+width*2, dtype=numpy.float32)
             for j in xrange (height):
                 for i in xrange (width):
                     value = glyph.getpixel ((i, j))
-                    tex2d.append(float(value)/255)
-            tex2d = numpy.array(tex2d, dtype=numpy.float32)
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED, GL_FLOAT, tex2d)
+                    tex2d[j*width+i] = float(value)/255
+            #tex2d = numpy.array(tex2d, dtype=numpy.float32)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height+2, 0, GL_RED, GL_FLOAT, tex2d)
             Text._TEXTURE_CACHE[(id(self.font), char)] = ID
         return Text._TEXTURE_CACHE[(id(self.font), char)]
 
@@ -458,6 +476,7 @@ class FontRenderer(renderer.Renderer):
         self.program.uniform('tex', 1)
         self.program.uniform('color', self.color)
 
+
         # Too many looops!!!!!!
         for name, layout in self.layouts.items():
             for (text, modelview) in layout.get_render_protocol():
@@ -474,7 +493,7 @@ class FontRenderer(renderer.Renderer):
                     glDrawArrays(GL_TRIANGLES, n*6, 6)
     
                 glBindVertexArray(0)
-        
+
         if GlApplication.DEBUG == True:
             self.program.uniform('debug', False)
         self.program.unuse()

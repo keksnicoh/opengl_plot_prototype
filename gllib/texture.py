@@ -95,9 +95,9 @@ class NumpyTexture():
             raise ValueError('channels must be in [1,2,3,4] actually is {}'.format(self.channels))
 
         glBindTexture(GL_TEXTURE_2D, self.gl_texture_id);
-        #glTexImage2D(GL_TEXTURE_2D, 0, texture_format, self.np_data.shape[1], self.np_data.shape[0], 0, texture_format, GL_FLOAT, self.np_data.flatten());
+       # glTexImage2D(GL_TEXTURE_2D, 0, texture_format, self.np_data.shape[1], self.np_data.shape[0], 0, texture_format, GL_FLOAT, self.np_data.flatten());
 
-        glTexImage2D(GL_TEXTURE_2D, 0, internal_texture_format, self.np_data.shape[0], self.np_data.shape[1], 0, texture_format, GL_FLOAT, self.np_data.flatten());
+        glTexImage2D(GL_TEXTURE_2D, 0, internal_texture_format, self.np_data.shape[1], self.np_data.shape[0], 0, texture_format, GL_FLOAT, self.np_data.flatten());
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         for parameter in self.gl_texture_parameters:

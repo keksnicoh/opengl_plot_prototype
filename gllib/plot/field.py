@@ -88,7 +88,7 @@ class Field():
             self._coord_top_left [0], self._coord_bottom_right[1], 
             self._coord_bottom_right[0], self._coord_bottom_right[1], 
             self._coord_bottom_right[0], self._coord_bottom_right[1], 
-            self._coord_bottom_right[0], self._coord_top_left [1], 
+            self._coord_bottom_right[0], self._coord_top_left[1], 
             self._coord_top_left [0], self._coord_top_left [1]
         ], dtype=np.float32).reshape(6,2)
 
@@ -127,6 +127,7 @@ class Field():
             'COLOR_KERNEL': str(self.color_scheme)
         })
 
+
         self.program = Program()
         self.program.shaders.append(Shader(GL_VERTEX_SHADER, load_lib_file('glsl/plot2d/field.vert.glsl')))
         self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, frag_src))
@@ -138,13 +139,19 @@ class Field():
         if hasattr(self.data_kernel, 'get_uniform_data'):
             for uniform in self.data_kernel.get_uniform_data().items():
                 self.program.uniform(*uniform)
+        self.initialized = True
 
     def update_plotmeta(self, plot_cam, outer_cam, *args, **kwargs):
         # not so nice ... but later refactoring ...
         self.program.uniform('mat_domain', np.identity(3))
         self.program.uniform('mat_camera', plot_cam)
         self.program.uniform('mat_outer_camera', outer_cam)
-
+        if hasattr(self.color_scheme, 'get_uniform_data'):
+            for uniform in self.color_scheme.get_uniform_data().items():
+                self.program.uniform(*uniform)
+        if hasattr(self.data_kernel, 'get_uniform_data'):
+            for uniform in self.data_kernel.get_uniform_data().items():
+                self.program.uniform(*uniform)
     def render(self, plotter):
         # final rendering
         glActiveTexture(GL_TEXTURE0);

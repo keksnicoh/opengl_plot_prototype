@@ -1,18 +1,18 @@
 from gllib.util import Event
-from gllib.buffer import * 
+from gllib.buffer import *
 from gllib.shader import *
 from gllib.helper import load_lib_file
 from gllib.matrix import ModelView
 from gllib.renderer.window import Framebuffer
 from gllib.texture import Texture
 
-import numpy as np 
-from OpenGL.GL import * 
+import numpy as np
+from OpenGL.GL import *
 
 class ShapeRenderer(object):
 
     def __init__(self, camera):
-        self._instances = {} 
+        self._instances = {}
         self._shape_vaos = {}
         self.on_instances_changed = Event()
         self.on_instances_changed.append(ShapeRenderer.update_shape_vaos)
@@ -60,7 +60,7 @@ class ShapeRenderer(object):
                     ', '.join(self.shapes.keys())
                 ))
             shape = self.shapes[shape]
-        return shape 
+        return shape
 
     def draw_instance(self, instance):
         shape = self._shape(instance)
@@ -101,7 +101,7 @@ class ShapeRenderer(object):
             for instance in instances:
                 # XXX
                 # - define the exact behavior of mix_texture.
-                if instance.texture is not None: 
+                if instance.texture is not None:
                     self.program.uniform('mix_texture', 1)
                     self.program.uniform('tex', 0)
                     glBindTexture(GL_TEXTURE_2D, instance.texture.gl_texture_id)
@@ -162,17 +162,17 @@ class ShapeRenderer(object):
                     glDrawArrays(GL_TRIANGLES, 0, 6)
 
             self._shape_vaos[shape_object_id].unbind()
-        self.border_program.unuse()   
+        self.border_program.unuse()
 
         glEnable(GL_BLEND)
 
 class ShapeInstance():
     def __init__(self, shape, size=(1,1), position=(0,0), color=[1,1,1,1], border=0, texture=None, mix_texture=1):
-        self.shape    = shape 
-        self.size     = size 
+        self.shape    = shape
+        self.size     = size
         self.texture  = texture
         self.color    = color
-        self.position = position 
+        self.position = position
         self.mix_texture = mix_texture
         self.border   = border if type(border) is dict else {
             'size': border,
@@ -182,23 +182,23 @@ class ShapeInstance():
     @property
     def border_size(self):
         return self.border['size']
-    
+
 class Rectangle():
     @property
     def verticies(self):
         return np.array([
-            0, 1, 
-            0, 0, 
-            1, 0, 
+            0, 1,
+            0, 0,
+            1, 0,
 
-            1, 0, 
-            1, 1, 
-            0, 1, 
+            1, 0,
+            1, 1,
+            0, 1,
         ], dtype=np.float32).reshape(6,2)
 
     @property
     def texture_coords(self):
         return np.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=np.float32).reshape(6,2)
-    
-  
+
+
 

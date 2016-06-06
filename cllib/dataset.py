@@ -2,14 +2,14 @@
 """
 dataset utilities
 
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
-import numpy as np 
+import numpy as np
 
 import argparse
 from collections import OrderedDict
 
-import os 
+import os
 
 class Dataset():
     """
@@ -38,11 +38,11 @@ class Dataset():
 
     def _read_parameters(self, parameters):
         """
-        read parameters by using numpy dtype defined 
+        read parameters by using numpy dtype defined
         in static member PARAMETERS = [(key, dtype, default)].
         note that if default is not None its value will be used
-        as default value for parameter k. If contains a callable 
-        it will be executed after all parameters was created. 
+        as default value for parameter k. If contains a callable
+        it will be executed after all parameters was created.
         """
         self.parameters = np.empty((1,), dtype=self._parameters_dtype)[0]
         callback_defaults = []
@@ -52,7 +52,7 @@ class Dataset():
                 self.parameters[k] = parameters[k]
             elif len(x) == 3:
                 if hasattr(x[2], '__call__'):
-                    callback_defaults.append((k,x[2]))
+                    callback_defaults.append((k, x[2]))
                 else:
                     self.parameters[k] = x[2]
             else:
@@ -63,13 +63,13 @@ class Dataset():
             self.parameters[k] = d(self)
 
     def cl_init(self, ctx, queue):
-        self.cl_ctx   = ctx 
-        self.cl_queue = queue 
+        self.cl_ctx   = ctx
+        self.cl_queue = queue
 
     @classmethod
     def _prepare_tasks(cls):
         tasks = getattr(cls, 'TASKS_QUEUE')
-        
+
         tasks_dict = OrderedDict()
         for task in tasks:
             name, declr = task
@@ -81,20 +81,22 @@ class Dataset():
         for task_id, declr in self._tasks.items():
             if task_id == run_until:
                 return
+
             self.run_task(task_id)
 
     def run_task(self, task_id):
         """
         runs a taks by its task_id.
-        please note the comments in here to get 
+        please note the comments in here to get
         an idea how to declare a task
         within the structure read by this method.
         """
         declr = self._tasks[task_id]
-        if not hasattr(declr, '__class__'): # if declr is a type then remap to minimal declr
+        if not hasattr(declr, '__class__'):  # if declr is a type then remap to minimal declr
             declr = {'cls': declr}
 
-        if not task_id in self._task_instances:
+        if task_id not in self._task_instances:
+
             # if declr is string and there is a attribute in this class
             # with that name, we will use that attribute
             if type(declr) is str:
@@ -103,11 +105,10 @@ class Dataset():
                 lcl = getattr(self, declr)
 
                 if task_id not in self.runners:
-                    result = lcl()
+                    result = lcl() if hasattr(lcl, '__call__') else lcl
                 else:
                     result = self.runners[task_id](self, lcl)
 
-                result = lcl() if hasattr(lcl, '__call__') else lcl
                 self.buffers.update(result or {})
                 return result or {}
 
@@ -117,14 +118,20 @@ class Dataset():
                     result = declr(self)
                 else:
                     result = self.runners[task_id](self, declr)
-                    
-                self.buffers.update(result or {})
-                return result or {} 
 
+                self.buffers.update(result or {})
+                return result or {}
+
+            elif type(declr) is dict and 'function' in declr:
+                args = declr.get('args', [])
+                kwargs = declr.get('kwargs', {})
+                result = getattr(self, declr['function'])(*args, **kwargs) or {}
+                self.buffers.update(result)
+                return result
 
             # create task instance.
             # arguments can be assigned as tuples (key, value)
-            # or as plain values. if value is a string and there 
+            # or as plain values. if value is a string and there
             # is a attribute within the dataset with name value,
             # then this value will be taken. if value is callable
             # then it will be called.
@@ -140,13 +147,13 @@ class Dataset():
                         val = val(self)
 
                     if type(arg) is tuple:
-                        cls_kwargs[v[0]] = val
+                        cls_kwargs[arg[0]] = val
                     else:
                         cls_args.append(val)
 
-            # run the task. decorate TypeError with some specific 
+            # run the task. decorate TypeError with some specific
             # information about the task.
-            
+
             if 'factory' in declr:
                 if type(declr['factory']) is str:
                     factory = getattr(self, declr['factory'])
@@ -180,7 +187,13 @@ class Dataset():
 
         # go
         if task_id not in self.runners:
-            result = self._task_instances[task_id].run()
+            task = self._task_instances[task_id]
+            if hasattr(task, 'run'):
+                result = task.run()
+            elif hasattr(task, '__call__'):
+                result = task()
+            else:
+                raise RuntimeError('task "{}" must have a run() or __call__() attribute'.format(task_id))
         else:
             result = self.runners[task_id](self, task)
 
@@ -196,7 +209,6 @@ class Dataset():
                     raise ValueError('keep_buffer bad entry')
 
         self.buffers.update(buffers)
-
         return result
 
     def persist(self, folder):

@@ -2,7 +2,7 @@ from gllib.renderer import window
 from gllib.matrix import ModelView
 from gllib.shader import *
 from gllib.helper import load_lib_file, resource_path
-from OpenGL.GL import * 
+from OpenGL.GL import *
 from gllib.renderer.font import FontRenderer, AbsoluteLayout, Text
 from gllib.buffer import VertexArray, VertexBuffer
 
@@ -15,12 +15,12 @@ YAXIS = 1
 ZAXIS = 2
 
 class Fixed():
-    def __init__(self, 
-        camera, 
+    def __init__(self,
+        camera,
         scale_camera,
         measurements,
         bgcolor,
-        size, 
+        size,
         modelview=None,
         linecolor=[1,1,1,1]):
 
@@ -35,12 +35,12 @@ class Fixed():
     def init(self):
         self._frame = window.Framebuffer(
             camera       = self.camera,
-            screensize   = self.size,  
+            screensize   = self.size,
             clear_color  = self.bgcolor,
             multisampling= 4,
             modelview    = self.modelview,
         )
-         
+
         scaling      = [0,0]
         scaling[0]   = self.size[0]
         scaling[1]   = self.scale_camera.get_scaling()[1]
@@ -62,7 +62,7 @@ class Fixed():
         self.program.shaders.append(Shader(GL_GEOMETRY_SHADER, load_lib_file('glsl/plot2d/axis/marker_y.geom.glsl')))
         self.program.shaders.append(Shader(GL_FRAGMENT_SHADER, load_lib_file('glsl/plot2d/axis/marker.frag.glsl')))
         self.program.link()
-        
+
         self.program.uniform('color', self.linecolor)
 
         self.vao = VertexArray({
@@ -98,7 +98,7 @@ class Fixed():
     def render(self):
         """
         renders the axis.
-        also checks whether there is a change in screensize or whether the 
+        also checks whether there is a change in screensize or whether the
         object was ininzialized.
         """
         self._frame.use()
@@ -118,12 +118,12 @@ class Fixed():
 
 
 class Scale():
-    def __init__(self, 
-        camera, 
-        scale_camera, 
-        size, 
-        axis=0, 
-        unit=1, 
+    def __init__(self,
+        camera,
+        scale_camera,
+        size,
+        axis=0,
+        unit=1,
         subunits=9,
         unit_symbol=u'',
         bgcolor=[1,1,1,1],
@@ -134,11 +134,11 @@ class Scale():
         self._font_renderer       = None
 
         self.unit                 = unit
-        self.subunits             = subunits 
+        self.subunits             = subunits
         self.size                 = size
-        self.initialized          = False 
+        self.initialized          = False
         self.modelview            = ModelView()
-        self.camera               = camera 
+        self.camera               = camera
         self.linecolor            = linecolor
         self.fontcolor            = fontcolor
         self.unit_symbol = unit_symbol or ''
@@ -153,18 +153,19 @@ class Scale():
         self._scale_camera        = scale_camera
         self._initial_size        = [size[0],size[1]]
         self.vao = None
+        self._labels =  []
 
     def unit_density_factor(self, capture_size):
         density = 80
         size = capture_size
-        f = 1.0 
+        f = 1.0
         last_diff = density - size
         while True:
             if last_diff < 0:
                 if size*f < 2*density:
-                    f *= 0.5 
+                    f *= 0.5
                     break
-                f *= 0.5 
+                f *= 0.5
             else:
                 if 2*size*f > density:
                     break
@@ -188,7 +189,6 @@ class Scale():
         self.init_capturing()
         self.initialized = True
 
-
     def init_shader(self):
         """
         initializes shader
@@ -201,7 +201,7 @@ class Scale():
         axis_program.shaders.append(geometry_shader)
         axis_program.shaders.append(fragment_shader)
         axis_program.link()
-        self.axis_program = axis_program   
+        self.axis_program = axis_program
 
         self.axis_program.use()
         #self.axis_program.uniform('mat_modelview', numpy.array([1,0,0,0, 0,1,0,0, 0,0,1,0, 0,0,0,1], dtype=numpy.float32))
@@ -213,33 +213,34 @@ class Scale():
         initializes capturing of a unit
         """
 
-        # create framebuffer for one scale unit. 
+        # create framebuffer for one scale unit.
         unit_size    = float(self.unit)/self._scale_camera.get_scaling()[self._axis]
         capture_size = [0,0]
         capture_size[self._axis]   = float(unit_size)*float(self._initial_size[self._axis])
         capture_size[self._axis^1] = self.size[self._axis^1]
         self._unit_f = self.unit_density_factor(capture_size[self._axis])
         capture_size[self._axis]   *= self.unit_density_factor(capture_size[self._axis])
-
         #if self._frame is None:
         frame = window.Framebuffer(
             camera       = self.camera,
-            screensize   = self.size,  
+            screensize   = self.size,
             capture_size = capture_size,
-            screen_mode  = window.Framebuffer.SCREEN_MODE_REPEAT, 
+            screen_mode  = window.Framebuffer.SCREEN_MODE_REPEAT,
             clear_color  = self.bgcolor,
-            multisampling= 4,
+            multisampling= 1,
             modelview    = self.modelview,
         )
-        
+
+        frame.inner_camera.set_scaling(self.size)
+
         self._frame = frame
 
         self._frame.init()
 
-        # create a special scaling. 
+        # create a special scaling.
         # in self._axis direction the scaling should be like unit scaling,
-        # on the perpendicular axis the scaling should be like the scaling 
-        # from frame space. 
+        # on the perpendicular axis the scaling should be like the scaling
+        # from frame space.
         scaling               = [0,0]
         scaling[self._axis]   = self.unit
         scaling[self._axis^1] = self._frame.inner_camera.get_scaling()[self._axis^1]
@@ -247,7 +248,7 @@ class Scale():
         #scaling = capture_size
         self._frame.inner_camera.set_scaling(scaling)
         self._frame.inner_camera.set_screensize(capture_size)
-        
+
         if self._axis == 0:
             self._frame.inner_camera.set_base_matrix(np.array([
                 1, 0, 0, 0,
@@ -268,7 +269,12 @@ class Scale():
         # set init state
         self._last_size = self.size[:]
         self._last_screen_scaling = self._scale_camera.get_screen_scaling()
-        
+
+    @property
+    def labels(self):
+        return self._labels
+
+
     def _init_capturing_vbo(self):
         data = numpy.zeros(self.subunits*2+2, dtype=numpy.float32)
         if self._axis == 0:
@@ -277,7 +283,7 @@ class Scale():
             data[1] = 10
             for i in range(1, self.subunits):
                 data[2*i+2] = subunit*i+subunit/2
-                data[2*i+3] = 3   
+                data[2*i+3] = 3
         else:
             subunit = float(self.unit)/self.subunits
             data[0] = subunit/2
@@ -290,7 +296,7 @@ class Scale():
         vbo = glGenBuffers(1)
 
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)  
+        glBufferData(GL_ARRAY_BUFFER, ArrayDatatype.arrayByteCount(data), data, GL_STATIC_DRAW)
         glBindBuffer(GL_ARRAY_BUFFER, 0)
 
         glBindVertexArray(self.vao)
@@ -304,6 +310,7 @@ class Scale():
         """
         prepares axis fonts
         """
+        self._labels = []
         capture_size = self._frame.capture_size[self._axis]
         translation  = self._translation%self._frame.capture_size[self._axis]
         size         = self._last_size[self._axis] + translation
@@ -317,14 +324,16 @@ class Scale():
         if self._axis == 0:
             position = [translation,20]
             for i in range(0, unit_count):
-                text = Text(self.format_number(self._unit_f*(i-start_unit), self.unit_symbol), self._font)
-                axis_flayout.add_text(text, (position[0], position[1]))
+                label = self.format_number(self._unit_f*(i-start_unit), self.unit_symbol)
+                self._labels.append((position[0], label))
                 position[self._axis] += capture_size
         else:
             position = [self.size[0]-15,size-capture_size]
             for i in range(0, unit_count):
-                text = Text(self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol), self._font)
-                axis_flayout.add_text(text, (position[0], position[1]))
+                label = self.format_number(self._unit_f*(start_unit+i+1), self.unit_symbol)
+              #  text = Text(label, self._font)
+              #  axis_flayout.add_text(text, (position[0], position[1]))
+                self._labels.append((position[1], label))
                 position[self._axis] -= capture_size
 
     def format_number(self, number, symbol):
@@ -353,7 +362,7 @@ class Scale():
         self.axis_program.uniform('mat_outer_camera', self._frame.camera.get_matrix())
         self.axis_program.unuse()
         # if screen-scaling of the scale_camera has changed
-        # we need to initialize capturing of the axis for this size. 
+        # we need to initialize capturing of the axis for this size.
         # this happens for example when the zoom changed.
         if self._last_screen_scaling != self._scale_camera.get_screen_scaling():
             self.init_capturing()
@@ -384,16 +393,16 @@ class Scale():
     def render(self):
         """
         renders the axis.
-        also checks whether there is a change in screensize or whether the 
+        also checks whether there is a change in screensize or whether the
         object was ininzialized.
         """
         if not self.initialized:
             self.init()
-            
+
         elif not self._last_size == self.size:
             self._frame.screensize = self.size
             self._frame.init_screen()
-            self._last_size = self.size 
+            self._last_size = self.size
 
         if not self._frame.has_captured():
             self.prepare_fonts()

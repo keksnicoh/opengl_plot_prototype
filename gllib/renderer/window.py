@@ -1,11 +1,11 @@
 #-*- coding: utf-8 -*-
 """
 framebuffer utilities
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
 
 from gllib.renderer import renderer
-from gllib.shader import Program, Shader 
+from gllib.shader import Program, Shader
 from gllib.camera import Camera2d
 from gllib import matrix
 from gllib import glutil
@@ -14,20 +14,20 @@ from gllib.application import GlApplication
 from gllib.errors import GlError
 from gllib.matrix import ModelView
 from gllib.gltype import *
-from OpenGL.GL import * 
+from OpenGL.GL import *
 import numpy
 import logging
 
 class Framebuffer(renderer.Renderer):
     """
     enables to record a scene to a framebuffer
-    and renders the scene to screen. 
+    and renders the scene to screen.
     has a lot of usefull features and settings:
-    
+
     screensize: size of the screen in main frame
     capture_size: size of the screen in inner frame
 
-    screen_mode: whether the captured scene should be streched over to 
+    screen_mode: whether the captured scene should be streched over to
       screenplane or should be repeated (if capture size is smaller than screensize).
       (SCREEN_MODE_STRECH, SCREEN_MODE_REPEAT)
 
@@ -37,7 +37,7 @@ class Framebuffer(renderer.Renderer):
     - RECORD_TRACK_COMPLEX: another framebuffer keeps track of the last rendered scene.
         on next scene record the last record will be rendered to background.
         it is possible to define a custom shader.
-    
+
     border: can be a custom object with some required method which is rendered
       after rendering the plane. allows to decorate the plane.
 
@@ -65,20 +65,20 @@ class Framebuffer(renderer.Renderer):
     """
     simple framebuffer which renders to a 2d plane.
     """
-    def __init__(self, 
-        camera, 
-        screensize, 
-        capture_size = None, 
+    def __init__(self,
+        camera,
+        screensize,
+        capture_size = None,
         screen_mode  = SCREEN_MODE_STRECH,
         record_mode  = RECORD_CLEAR,
-        inner_camera = None, 
+        inner_camera = None,
         blit_texture = False,
         modelview    = None,
         clear_color  = [0,0,0,1],
         multisampling = None):
         """
         initializes attributes
-        :param camera: camera instance 
+        :param camera: camera instance
         :param screensize: inner screensize
         :param inner_camera: inner camera
         :param clear_color: inner clear color
@@ -93,17 +93,17 @@ class Framebuffer(renderer.Renderer):
         self.program            = None
         self.screen_translation = [0,0]
         self.modelview          = modelview or ModelView()
-        self.record_mode        = record_mode 
+        self.record_mode        = record_mode
         self.record_program     = None
         self.custom_texture_filters = None
-        self.multisampling = multisampling or 1 
+        self.multisampling = multisampling or 1
         self.blit_texture = blit_texture
 
         if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
             self.blit_texture = True
 
-        self._rgb_texture_id          = None 
-        self._framebuffer_id          = None 
+        self._rgb_texture_id          = None
+        self._framebuffer_id          = None
         self._outer_viewport          = None
         self._outer_clear_value       = None
         self._last_capture_size       = None
@@ -121,7 +121,7 @@ class Framebuffer(renderer.Renderer):
 
     def __del__(self):
         """
-        Delete opengl data 
+        Delete opengl data
         """
         if self._rgb_texture_id is not None:
             glDeleteTextures([self._rgb_texture_id])
@@ -134,7 +134,7 @@ class Framebuffer(renderer.Renderer):
             return self._record_texture_id
 
         return self._rgb_texture_id
-     
+
 
     def init(self):
         glEnable( GL_MULTISAMPLE )
@@ -200,8 +200,8 @@ class Framebuffer(renderer.Renderer):
         init vbo and stuff from the screen plane
         """
         vertex_position = numpy.array([
-            0, self.screensize[1], 0, 0, self.screensize[0], 0, self.screensize[0], 0, 
-            self.screensize[0], self.screensize[1], 0, self.screensize[1], 
+            0, self.screensize[1], 0, 0, self.screensize[0], 0, self.screensize[0], 0,
+            self.screensize[0], self.screensize[1], 0, self.screensize[1],
         ], dtype=numpy.float32)
         tex_position = numpy.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=numpy.float32)
 
@@ -240,7 +240,7 @@ class Framebuffer(renderer.Renderer):
         #glTexParameterf(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MAG_FILTER, GL_NEAREST)
         #glTexParameterf(GL_TEXTURE_2D_MULTISAMPLE, GL_TEXTURE_MIN_FILTER, GL_NEAREST)
         #self._rgb_texture_id = glutil.simple_texture(self.capture_size, parameters=self.custom_texture_filters or [
-        #    # those filters enable translation on 
+        #    # those filters enable translation on
         #    # texture without anyoing blur effects.
         #    (GL_TEXTURE_MAG_FILTER, GL_NEAREST),
         #    (GL_TEXTURE_MIN_FILTER, GL_NEAREST),
@@ -271,13 +271,13 @@ class Framebuffer(renderer.Renderer):
             if self.multisampling < 2:
                 raise e
             logging.warning('could not create multisample texture. maybe multisampling=%s is too high? gonna disable multisampling ...', self.multisampling)
-            self.multisampling = 1 
+            self.multisampling = 1
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, self.multisampling, GL_RGBA, numpy.int32(self.capture_size[0]), numpy.int32(self.capture_size[1]), False );
         return textid
 
     def init_record_track_complex(self):
         """
-        initializes texture and framebuffer for complex record 
+        initializes texture and framebuffer for complex record
         mode. the second framebuffer is required to swap old framebuffer
         content to the record_texture
         """
@@ -285,14 +285,14 @@ class Framebuffer(renderer.Renderer):
             if self._record_texture_id is not None:
                 glDeleteTextures([self._record_texture_id])
 
-            self._record_texture_id = glutil.simple_texture(self.capture_size)  
+            self._record_texture_id = glutil.simple_texture(self.capture_size)
             if self._record_framebuffer_id is None:
                 self._record_framebuffer_id = glGenFramebuffers(1);
-                
+
             glBindFramebuffer(GL_READ_FRAMEBUFFER, self._record_framebuffer_id)
             glReadBuffer(GL_COLOR_ATTACHMENT0)
             glFramebufferTexture(GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, self._record_texture_id, 0);
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)      
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0)
 
         if self.record_mode == Framebuffer.RECORD_TRACK_COMPLEX:
             self._record_captured = False
@@ -322,7 +322,7 @@ class Framebuffer(renderer.Renderer):
         changed this method will return true
         """
         return (
-            self._last_screensize != self.screensize 
+            self._last_screensize != self.screensize
             or self._last_capture_size != self.capture_size
             or self._texture_matrix_changed
             or self._last_screen_translation != self.screen_translation
@@ -330,7 +330,7 @@ class Framebuffer(renderer.Renderer):
 
     def _get_texture_matrix(self):
         """
-        returns a texture matrix 
+        returns a texture matrix
         """
         self._last_screen_translation = self.screen_translation[:]
         if self.screen_mode == Framebuffer.SCREEN_MODE_STRECH:
@@ -347,7 +347,7 @@ class Framebuffer(renderer.Renderer):
                 'Framebuffer.SCREEN_MODE_REPEAT'
             ])))
 
-    # --- IMPORTANT PUBLIC METHODS 
+    # --- IMPORTANT PUBLIC METHODS
 
     def update_modelview(self):
         self.program.uniform('mat_modelview', self.modelview)
@@ -364,18 +364,18 @@ class Framebuffer(renderer.Renderer):
         """
         returns whether the framebuffer has allready
         been used or not. also if capture_size has changed
-        this method will return True 
+        this method will return True
         """
         return self._has_captured and self._last_capture_size == self.capture_size
 
     def use(self):
         """
         start rendering to a framebuffer.
-        keeps old opengl values and restores them 
+        keeps old opengl values and restores them
         after finishing
         """
         #logging.debug('start using window.Framebuffer %s', self)
-  
+
         if self._last_capture_size != self.capture_size:
             self.init_capturing()
 
@@ -432,7 +432,7 @@ class Framebuffer(renderer.Renderer):
 
     def render(self):
         """
-        renders the plane 
+        renders the plane
         """
         if self._last_screensize != self.screensize:
             self.init_screen()

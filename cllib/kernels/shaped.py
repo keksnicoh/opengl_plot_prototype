@@ -195,6 +195,7 @@ void {{{KERNEL_NAME}}}(
         })
         self._kernel = cl.Program(self.ctx, src.encode('ascii')).build()
         self._kernel_args = [a[0] for a in arguments]
+        self.src = src
         return src
 
     def __call__(self, queue, length, *args, **kwargs):
@@ -205,7 +206,7 @@ void {{{KERNEL_NAME}}}(
             self.build()
 
         if self._kernel_local is None:
-            length = (length, )
+            length = (length, ) if type(length) is not tuple else length
         elif len(self._kernel_local) == 1:
             length = (length*self._kernel_local[0], )
         elif len(self._kernel_local) == 2:

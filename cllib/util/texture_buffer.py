@@ -2,7 +2,7 @@
 """
 texture buffer utilities
 
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
 from cllib.common import kernel_helpers
 
@@ -12,7 +12,7 @@ import pyopencl as cl
 
 class BufferToTexture():
     """
-    converts opencl buffer to an opengl texture 
+    converts opencl buffer to an opengl texture
     by a given mapping expression
 
     :arg ctx:
@@ -25,17 +25,17 @@ class BufferToTexture():
         self.size = size
         self.map_expr = map_expr
         self.shape = shape or size
-        self.arguments = arguments 
+        self.arguments = arguments
         self.kernel_name = 'foo'
-        self._kernel = None 
-        self._kernel_args = None 
-        
+        self._kernel = None
+        self._kernel_args = None
+
     def build(self):
         SOURCE = """
         #define HEIGHT {{HEIGHT}}
         #define WIDTH {{WIDTH}}
         {{{LIBS}}}
-        {{{STRUCTS}}}        
+        {{{STRUCTS}}}
         __kernel void {{NAME}}({{ARGS}}, __write_only image2d_t _outtex) {
             int _x = get_global_id(0);
             int _y = get_global_id(1);
@@ -46,7 +46,7 @@ class BufferToTexture():
             write_imagef(_outtex, __FIELD, {{MAP_EXPR}});
         }
         """
-        arguments, strcts, cl_arg_declr, includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], self.arguments)
+        arguments, strcts, cl_arg_declr, includes, _ = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], self.arguments)
         src = pystache.render(SOURCE, {
             'ARGS'    : ', '.join(cl_arg_declr),
             'NAME'    : self.kernel_name,
@@ -83,7 +83,7 @@ class BufferToTexture():
 
         cl.enqueue_acquire_gl_objects(queue, enq)
         getattr(self._kernel, self.kernel_name)(queue, tuple([int(a) for a in self.size]), None, *arguments)
-        cl.enqueue_release_gl_objects(queue, enq) 
+        cl.enqueue_release_gl_objects(queue, enq)
 
     def run(self, queue, length, *args, **kwargs):
         """
@@ -91,6 +91,6 @@ class BufferToTexture():
         """
         if self._kernel is None:
             self.build()
-            
+
         arguments = kernel_helpers.create_knl_args_ordered(self._kernel_args, args, kwargs)
         getattr(self._kernel, self.kernel_name)(queue, tuple([int(a) for a in self.size]), None, *arguments)

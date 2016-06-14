@@ -289,7 +289,7 @@ class TextObject(object):
                     elif self.opcode[self.ptr][0] == LEXER.T_LOWER:
                         self.position_stack.append((self.position[0], self.position[1]))
                         self.offset.append([self.offset[-1][0] - self.size[-1]*0.05, self.offset[-1][1] + self.size[-1]*0.45])
-                        self.size.append(self.size[-1]*0.7)
+                        self.size.append(self.size[-1]*0.85)
                         self.ptr += 1
 
                     elif self.opcode[self.ptr][0] == LEXER.T_LOWER_END:

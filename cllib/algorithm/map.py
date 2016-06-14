@@ -2,26 +2,26 @@
 """
 algorithms to map data
 
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
 from cllib.common import kernel_helpers
 
 import pystache
 from copy import copy
 import pyopencl as cl
-import pyopencl.tools 
+import pyopencl.tools
 
 from operator import mul
-import numpy as np 
+import numpy as np
 
 class Blockwise():
     """
-    Kernel maps structured chunks to structured chunks. 
+    Kernel maps structured chunks to structured chunks.
 
     XXX
-    - test me 
-    - fix redundancy, 
-    - examples.  
+    - test me
+    - fix redundancy,
+    - examples.
     """
     _SOURCE = """
 #pragma OPENCL EXTENSION cl_khr_fp64 : enable
@@ -33,9 +33,9 @@ class Blockwise():
 
 {{{PROCEDURE_FUNCTIONS}}}
 
-__kernel 
+__kernel
 void {{{KERNEL_NAME}}}(
-    {{{PROCEDURE_ARGUMENTS}}}) 
+    {{{PROCEDURE_ARGUMENTS}}})
 {
     {{IDS}}
     {{{PROCEDURE}}}
@@ -43,16 +43,16 @@ void {{{KERNEL_NAME}}}(
 }
     """
 
-    def __init__(self, 
-        ctx, 
+    def __init__(self,
+        ctx,
         map_expr=None,
-        arguments=None, 
-        in_blocksize=1, 
+        arguments=None,
+        in_blocksize=1,
         out_blocksize=None,
         block_shape=None,
         libraries='',
         threads=None,
-        name='_map_kernel', 
+        name='_map_kernel',
     ):
         if type(map_expr) is not str \
            and kernel_helpers.get_attribute_or_item(map_expr, 'map_expr') is None:
@@ -67,13 +67,13 @@ void {{{KERNEL_NAME}}}(
         self.arguments      = arguments
 
         self.libraries      = libraries
-        self.includes       = None 
+        self.includes       = None
         self.threads        = threads
         self._kernel_layout = None
         self._arguments     = []
         self._kernel_args   = None
         self._kernel        = None
-        self._kernel_local  = None 
+        self._kernel_local  = None
 
     def build(self, caardinality=1, dimension=1):
         if hasattr(self.map_expr, 'build'):
@@ -104,7 +104,7 @@ void {{{KERNEL_NAME}}}(
         # find structures.
         # XXX
         # - helper function
-        arguments, strcts, cl_arg_declr, arg_includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+        arguments, strcts, cl_arg_declr, arg_includes, _ = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
         includes += arg_includes
 
         cl_includes = ['#include <{}>'.format(path) for path in set(includes)]
@@ -140,9 +140,9 @@ void {{{KERNEL_NAME}}}(
                 thread_constants = self._kernel_local
                 nthreads = len(self._kernel_local)
 
-                get_local_id = lambda i: 'get_local_id({})'.format(i)                
+                get_local_id = lambda i: 'get_local_id({})'.format(i)
                 itemid = 'int{n} __item_id = (int{n})({ids});'.format(
-                    n='' if nthreads == 1 else nthreads, 
+                    n='' if nthreads == 1 else nthreads,
                     ids=','.join([get_local_id(i) for i in range(0, len(thread_constants))]))
                 if nthreads == 1:
                     cl_item_var += itemid+"""
@@ -169,17 +169,17 @@ void {{{KERNEL_NAME}}}(
                 cl_constants.append(('THREAD_X', thread_constants[0]))
                 cl_constants.append(('THREAD_Y', thread_constants[1]))
                 cl_constants.append(('THREAD_Z', thread_constants[2]))
-            else:   
+            else:
                 # XXX
                 # - does a n>3 case make sense? check opencl specs...
                 raise NotImplemented('not implemented yet')
-            
+
         src = pystache.render(Blockwise._SOURCE, {
             'INCLUDES'           : '\n'.join(cl_includes),
             'STRUCTS'            : '\n'.join(strcts),
             'PROCEDURE'          :  map_expr,
-            'IDS'                : cl_item_var,           
-            'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,      
+            'IDS'                : cl_item_var,
+            'CONSTANTS'          : '\n'.join(['#define {} {}'.format(*x) for x in cl_constants])     ,
             'PROCEDURE_ARGUMENTS': ', \n    '.join(cl_arg_declr),
             'PROCEDURE_FUNCTIONS': libraries,
             'KERNEL_NAME'        : self.name,
@@ -211,7 +211,7 @@ void {{{KERNEL_NAME}}}(
 
     def __str__(self):
         """
-        readable representation of kernel delcaration 
+        readable representation of kernel delcaration
         """
         return '{}({})'.format(self.name, ', '.join(self._kernel_args))
 
@@ -228,14 +228,14 @@ void {{{KERNEL_NAME}}}(
 
 
 
-# DEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATED 
+# DEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATEDDEPRECATED
 
 
 
 
 class MatrixElementWise():
     """
-    mapper for matrix structures.    
+    mapper for matrix structures.
     """
     _SOURCE = """
 #define DIM {{{DIM}}}
@@ -244,9 +244,9 @@ class MatrixElementWise():
 
 {{{PROCEDURE_FUNCTIONS}}}
 
-__kernel 
+__kernel
 void {{{KERNEL_NAME}}}(
-    {{{PROCEDURE_ARGUMENTS}}}) 
+    {{{PROCEDURE_ARGUMENTS}}})
 {
     int2 _FIELD  = (int2)(get_global_id(0), get_global_id(1));
     int _ITEMID = (get_global_size(0)*_FIELD.y + _FIELD.x);
@@ -259,13 +259,13 @@ void {{{KERNEL_NAME}}}(
 }
     """
 
-    def __init__(self, 
-        ctx, 
-        operation, 
-        layout=(1,1), 
-        name='_map_kernel', 
+    def __init__(self,
+        ctx,
+        operation,
+        layout=(1,1),
+        name='_map_kernel',
         map_expr=None,
-        arguments=None, 
+        arguments=None,
         postprocess='float*'
     ):
         self.map_expr = map_expr
@@ -292,7 +292,7 @@ void {{{KERNEL_NAME}}}(
 
         argument_list = self.operation.arguments
 
-        layout = self.operation.mapping_declaration 
+        layout = self.operation.mapping_declaration
         domain, out_domain = [s.strip() for s in layout.split('->')]
         domain_split = [_read_factors(d.strip()) for d in domain.split(',')]
         kernel_layout = [_evaluate_factor(d.strip(), *self.layout[0:2]) for d in domain.split(',')]
@@ -327,13 +327,13 @@ void {{{KERNEL_NAME}}}(
                     pp_layout = pp['layout']
 
             if hasattr(pp, 'arguments'):
-                pp_args = pp.arguments 
+                pp_args = pp.arguments
             if hasattr(pp, 'code'):
-                pp_code = pp.code 
+                pp_code = pp.code
             if hasattr(pp, 'library'):
-                pp_lib = pp.library 
+                pp_lib = pp.library
             if hasattr(pp, 'layout'):
-                pp_layout = pp.layout 
+                pp_layout = pp.layout
 
         _pp_map_expr = 'postprocess with mapexpression is not allowed when operation does not provide map expression'
         if map_expr is not None:
@@ -387,7 +387,7 @@ void {{{KERNEL_NAME}}}(
                 raise ValueError('argument "{}" missing for {}'.format(name, self))
             arguments.append(kwargs[name])
             del kwargs[name]
-            
+
         if len(kwargs):
             for key in kwargs:
                 if key in self._kernel_args:
@@ -399,7 +399,7 @@ void {{{KERNEL_NAME}}}(
             raise ArgumentError('unkown arguments: {}'.format(', '.join(kwargs.keys())))
 
         layout = (length,)
-        if self._kernel_layout is not None: 
+        if self._kernel_layout is not None:
             layout = self._kernel_layout
             if layout[0]*layout[1] < length:
                 raise Exception('SCHEISSE')
@@ -420,7 +420,7 @@ def _evaluate_factor(factor, caard, dim):
         if char in is_number:
             if has_symbol:
                 raise ValueError('numbers are only allowed in front of symbols')
-            expr += char 
+            expr += char
         elif char == 'c':
             if len(expr):
                 factors.append(float(expr))
@@ -444,7 +444,7 @@ def _read_factors(descr, postfix='*'):
         if char in is_number:
             if has_symbol:
                 raise ValueError('numbers are only allowed in front of symbols')
-            expr += char 
+            expr += char
             has_chars = True
         elif char == 'c':
             if not has_chars:

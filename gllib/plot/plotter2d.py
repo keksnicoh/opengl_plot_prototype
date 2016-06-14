@@ -168,6 +168,10 @@ class Plotter(object, Controller):
         self._colorlegend_graph     = None
         self._colorlegend_texts = []
 
+        self.xlabel_text = None
+        self.ylabel_text = None
+        self.title_text = None
+
         self._fntrenderer = FontRenderer2()
         self._fntlayout = AlignedLayout(self.camera)
         self.on_cursor.append(self.cursor_reload)
@@ -469,6 +473,9 @@ class Plotter(object, Controller):
                 size=self.color_scheme['xlabel-fontsize'],
                 color=hex_to_rgba(self.color_scheme['font-color']),
                 enable_simple_tex=True)
+
+            self.xlabel_text = text
+
             self._fntlayout.add_text(text, 'x-center', ('bottom', 5))
 
         if self._ylabel is not None:
@@ -479,6 +486,9 @@ class Plotter(object, Controller):
                 color=hex_to_rgba(self.color_scheme['font-color']),
                 enable_simple_tex=True)
             axis_space[3] += self.color_scheme['ylabel-boxheight']
+
+            self.ylabel_text = text
+
             self._fntlayout.add_text(text, 'y-center')
 
         if self._title is not None:
@@ -488,6 +498,9 @@ class Plotter(object, Controller):
                 color=hex_to_rgba(self.color_scheme['font-color']),
                 enable_simple_tex=True)
             axis_space[0] += self.color_scheme['title-boxheight']
+
+            self.title_text = text
+
             self._fntlayout.add_text(text, 'x-center')
 
         self._plotplane_margin = axis_space
@@ -1068,11 +1081,11 @@ from copy import deepcopy
 BLA_COLORS = deepcopy(DEFAULT_COLORS)
 BLA_COLORS['graph-colors'] = []
 BLA_COLORS.update({
-    'bgcolor'              : '142638ff',
+    'bgcolor'              : '041117ff',
     'plotplane-bgcolor'    : '000000aa',
-    'plotplane-bordercolor': 'ffffffff',
-    'font-color'           : 'ffffffff',
-    'axis-fontcolor'           : 'ffffffff',
+    'plotplane-bordercolor': 'ff5555ff',
+    'font-color'           : 'ffffaaff',
+    'axis-fontcolor'           : 'ffffaaff',
 
     'select-area-bgcolor'  : 'aaaaaa66',
     'select-area-pending-bgcolor'  : 'FF990066',
@@ -1082,19 +1095,19 @@ BLA_COLORS.update({
 
     'xaxis-bgcolor'        : '020609ff',
     'yaxis-bgcolor'        : '020609ff',
-    'xaxis-linecolor'      : 'ffffffff',
+    'xaxis-linecolor'      : 'ff5555bb',
     'xaxis-bgcolor'        : '00333300',
     'xaxis-fontcolor'      : 'ffffffff',
-    'yaxis-linecolor'      : 'ffffffff',
+    'yaxis-linecolor'      : 'ff5555bb',
     'yaxis-bgcolor'        : '00333300',
-    'yaxis-fontcolor'      : 'ffffffff',
+    'yaxis-fontcolor'      : 'ff5555ff',
 
     'plotframe-border-size': 1,
-    'plotframe-border-color': 'ffffffff',
+    'plotframe-border-color': 'ff5555ff',
     'graph-colors': [
         'FC82C3ff',
         '2FB5F3ff',
-        'E1C829ff',
+        'F1D859ff',
         '3ADD00ff',
         '00ffffff',
         'f0f0f0ff',

@@ -95,14 +95,14 @@ class LegendWidget(PlotterWidget):
             return
 
         offsetx = 50
-        yskip = 0
+        yskip = 4
         maxx = 0
         y = 0
         self.grid = []
         gridy = 0
         for gid, graph in self.graphs.items():
             label = graph.label if hasattr(graph, 'label') and graph.label is not None else gid
-            text = self.font_renderer.create_text(label, 12, (offsetx, y))
+            text = self.font_renderer.create_text(label, 12, (offsetx, y), enable_simple_tex=True)
 
             w, h = text.get_boxsize()
 
@@ -112,7 +112,7 @@ class LegendWidget(PlotterWidget):
             y += h + yskip
             maxx = max(maxx, w)
 
-        self.size = (maxx + offsetx, y+3)
+        self.size = (maxx + offsetx, y+3+yskip)
         self.plane.size = self.size
 
         self.framebuffer.screensize = self.size

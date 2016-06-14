@@ -24,7 +24,7 @@ class Related():
 	SORT_KERNEL = """
 		{{{LIBS}}}
 		{{{STRUCTS}}}
-	__kernel void bubble_sort(__global float* values, {{{RELATED_BUFFERS}}}) 
+	__kernel void bubble_sort(__global float* values, {{{RELATED_BUFFERS}}})
 		{
 			int glid = get_global_id(0);
 
@@ -49,7 +49,7 @@ class Related():
 				if (c>{{{DIMENSION}}}) {
 					did_change_something = false;
 				}
-			}	
+			}
 		}
 	"""
 
@@ -57,7 +57,7 @@ class Related():
 		self.ctx = ctx
 		self._key_shape = key_shape
 
-		is_tuple  = lambda x: type(x) is tuple 
+		is_tuple  = lambda x: type(x) is tuple
 		only_type = lambda x: len(x) == 1
 		get_bs    = lambda x: x[1] if is_tuple(x) and not only_type(x) else 1
 		get_dtype = lambda x: x[0] if is_tuple(x) else x
@@ -74,13 +74,13 @@ class Related():
 
 	def build(self, descending=False):
 		arguments = [('r_{}'.format(i), 'global', x[0], '*r_{}'.format(i)) for i, x in enumerate(self._blocksizes)]
-		arguments, strcts, cl_arg_declr, includes = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
+		arguments, strcts, cl_arg_declr, includes, _ = kernel_helpers.process_arguments_declaration(self.ctx.devices[0], arguments)
 
 		related_buffer_blocks = [self._build_related_buffer_block(i, (arguments[i][2], x[1]))  for i, x in enumerate(self._blocksizes)]
 
 		src = pystache.render(self.SORT_KERNEL, {
 			'LIBS': '\n'.join('#include <{}>'.format(i) for i in includes),
-			'STRUCTS': '\n'.join(strcts), 
+			'STRUCTS': '\n'.join(strcts),
 		    'RELATED_BUFFERS': ', '.join(cl_arg_declr),
 		    'SHIFT_RELATED_BUFFERS': '\n'.join(related_buffer_blocks),
 		    'ORDER': '<' if descending else '>',
@@ -109,7 +109,7 @@ if __name__ == '__main__':
 	gpu_device = devices[1]
 	ctx    = cl.Context(devices=[gpu_device])
 	queue = cl.CommandQueue(ctx)
-	
+
 	sort = Related(ctx, random_search_array.shape, [(np.float32, x.shape[1]) for x in random_related_arrays])
 
 	if descending:
@@ -140,7 +140,7 @@ if __name__ == '__main__':
 
 		exit(0)
 
-	
+
 	sort.build()
 
 

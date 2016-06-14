@@ -573,7 +573,7 @@ class FontRenderer():
         self.texture_id = glGenTextures(1);
 
         glBindTexture(GL_TEXTURE_2D_ARRAY, self.texture_id);
-        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RED, glypthatlas_width, glyphatlas_height, glyphatlas.shape[0], 0, GL_RED, GL_FLOAT, glyphatlas);
+        glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_R32F, glypthatlas_width, glyphatlas_height, glyphatlas.shape[0], 0, GL_RED, GL_FLOAT, glyphatlas);
         glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
         glTexParameterf(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
         glBindTexture(GL_TEXTURE_2D_ARRAY, 0);

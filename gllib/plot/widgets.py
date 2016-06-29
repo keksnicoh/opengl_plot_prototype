@@ -2,6 +2,7 @@ from gllib.util import Event
 from gllib.renderer.shape import ShapeRenderer, ShapeInstance, Rectangle
 from gllib.font import FontRenderer
 from gllib.renderer.window import Framebuffer
+from gllib.renderer.shape import ShapeRenderer, Rectangle, ShapeInstance
 class PlotterWidget():
 
     def attach(self, plotter):
@@ -17,14 +18,14 @@ class PlotterWidget():
         pass
 
 class LegendWidget(PlotterWidget):
-    INNER_SCALING = 8
+    INNER_SCALING = 16
     def __init__(self, *args, **kwargs):
         self.font_renderer = None
         self.graphs = []
         self.size = (400, 100)
         self.framebuffer = None
         self.shape_renderer = None
-        self.position = (100, 100)
+        self.position = (100, 100) if position not in kwargs else kwargs['position']
         self.grid = None
         self.plane = None
         self._render_frame = False
@@ -78,10 +79,10 @@ class LegendWidget(PlotterWidget):
             'size': self.size,
             'position': self.position,
             'border': {
-                'size': 0,
+                'size': 1,
                 'color': [0,0,0,1]
             },
-            'color': [1,1,1,0],
+            'color': [1,1,1,1],
             'texture': self.framebuffer
         })
         self.shape_renderer.draw_instance(self.plane)
@@ -94,12 +95,14 @@ class LegendWidget(PlotterWidget):
             self._render_frame = True
             return
 
+
         offsetx = 50
         yskip = 4
         maxx = 0
         y = 0
         self.grid = []
         gridy = 0
+        dirty = []
         for gid, graph in self.graphs.items():
             label = graph.label if hasattr(graph, 'label') and graph.label is not None else gid
             text = self.font_renderer.create_text(label, 12, (offsetx, y), enable_simple_tex=True)
@@ -108,9 +111,11 @@ class LegendWidget(PlotterWidget):
 
             self.grid.append([(0, gridy), (45, gridy + h)])
             gridy += h
+            dirty.append([graph, y, h+2])
 
             y += h + yskip
             maxx = max(maxx, w)
+
 
         self.size = (maxx + offsetx, y+3+yskip)
         self.plane.size = self.size
@@ -121,6 +126,18 @@ class LegendWidget(PlotterWidget):
 
 
         self.font_renderer.set_camera(self.framebuffer.inner_camera)
+
+        self.graph_shape_render = ShapeRenderer(self.framebuffer.inner_camera)
+        self.graph_shape_render.gl_init()
+
+        rect = Rectangle()
+
+        for g, y, h in dirty:
+            if g.draw_lines:
+                self.graph_shape_render.draw_instance(ShapeInstance(rect, position=(10,y+6), size=(30,3), color=g.color, ))
+            if g.draw_dots:
+                self.graph_shape_render.draw_instance(ShapeInstance(rect, position=(22,y+4), size=(6,7), color=g.color, ))
+
 
         self._render_frame = True
 
@@ -142,10 +159,10 @@ class LegendWidget(PlotterWidget):
 
             self.font_renderer.render()
 
+            self.graph_shape_render.render()
+ #           for i, graph in enumerate(self.graphs.values()):
 
-            for i, graph in enumerate(self.graphs.values()):
-
-                graph.render_legend_graph(self.plotter, self.plotter._plotframe.camera, self.framebuffer.inner_camera, *self.grid[i])
+#                graph.render_legend_graph(self.plotter, self.plotter._plotframe.camera, self.framebuffer.inner_camera, *self.grid[i])
 
             self.framebuffer.unuse()
 

@@ -101,7 +101,12 @@ class Plotter(Controller, object):
         on_keyboard = (lambda s,a,p: None),
         graphs            = {},
         axis_measures     = [],
+        render_axis = (True, True),
+        plotplane_margin=[5, 10, 40, 5],
+        plotplane_minsize=(100, 100),
+        min_label_space=(0,0),
         widget = None,
+        axis_density=(80,80),
     ):
         plot_info('Yo bro', 'plotter cant wait to plot for you')
         Controller.__init__(self, camera)
@@ -129,10 +134,10 @@ class Plotter(Controller, object):
         self._axis_measures = axis_measures
 
         self.on_state = Event()
-
+        self.min_label_space = min_label_space
         self._axis_translation      = (10, 0)
-        self._plotplane_margin      = [5, 10, 40, 5]
-        self._plot_plane_min_size   = (100, 100)
+        self._plotplane_margin      = plotplane_margin
+        self._plot_plane_min_size   = plotplane_minsize
         self._axis                  = axis
         self._axis_units            = axis_units
         self.colorlegend_speed      = 0.01
@@ -142,7 +147,7 @@ class Plotter(Controller, object):
         self._title_font            = None
         self._xlabel_font           = None
         self._ylabel_font           = None
-
+        self._axis_density = axis_density
         self._axis_subunits         = axis_subunits
         self._axis_unit_symbols     = axis_unit_symbols
         self._origin                = origin
@@ -153,7 +158,7 @@ class Plotter(Controller, object):
         self._colorlegend_axis      = None
         self._debug                 = False
         self._fontrenderer          = None
-        self._render_axis           = (True,True)
+        self._render_axis           = render_axis
         self._axis_texts            = [[],[]]
         self._yboxwidths            = []
         # dstates
@@ -417,19 +422,19 @@ class Plotter(Controller, object):
         if self.colorlegend is None:
             return (0,0)
 
-        return (100-self.colorlegend_margin[1]-self.colorlegend_margin[3], self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
+        return (65-self.colorlegend_margin[1]-self.colorlegend_margin[3], self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
 
     @property
     def colorlegend_boxsize(self):
         if self.colorlegend is None:
             return (0,0)
-        return (100, self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
+        return (65, self.camera.screensize[1]-self.colorlegend_margin[0]-self.colorlegend_margin[2])
 
     @property
     def colorlegend_margin(self):
         if self.colorlegend is None:
             return (0,0,0,0)
-        return (self._plotplane_margin[0], 60, self._plotplane_margin[2], 10)
+        return (self._plotplane_margin[0], 40, self._plotplane_margin[2], 10)
 
     @property
     def colorlegend_position(self):
@@ -595,6 +600,8 @@ class Plotter(Controller, object):
                 linecolor    = hex_to_rgba(self.color_scheme['xaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['xaxis-fontcolor']),
             )
+            self._xaxis.density = self._axis_density[0]
+
             self._xaxis.init()
             self._update_xaxis()
 
@@ -612,6 +619,7 @@ class Plotter(Controller, object):
                 linecolor    = hex_to_rgba(self.color_scheme['yaxis-linecolor']),
                 fontcolor    = hex_to_rgba(self.color_scheme['yaxis-fontcolor']),
             )
+            self._yaxis.density = self._axis_density[1]
             self._yaxis.init()
             self._update_yaxis()
         self.init_colorlegend()
@@ -821,12 +829,12 @@ class Plotter(Controller, object):
                 active_length -= 1
                 self._yboxwidths[i] = 0
 
-            maxboxwidth = np.max(self._yboxwidths)
+            maxboxwidth = max(self.min_label_space[1], np.max(self._yboxwidths))
             old =  self._plotplane_margin[3]
             if self._ylabel is not None:
                 maxboxwidth += self.color_scheme['ylabel-fontsize']+10
 
-            self._plotplane_margin[3] = int(maxboxwidth)+5
+            self._plotplane_margin[3] = max(self.min_label_space[1], int(maxboxwidth)+5)
             if  self._plotplane_margin[3] != old:
                 self._margin_changed = True
 

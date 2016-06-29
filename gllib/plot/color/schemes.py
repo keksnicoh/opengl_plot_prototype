@@ -46,13 +46,13 @@ class ColorMap(ColorScheme):
     @property
     def range(self):
         return [self.colorrange[0], self.center, self.colorrange[1]]
-    
+
 
     def get_uniform_data(self):
         return {
             'range': self.colorrange
         }
-        
+
 
     @property
     def glsl_functions(self): return load_lib_file('../vendor/glsl-colormap/shaders/{}.frag'.format(self.filename))
@@ -62,4 +62,3 @@ class ColorMap(ColorScheme):
     @property
     def glsl_uniforms(self):
         return [('vec2', 'range')]
-     

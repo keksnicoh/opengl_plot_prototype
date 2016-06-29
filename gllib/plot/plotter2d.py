@@ -76,7 +76,7 @@ DEFAULT_COLORS = {
     ]
 }
 
-class Plotter(object, Controller):
+class Plotter(Controller, object):
     KEY_TRANSLATION_SPEED = 0.05
     KEY_ZOOM_SPEED        = 0.02
     FONT_ENCODING         = 'unic'

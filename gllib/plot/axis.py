@@ -141,6 +141,7 @@ class Scale():
         self.camera               = camera
         self.linecolor            = linecolor
         self.fontcolor            = fontcolor
+        self.density = 80
         self.unit_symbol = unit_symbol or ''
         self.bgcolor              = bgcolor
         self._last_screen_scaling = None
@@ -156,7 +157,7 @@ class Scale():
         self._labels =  []
 
     def unit_density_factor(self, capture_size):
-        density = 80
+        density = self.density
         size = capture_size
         f = 1.0
         last_diff = density - size

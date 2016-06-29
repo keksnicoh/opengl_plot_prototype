@@ -4,16 +4,16 @@ field plotting.
 
 contains classes that plots 2d fields of data
 
-:author: Nicolas 'keksnicoh' Heimann 
+:author: Nicolas 'keksnicoh' Heimann
 """
-from gllib.shader import Program, Shader 
+from gllib.shader import Program, Shader
 from gllib.buffer import VertexArray, VertexBuffer
 from gllib.helper import load_lib_file
 
 import pystache
 
 import numpy as np
-from OpenGL.GL import * 
+from OpenGL.GL import *
 
 
 class Field():
@@ -28,7 +28,7 @@ class Field():
     top_left and bottom_right texel. data_kernel is by default the default
     glsl 2d texture sampler.
 
-    using a color scheme one can modify data from data_kernel. 
+    using a color scheme one can modify data from data_kernel.
     (field plot color scheme...)
     """
     def __init__(self, domain=None, top_left=None, bottom_right=None, color_scheme=None, data_kernel=None):
@@ -43,7 +43,7 @@ class Field():
         self.initialized         = False
         self.program             = None
         self.data_kernel         = data_kernel or 'fragment_color = texture(tex[0], x);'
-        self._np_vertex_data     = None 
+        self._np_vertex_data     = None
         self._np_texture_data    = None
         self._coord_top_left     = None
         self._coord_bottom_right = None
@@ -61,7 +61,7 @@ class Field():
             if self.bottom_right is None:
                 self.bottom_right = (self.domain.dimensions[0], 1)
 
-        self.gl_init()   
+        self.gl_init()
 
         self._np_texture_data = np.array([0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0], dtype=np.float32).reshape(6,2)
         self.scale(self.top_left, self.bottom_right)
@@ -78,17 +78,17 @@ class Field():
             self._coord_bottom_right = bottom_right or (1,0)
         else:
             dimensions = (self.domain.dimensions[0]-1, self.domain.dimensions[1]-1)
-            unit_size_x = 0.5*float(bottom_right[0]-top_left[0])/dimensions[0]
-            unit_size_y = 0.5*float(top_left[1]-bottom_right[1])/dimensions[1]
+            unit_size_x = 0.5*float(bottom_right[0]-top_left[0])/dimensions[1]
+            unit_size_y = 0.5*float(top_left[1]-bottom_right[1])/dimensions[0]
             self._coord_top_left = (top_left[0]-unit_size_x, top_left[1]+unit_size_y)
             self._coord_bottom_right = (bottom_right[0]+unit_size_x, bottom_right[1]-unit_size_y)
 
         self._np_vertex_data = np.array([
-            self._coord_top_left[0], self._coord_top_left [1], 
-            self._coord_top_left [0], self._coord_bottom_right[1], 
-            self._coord_bottom_right[0], self._coord_bottom_right[1], 
-            self._coord_bottom_right[0], self._coord_bottom_right[1], 
-            self._coord_bottom_right[0], self._coord_top_left[1], 
+            self._coord_top_left[0], self._coord_top_left [1],
+            self._coord_top_left [0], self._coord_bottom_right[1],
+            self._coord_bottom_right[0], self._coord_bottom_right[1],
+            self._coord_bottom_right[0], self._coord_bottom_right[1],
+            self._coord_bottom_right[0], self._coord_top_left[1],
             self._coord_top_left [0], self._coord_top_left [1]
         ], dtype=np.float32).reshape(6,2)
 
@@ -97,7 +97,7 @@ class Field():
             'texture_position': VertexBuffer.from_numpy(self._np_texture_data),
         }, self.program.attributes)
 
-        self.top_left            = top_left 
+        self.top_left            = top_left
         self.bottom_right        = bottom_right
 
     def gl_init(self):
@@ -121,7 +121,7 @@ class Field():
             glsl_uniforms += ['uniform {} {};'.format(t, n) for t, n in self.data_kernel.glsl_uniforms]
 
         frag_src = pystache.render(load_lib_file('glsl/plot2d/field.frag.glsl'), {
-            'UNIFORMS'    : '\n'.join(glsl_uniforms), 
+            'UNIFORMS'    : '\n'.join(glsl_uniforms),
             'FUNCTIONS'   : glsl_functions,
             'DATA_KERNEL' : str(self.data_kernel),
             'COLOR_KERNEL': str(self.color_scheme)

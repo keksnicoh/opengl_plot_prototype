@@ -25,7 +25,7 @@ class LegendWidget(PlotterWidget):
         self.size = (400, 100)
         self.framebuffer = None
         self.shape_renderer = None
-        self.position = (100, 100) if position not in kwargs else kwargs['position']
+        self.position = (100, 100) if 'position' not in kwargs else kwargs['position']
         self.grid = None
         self.plane = None
         self._render_frame = False

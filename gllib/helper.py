@@ -18,7 +18,13 @@ def resource_path(*path):
     return os.path.join(BASE, 'resources', *path)
 
 def hex_to_rgb(hexstr):
-    return [float(i)/255 for i in struct.unpack('BBB', hexstr.decode('hex'))]
+    try:
+        return [float(i)/255 for i in struct.unpack('BBB', hexstr.decode('hex'))]
+    except:
+        return [float(i)/255 for i in struct.unpack('BBB', bytes.fromhex(hexstr))]
 
 def hex_to_rgba(hexstr):
-    return [float(i)/255 for i in struct.unpack('BBBB', hexstr.decode('hex'))]
+    try:
+        return [float(i)/255 for i in struct.unpack('BBBB', hexstr.decode('hex'))]
+    except:
+        return [float(i)/255 for i in struct.unpack('BBBB', bytes.fromhex(hexstr))]

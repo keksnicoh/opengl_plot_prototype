@@ -246,7 +246,10 @@ class TextObject(object):
         else:
             colors = [self._color for i in range(len(self.chars))]
 
-        chars = self.chars.decode('utf-8')
+        try:
+            chars = self.chars.decode('utf-8')
+        except:
+            chars = self.chars
         def _map_latex_placeholder(match):
             if match.group(1) not in self._LATEX_CHARACTER_MAPPING:
                 return match.group(0)
@@ -444,7 +447,10 @@ class TextObject(object):
         self._has_changes = True
 
     def __len__(self):
-        return len(self._chars.decode('utf-8'))
+        try:
+            return len(self._chars.decode('utf-8'))
+        except:
+            return len(self._chars)
 
 
 
@@ -503,7 +509,10 @@ class FNTFile():
 
                         fntchar = FNTFile.FNTGlyph(*match.groups())
                         fnt.glyphs.append(fntchar)
-                        fnt.char_glyph[unichr(fntchar.cid)] = index
+                        try:
+                            fnt.char_glyph[unichr(fntchar.cid)] = index
+                        except:
+                            fnt.char_glyph[chr(fntchar.cid)] = index
                         index += 1
 
             if expected_chars is None:

@@ -3,15 +3,32 @@ from gllib.controller import Controller
 from gllib.plot import plotter2d
 from gllib.framelayout import FramelayoutController
 from gllib.plot.plotter2d import DARK_COLORS, DEFAULT_COLORS, BLA_COLORS
+import pyscreenshot as ImageGrab
 import numpy
 
-def plot2d(f, width=600, height=600, dark=False, **kwargs):
+class ScreenshotKeyboardHandler():
+    def __init__(self, window, file_name=None):
+        validate_filename = lambda x: x if '.' in x else x+'.png'
+
+        self.window    = window
+        self.file_name = validate_filename(file_name) or '__screen_capture.png'
+
+    def __call__(self, active, pressed=[]):
+        if (74, 0) in pressed: # J
+            pos, size = self.window.get_frame()
+            x_offset = 10
+            y_offset = 40
+            im = ImageGrab.grab(bbox=(pos[0] + x_offset, pos[1] + y_offset, size[0] + pos[0] + x_offset, size[1] + pos[1] + y_offset - 4))
+            im.save(self.file_name)
+
+def plot2d(f, width=600, height=600, dark=False, screenshot_file_name=None, **kwargs):
     window = GlWindow(width, height, 'plot')
     app = GlApplication()
     app.windows.append(window)
     if not 'color_scheme' in kwargs:
         kwargs['color_scheme']=DEFAULT_COLORS if not dark else BLA_COLORS
     plotter = plotter2d.Plotter( **kwargs)
+    plotter.on_keyboard.append(ScreenshotKeyboardHandler(window, screenshot_file_name))
     window.set_controller(plotter)
     app.init()
     f(plotter)
@@ -55,35 +72,12 @@ def plot2dColumns(f, plotters, width=600, height=600, dark=False):
 
     app.run()
 
-
-def plot2dColumns_extended(f, n, fake=None, width=600, height=600, **kwargs):
-    window = GlWindow(width, height, 'Column plot')
+def plot2dCustom(f, plotters, fake=None, width=600, height=600, window_title='', **kwargs):
+    window = GlWindow(width, height, window_title)
     app = GlApplication()
     app.windows.append(window)
 
-    def merge(a,b):
-        c = a.copy()
-        c.update(b)
-        return c
-
-    plotters = None
-    if isinstance(n, list):
-        plotters = [plotter2d.Plotter(**merge(kwargs, args)) for args in n]
-    else:
-        plotters = [plotter2d.Plotter(**kwargs) for i in range(0,n)]
-
-    def bla():
-        print('CYCLE')
-
-    views = [[c for c in plotters]]
-    if fake and isinstance(fake, list):
-        plotters.extend(fake)
-        views.append(fake)
-    elif fake:
-        plotters.append(fake)
-        views.append([fake])
-
-    controller = FramelayoutController(views)
+    controller = FramelayoutController(plotters)
     if hasattr(f, 'pre_cycle'):
         controller.on_pre_cycle.append(f.pre_cycle)
     window.set_controller(controller)
@@ -92,7 +86,6 @@ def plot2dColumns_extended(f, n, fake=None, width=600, height=600, **kwargs):
     f(plotters)
 
     app.run()
-
 
 
 

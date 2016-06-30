@@ -1,5 +1,5 @@
 import numpy
-from util import Event
+from gllib.util import Event
 
 class Camera():
     def __init__(self, initial_screensize, scaling=None):

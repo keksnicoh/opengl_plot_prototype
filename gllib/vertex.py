@@ -117,7 +117,12 @@ class BufferObject():
         self.shape = shape if type(shape) is tuple else (shape, )
         self.dtype = np.dtype(dtype)
         self.itemsize = np.dtype(dtype).itemsize
-        self.nbytes = self.itemsize*reduce(mul, self.shape)
+
+        try:
+            self.nbytes = self.itemsize*reduce(mul, self.shape)
+        except:
+            import functools
+            self.nbytes = self.itemsize*functools.reduce(mul, self.shape)
 
         self._target = target
         self._usage = usage

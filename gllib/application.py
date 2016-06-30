@@ -6,7 +6,7 @@ from .util import CommandQueue, signal
 from .camera import Camera2d
 
 from OpenGL.GL import *
-from glfw import *
+from gllib.glfw import *
 from termcolor import colored
 import logging
 import sys
@@ -227,13 +227,16 @@ class GlWindow():
         glfwSwapBuffers(self._glfw_window)
 
     def set_position(self, x, y):
-        return
+        #return
         if not self.x == None and not self.y == None:
             glfwSetWindowPos(self._glfw_window, int(self.x), int(self.y))
         else:
             glfwSetWindowPos(self._glfw_window, int(x), int(y))
             self.x = x
             self.y = y
+
+    def get_frame(self):
+        return (glfwGetWindowPos(self._glfw_window), glfwGetWindowSize(self._glfw_window))
 
     def make_context(self):
         glfwMakeContextCurrent(self._glfw_window)

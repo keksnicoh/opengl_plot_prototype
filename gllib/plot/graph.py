@@ -184,8 +184,17 @@ class Line2d():
         self._compile_glsl_programs(vertex_source)
         self._init_program_uniforms()
 
-        self.vao = VertexArray(vertex_array, self.program.attributes)
+        self.register_domains(vertex_array)
         self.initialized = True
+
+    def register_domains(self, vertex_array=None):
+        if vertex_array is None:
+            vertex_array = dict([
+                ('in_d{}'.format(i), VertexBuffer(dimension=d.dimension, gl_vbo_id=d.gl_vbo_id)) 
+                for i, d in enumerate(self.domains)
+            ])
+        self.vao = VertexArray(vertex_array, self.program.attributes)
+
 
     def render(self, plotter):
         """

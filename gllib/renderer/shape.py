@@ -140,7 +140,7 @@ class ShapeRenderer(object):
             self._shape_vaos[shape_object_id].bind()
             for instance in instances:
                 border_size = instance.border['size']
-                if instance.border > 0:
+                if len(instance.border) > 0:
                     glEnable(GL_BLEND)
                     # XXX
                     # - cache the modelview matrix

@@ -1,7 +1,7 @@
 from OpenGL.GL import *
 import numpy
-from camera import Camera2d
-from util import Event
+from gllib.camera import Camera2d
+from gllib.util import Event
 #
 # XXX
 # remove me asap

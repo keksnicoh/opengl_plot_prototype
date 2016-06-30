@@ -11,7 +11,7 @@ class ScreenshotKeyboardHandler():
         validate_filename = lambda x: x if '.' in x else x+'.png'
 
         self.window    = window
-        self.file_name = validate_filename(file_name) or '__screen_capture.png'
+        self.file_name = validate_filename(file_name) if file_name else '__screen_capture.png'
 
     def __call__(self, active, pressed=[]):
         if (74, 0) in pressed: # J
